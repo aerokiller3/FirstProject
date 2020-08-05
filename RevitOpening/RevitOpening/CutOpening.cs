@@ -4,6 +4,7 @@ using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
@@ -24,7 +25,8 @@ namespace RevitOpening
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             _document = commandData.Application.ActiveUIDocument.Document;
-            var allDocs = commandData.Application.Application.Documents;
+            var allDocs = commandData.Application.Application.Documents/*.Cast<Document>()*/;
+            //var secondDoc = allDocs.ElementAt(1);
             var linked = allDocs.GetEnumerator();
             linked.MoveNext();
             linked.MoveNext();
@@ -49,7 +51,6 @@ namespace RevitOpening
                 foreach (var element in elements
                     .Where(el => intersection.PassesFilter(el)))
                 {
-                    //element.
                     CreateBox(wall, element);
                 }
             }
@@ -73,29 +74,35 @@ namespace RevitOpening
 
         private void CreateBox(Wall wall, MEPCurve pipe)
         {
-            const string famName2 = "Задание_Стена_Прямоугольник_БезОсновы";
-            var familySymbol = GetApertureSymbol(famName2, BuiltInCategory.OST_Windows);
+            var famName1 = "Отверстие_Круглое_Стена";
+            var famName2 = "Отверстие_Прямоуг_Перекр";
+            var famName3 = "Отверстие_Прямоуг_Перекр_БезЗаливки";
+            var famName4 = "Отверстие_Прямоуг_Стена";
+            var famName5 = "Задание_Стена_Прямоугольник_БезОсновы";
+            var famName6 = "Задание_Круглая_Стена_БезОсновы";
+            var famName7 = "Задание_Стена_Перекрытие_БезОсновы";
+            var familySymbol = GetApertureSymbol(famName5, BuiltInCategory.OST_Windows);
 
 
             var offset = 100;
             var geomSolid = wall.get_Geometry(new Options()).FirstOrDefault() as Solid;
             var wallData = new ElementGeometry(wall);
-            var ductData = new ElementGeometry(pipe);
+            var pipeData = new ElementGeometry(pipe);
 
-            double ductWidth, ductHeight;
+            double pipeWidth, pipeHeight;
             try
             {
-                ductHeight = pipe.Height;
-                ductWidth = pipe.Width;
+                pipeHeight = pipe.Height;
+                pipeWidth = pipe.Width;
             }
             catch
             {
-                ductHeight = pipe.Diameter;
-                ductWidth = pipe.Diameter;
+                pipeHeight = pipe.Diameter;
+                pipeWidth = pipe.Diameter;
             }
 
             var curves = geomSolid?
-                .IntersectWithCurve(ductData.Curve, new SolidCurveIntersectionOptions());
+                .IntersectWithCurve(pipeData.Curve, new SolidCurveIntersectionOptions());
             if (curves.SegmentCount == 0)
             {
                 return;
@@ -106,20 +113,20 @@ namespace RevitOpening
 
             if(intersectCurve==null || familySymbol==null)
                 return;
-
             var intersectionCenter = (intersectCurve.GetEndPoint(0) + intersectCurve.GetEndPoint(1)) / 2;
-            intersectionCenter=new XYZ(intersectionCenter.X-ductHeight / 2, intersectionCenter.Y-ductWidth,intersectionCenter.Z);
+            intersectionCenter -= new XYZ(0, pipeHeight, 0);
             var horAngleBetweenWallAndDuct =
-                Math.Acos((wallData.XLen * ductData.XLen + wallData.YLen * ductData.YLen) /
-                (SqrtOfSqrSum(wallData.XLen,wallData.YLen) * SqrtOfSqrSum(ductData.XLen,ductData.YLen)));
+                Math.Acos((wallData.XLen * pipeData.XLen + wallData.YLen * pipeData.YLen) /
+                (SqrtOfSqrSum(wallData.XLen,wallData.YLen) * SqrtOfSqrSum(pipeData.XLen,pipeData.YLen)));
             horAngleBetweenWallAndDuct = GetAcuteAngle(horAngleBetweenWallAndDuct);
             var vertAngleBetweenWallAndDuct =
-                Math.Acos(ductData.ZLen / Math.Sqrt(ductData.XLen*ductData.XLen + ductData.YLen*ductData.YLen + ductData.ZLen*ductData.ZLen));
+                Math.Acos(pipeData.ZLen / Math.Sqrt(pipeData.XLen*pipeData.XLen + pipeData.YLen*pipeData.YLen + pipeData.ZLen*pipeData.ZLen));
             vertAngleBetweenWallAndDuct = GetAcuteAngle(vertAngleBetweenWallAndDuct);
 
-            var width = CalculateMinSize(wall.Width, horAngleBetweenWallAndDuct, ductWidth,offset);
-            var height = CalculateMinSize(wall.Width, vertAngleBetweenWallAndDuct, ductWidth, offset);
+            var width = CalculateMinSize(wall.Width, horAngleBetweenWallAndDuct, pipeWidth,offset);
+            var height = CalculateMinSize(wall.Width, vertAngleBetweenWallAndDuct, pipeWidth, offset);
 
+            //var direction = , wallData.Curve.
             CreateAperture(intersectionCenter,familySymbol,wall,height,width,pipe.Category.Name);
         }
 
@@ -131,13 +138,25 @@ namespace RevitOpening
                 transaction.Start("Create box");
                 familySymbol.Activate();
 
-                var oldBox = _document.Create.NewFamilyInstance(intersectionCenter, familySymbol, wall,
+                var newBox = _document.Create.NewFamilyInstance(intersectionCenter, familySymbol,wall,
                     StructuralType.NonStructural);
 
-                oldBox.LookupParameter("Отверстие_Ширина").Set(minWidth);
-                oldBox.LookupParameter("Отверстие_Высота").Set(minHeight);
+                //"Отверстие_Круглое_Стена"
+                //newBox.LookupParameter("Размер_Диаметр").Set(Math.Max(minWidth, minHeight));
+
+                //Отверстие_Прямоуг_Перекр
+                newBox.LookupParameter("Отверстие_Ширина").Set(minWidth);
+                newBox.LookupParameter("Отверстие_Высота").Set(minHeight);
 
                 transaction.Commit();
+
+                //if (transaction.HasEnded())
+                //    transaction.Commit();
+                //else
+                //{
+                //    Thread.Sleep(10);
+                //    transaction.Commit();
+                //}
             }
         }
 
