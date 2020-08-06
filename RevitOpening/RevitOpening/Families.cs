@@ -9,38 +9,38 @@ namespace RevitOpening
 {
     public static class Families
     {
-        public static FamilyData WallRoundOpeningFamilyData;
-        public static FamilyData FloorRectOpeningFamilyData;
-        public static FamilyData WallRectOpeningFamilyData;
-        public static FamilyData WallRectTaskFamilyData;
-        public static FamilyData WallRoundTaskFamilyData;
-        public static FamilyData FloorRectTaskFamilyData;
+        public static FamilyParameters WallRoundOpeningFamily;
+        public static FamilyParameters FloorRectOpeningFamily;
+        public static FamilyParameters WallRectOpeningFamily;
+        public static FamilyParameters WallRectTaskFamily;
+        public static FamilyParameters WallRoundTaskFamily;
+        public static FamilyParameters FloorRectTaskFamily;
 
-        public static IEnumerable<FamilyData> AllFamilies;
+        public static IEnumerable<FamilyParameters> AllFamilies;
 
         static Families()
         {
-            WallRoundOpeningFamilyData =
-                new FamilyData("Отверстие_Круглое_Стена", "ТолщинаОсновы", null,null, "Размер_Диаметр");
-            FloorRectOpeningFamilyData =
-                new FamilyData("Отверстие_Прямоуг_Перекр", "Размер_Толщина основа", "Отверстие_Высота", "Отверстие_Ширина");
-            WallRectOpeningFamilyData =
-                new FamilyData("Отверстие_Прямоуг_Стена", "ТолщинаОсновы", "Отверстие_Высота", "Отверстие_Ширина");
-            WallRectTaskFamilyData =
-                new FamilyData("Задание_Стена_Прямоугольник_БезОсновы", "Отверстие_Глубина", "Отверстие_Высота", "Отверстие_Ширина");
-            WallRoundTaskFamilyData =
-                new FamilyData("Задание_Круглая_Стена_БезОсновы", "ТолщинаОсновы", null,null, "Диаметр отверстия");
-            FloorRectTaskFamilyData =
-                new FamilyData("Задание_Перекрытие_БезОсновы", "Отверстие_Глубина", "Отверстие_Высота", "Отверстие_Ширина");
-            AllFamilies = new List<FamilyData>
+            WallRoundOpeningFamily =
+                new FamilyParameters("Отверстие_Круглое_Стена", "ТолщинаОсновы", null,null, "Размер_Диаметр");
+            FloorRectOpeningFamily =
+                new FamilyParameters("Отверстие_Прямоуг_Перекр", "Размер_Толщина основа", "Отверстие_Высота", "Отверстие_Ширина");
+            WallRectOpeningFamily =
+                new FamilyParameters("Отверстие_Прямоуг_Стена", "ТолщинаОсновы", "Отверстие_Высота", "Отверстие_Ширина");
+            WallRectTaskFamily =
+                new FamilyParameters("Задание_Стена_Прямоугольник_БезОсновы", "Отверстие_Глубина", "Отверстие_Высота", "Отверстие_Ширина");
+            WallRoundTaskFamily =
+                new FamilyParameters("Задание_Круглая_Стена_БезОсновы", "ТолщинаОсновы", null,null, "Диаметр отверстия");
+            FloorRectTaskFamily =
+                new FamilyParameters("Задание_Перекрытие_БезОсновы", "Отверстие_Глубина", "Отверстие_Высота", "Отверстие_Ширина");
+            AllFamilies = new List<FamilyParameters>
             {
-                WallRoundOpeningFamilyData, FloorRectOpeningFamilyData,
-                WallRectOpeningFamilyData, WallRectTaskFamilyData,
-                WallRoundTaskFamilyData, FloorRectTaskFamilyData
+                WallRoundOpeningFamily, FloorRectOpeningFamily,
+                WallRectOpeningFamily, WallRectTaskFamily,
+                WallRoundTaskFamily, FloorRectTaskFamily
             };
         }
 
-        public static FamilyData GetFamilyData(string familyName)
+        public static FamilyParameters GetFamilyData(string familyName)
         {
             return AllFamilies.FirstOrDefault(f => f.Name == familyName);
         }
@@ -52,7 +52,6 @@ namespace RevitOpening
                 .OfCategory(BuiltInCategory.OST_Windows);
 
             var familySymbol = collector
-                .ToElements()
                 .Cast<FamilySymbol>()
                 .FirstOrDefault(x => x.FamilyName == familyName);
             if(familySymbol==null)

@@ -10,12 +10,12 @@ namespace RevitOpening
 {
     public class WallCutter : ICutter
     {
-        public OpeningParametrs CalculateBoxInElement(Element element, MEPCurve pipe, double offset)
+        public OpeningParametrs CalculateBoxInElement(Element element, MEPCurve pipe, double offset, FamilyParameters familyParameters)
         {
-            return CalculateBoxInWall(element as Wall, pipe, offset);
+            return CalculateBoxInWall(element as Wall, pipe, offset, familyParameters);
         }
 
-        private OpeningParametrs CalculateBoxInWall(Wall wall, MEPCurve pipe, double offset)
+        private OpeningParametrs CalculateBoxInWall(Wall wall, MEPCurve pipe, double offset, FamilyParameters familyParameters)
         {
             var geomSolid = wall.get_Geometry(new Options()).FirstOrDefault() as Solid;
             var wallData = new ElementGeometry(wall);
@@ -39,10 +39,13 @@ namespace RevitOpening
 
             var width = CalculateWidth(pipeWidth, wall.Width, wallData, pipeData, offset);
             var height = CalculateHeight(pipeWidth, wall.Width, pipeData, offset);
-            intersectionCenter = intersectionCenter - new XYZ(0,0 , height / 2);
+
+            if(familyParameters.Name == Families.WallRectTaskFamily.Name)
+                intersectionCenter -= new XYZ(0,0 , height / 2);
+
             var depth = wall.Width;
 
-            return new OpeningParametrs(width,height,depth,direction, intersectionCenter);
+            return new OpeningParametrs(width,height,depth,direction, intersectionCenter, wallData,pipeData);
         }
 
         private double CalculateWidth(double pipeWidth, double wallWidth, ElementGeometry wallData,

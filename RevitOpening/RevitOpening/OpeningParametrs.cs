@@ -19,13 +19,20 @@ namespace RevitOpening
 
         public XYZ IntersectionCenter { get; private set; }
 
-        public OpeningParametrs(double width, double heigth, double depth, XYZ direction, XYZ intersectionCenter)
+        public ElementGeometry WallGeometry { get; private set; }
+
+        public ElementGeometry PipeGeometry { get; private set; }
+
+        public OpeningParametrs(double width, double heigth, double depth, XYZ direction,
+            XYZ intersectionCenter, ElementGeometry wallGeometry, ElementGeometry pipeGeometry)
         {
             Width = width;
             Heigth = heigth;
             Depth = depth;
             Direction = direction;
             IntersectionCenter = intersectionCenter;
+            WallGeometry = wallGeometry;
+            PipeGeometry = pipeGeometry;
         }
     }
 }

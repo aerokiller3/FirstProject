@@ -54,17 +54,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CutOpening.cs" />
+    <Compile Include="CreateOpeningInTaskBoxes.cs" />
+    <Compile Include="CreateTaskBoxes.cs" />
     <Compile Include="ElementGeometry.cs" />
     <Compile Include="Families.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="FamilyLoader.cs" />
     <Compile Include="FloorCutter.cs" />
     <Compile Include="ICutter.cs" />
-    <Compile Include="OpeningData.cs" />
+    <Compile Include="OpeningParentsData.cs" />
     <Compile Include="OpeningParametrs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="FamilyData.cs" />
+    <Compile Include="FamilyParameters.cs" />
     <Compile Include="WallCutter.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -87,5 +88,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

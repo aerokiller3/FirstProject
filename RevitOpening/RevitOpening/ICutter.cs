@@ -9,6 +9,6 @@ namespace RevitOpening
 {
     public interface ICutter
     {
-        OpeningParametrs CalculateBoxInElement(Element element, MEPCurve pipe, double offset);
+        OpeningParametrs CalculateBoxInElement(Element element, MEPCurve pipe, double offset, FamilyParameters familyParameters);
     }
 }

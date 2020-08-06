@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Autodesk.Revit.DB;
+using Newtonsoft.Json;
 
 namespace RevitOpening
 {
@@ -15,6 +16,7 @@ namespace RevitOpening
 
         public double ZLen { get; private set; }
 
+        [JsonIgnore]
         public Curve Curve { get; private set; }
 
         public XYZ Start { get; private set; }

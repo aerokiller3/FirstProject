@@ -9,11 +9,11 @@ namespace RevitOpening
 {
     public class FloorCutter : ICutter
     {
-        public OpeningParametrs CalculateBoxInElement(Element element, MEPCurve pipe, double offset)
+        public OpeningParametrs CalculateBoxInElement(Element element, MEPCurve pipe, double offset, FamilyParameters familyParameters)
         {
-            return CalculateBoxInFloor(element as Floor, pipe, offset);
+            return CalculateBoxInFloor(element as Floor, pipe, offset, familyParameters);
         }
-        private OpeningParametrs CalculateBoxInFloor(Floor floor, MEPCurve pipe, double offset)
+        private OpeningParametrs CalculateBoxInFloor(Floor floor, MEPCurve pipe, double offset, FamilyParameters familyParameters)
         {
             var geomSolid = floor.get_Geometry(new Options()).FirstOrDefault() as Solid;
             var pipeData = new ElementGeometry(pipe);
@@ -34,7 +34,7 @@ namespace RevitOpening
             var boundBox = (floor.get_Geometry(new Options()).FirstOrDefault() as Solid).GetBoundingBox();
             var depth = boundBox.Max.Z - boundBox.Min.Z;
 
-            return new OpeningParametrs(width,height,depth,direction,intersectionCenter);
+            return new OpeningParametrs(width,height,depth,direction,intersectionCenter,null,pipeData);
         }
 
         private double CalculateWidth(double pipeWidth, double offset)
