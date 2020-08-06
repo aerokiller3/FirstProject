@@ -58,9 +58,34 @@
     <Compile Include="ElementGeometry.cs" />
     <Compile Include="Families.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="FamilyLoader.cs" />
+    <Compile Include="FloorCutter.cs" />
+    <Compile Include="ICutter.cs" />
     <Compile Include="OpeningData.cs" />
+    <Compile Include="OpeningParametrs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TOFamily.cs" />
+    <Compile Include="FamilyData.cs" />
+    <Compile Include="WallCutter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Families\Задание_Круглая_Стена_БезОсновы.rfa">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Families\Задание_Перекрытие_БезОсновы.rfa">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Families\Задание_Стена_Прямоугольник_БезОсновы.rfa">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Families\Отверстие_Круглое_Стена.rfa">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Families\Отверстие_Прямоуг_Перекр.rfa">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Families\Отверстие_Прямоуг_Стена.rfa">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -25,22 +25,29 @@ namespace RevitOpening
             var allDocs = commandData.Application.Application
                 .Documents.Cast<Document>();
             _linkedDocuments = allDocs.Skip(1);
+            new FamilyLoader(_document).LoadAllFamiliesToProject();
 
             var walls = GetElementsList<Wall>(allDocs);
             var floors = GetElementsList<Floor>(allDocs);
-
             var pipes = GetElementsList<Pipe>(allDocs);
             var ducts = GetElementsList<Duct>(allDocs);
-            //Можно добавить ещё коммуникаций
 
+            var ductsInWalls = FindIntersectionsWith(walls, ducts);
+            var pipesInWalls = FindIntersectionsWith(walls, pipes);
+            var ductsInFloors = FindIntersectionsWith(floors, ducts);
+            var pipesInFloors = FindIntersectionsWith(floors, pipes);
 
-            FindIntersectionsWith(walls, ducts);
-            FindIntersectionsWith(walls, pipes);
-            FindIntersectionsWith(floors, ducts);
-            FindIntersectionsWith(floors, pipes);
+            var wallCutter = new WallCutter();
+            var floorCutter = new FloorCutter();
+
+            CreateAllOpening(ductsInWalls, wallCutter, Families.WallRectTaskFamilyData);
+            CreateAllOpening(pipesInWalls, wallCutter, Families.WallRectTaskFamilyData);
+            CreateAllOpening(ductsInFloors, floorCutter, Families.FloorRectTaskFamilyData);
+            CreateAllOpening(pipesInFloors, floorCutter, Families.FloorRectTaskFamilyData);
 
             return Result.Succeeded;
         }
+
         private List<T> GetElementsList<T>(IEnumerable<Document> allDocs)
         {
             var elements = new List<T>();
@@ -56,144 +63,53 @@ namespace RevitOpening
             return elements;
         }
 
-        private void FindIntersectionsWith(IEnumerable<Element> walls, IReadOnlyCollection<MEPCurve> pipes)
+        private Dictionary<Element,List<MEPCurve>> FindIntersectionsWith(IEnumerable<Element> elements, IReadOnlyCollection<MEPCurve> curves)
         {
-            foreach (var intersectionElement in walls)
+            var intersections = new Dictionary<Element,List<MEPCurve>>();
+            foreach (var intersectionElement in elements)
             {
+                var currentInetsections = new List<MEPCurve>();
                 var intersection = new ElementIntersectsElementFilter(intersectionElement);
-
-                foreach (var element in pipes
+                foreach (var element in curves
                     .Where(el => intersection.PassesFilter(el)))
-                {
-                    switch (intersectionElement)
-                    {
-                        case Wall wall:
-                            CalculateBoxInWall(wall, element);
-                            break;
-                        case Floor floor:
-                            CalculateBoxInFloor(floor, element);
-                            break;
-                    }
-                }
+                    currentInetsections.Add(element);
+                if (currentInetsections.Count > 0)
+                    intersections[intersectionElement] = currentInetsections;
             }
+
+            return intersections;
         }
-
-        private void CalculateBoxInFloor(Floor floor, MEPCurve pipe)
+        private void CreateAllOpening(Dictionary<Element, List<MEPCurve>> pipesInElements, ICutter cutter, FamilyData familyData)
         {
-            var familySymbol = GetFamilySymbol(_document,Families.FloorRectTaskFamily.Name);
-
-            var geomSolid = floor.get_Geometry(new Options()).FirstOrDefault() as Solid;
-            var wallData = new ElementGeometry(floor);
-            var pipeData = new ElementGeometry(pipe);
-
-            var dir = new XYZ(wallData.End.X - wallData.Start.X, wallData.End.Y - wallData.Start.Y, 0);
-
-            var curves = geomSolid?
-                .IntersectWithCurve(pipeData.Curve, new SolidCurveIntersectionOptions());
-            if (curves == null || curves.SegmentCount == 0 || familySymbol == null)
-                return;
-
-            var intersectCurve = curves.GetCurveSegment(0);
-            var intersectionCenter = (intersectCurve.GetEndPoint(0) + intersectCurve.GetEndPoint(1)) / 2;
-            var pipeWidth = pipe.GetPipeWidth();
-            var pipeHeight = pipe.GetPipeHeight();
-
-            var geomdPipeSolidFaces = (pipe.get_Geometry(new Options()).FirstOrDefault() as Solid).Faces;
-            foreach (Face solidFace in geomdPipeSolidFaces)
+            var familySymbol = Families.GetFamilySymbol(_document, familyData.Name);
+            foreach (var ductsInWall in pipesInElements)
+            foreach (var curve in ductsInWall.Value)
             {
-                var faceNormal = solidFace;
+                var openingParametrs = cutter.CalculateBoxInElement(ductsInWall.Key, curve, _offset);
+                if (openingParametrs == null)
+                    continue;
+                CreateOpening(familyData, familySymbol, ductsInWall.Key, openingParametrs);
             }
 
-            //var floorWidth = floor.
-            //var width = CalculateWidth(pipeWidth, floor. , wallData, pipeData);
-            //var height = CalculateHeight(pipeWidth, , pipeData);
-
-            //CreateOpening(intersectionCenter, familySymbol, floor, height, width, pipe.Category.Name, dir);
-        }
-        public FamilySymbol GetFamilySymbol(Document document, string familyName)
-        {
-            var collector = new FilteredElementCollector(document)
-                .OfClass(typeof(FamilySymbol))
-                .OfCategory(BuiltInCategory.OST_Windows);
-
-            var familySymbol = collector
-                .ToElements()
-                .Cast<FamilySymbol>()
-                .FirstOrDefault(x => x.FamilyName == familyName);
-
-            collector.Dispose();
-            return familySymbol;
         }
 
-        private void CalculateBoxInWall(Wall wall, MEPCurve pipe)
-        {
-            //Families.WallRoundOpeningFamily /*работает*/
-            //Families.WallRoundTaskFamily /*(Вылазит)*/
-            //Families.WallRectTaskFamily  /*(Вылазит)*/
-            //Families.WallRectOpeningFamily /*работает*/
-            var currentFamily = Families.WallRoundTaskFamily;
-            var familySymbol = GetFamilySymbol(_document, currentFamily.Name);
-            
-            var geomSolid = wall.get_Geometry(new Options()).FirstOrDefault() as Solid;
-            var wallData = new ElementGeometry(wall);
-            var pipeData = new ElementGeometry(pipe);
-            var direction = new XYZ(wallData.End.X - wallData.Start.X, wallData.End.Y - wallData.Start.Y, 0);
-
-            var curves = geomSolid?
-                .IntersectWithCurve(pipeData.Curve, new SolidCurveIntersectionOptions());
-            if (curves == null || curves.SegmentCount == 0 || familySymbol == null)
-                return;
-
-            var intersectCurve = curves.GetCurveSegment(0);
-            var intersectionCenter = (intersectCurve.GetEndPoint(0) + intersectCurve.GetEndPoint(1)) / 2;
-            var pipeWidth = pipe.GetPipeWidth();
-
-            var width = CalculateWidth(pipeWidth, wall.Width, wallData, pipeData);
-            var height = CalculateHeight(pipeWidth, wall.Width, pipeData);
-            var depth = wall.Width;
-
-            CreateOpening(intersectionCenter, familySymbol, wall, height, width, pipe.Category.Name,direction, depth,currentFamily);
-        }
-
-        private double CalculateWidth(double pipeWidth, double wallWidth, ElementGeometry wallData,
-            ElementGeometry pipeData)
-        {
-            var horAngleBetweenWallAndDuct =
-                Math.Acos((wallData.XLen * pipeData.XLen + wallData.YLen * pipeData.YLen) /
-                          (Extensions.SqrtOfSqrSum(wallData.XLen, wallData.YLen) * Extensions.SqrtOfSqrSum(pipeData.XLen, pipeData.YLen)));
-            horAngleBetweenWallAndDuct = Extensions.GetAcuteAngle(horAngleBetweenWallAndDuct);
-
-            return Extensions.CalculateSize(wallWidth, horAngleBetweenWallAndDuct, pipeWidth, _offset);
-        }
-
-        private double CalculateHeight(double pipeWidth, double wallWidth, ElementGeometry pipeData)
-        {
-            var vertAngleBetweenWallAndDuct =
-                Math.Acos(pipeData.ZLen / Math.Sqrt(pipeData.XLen * pipeData.XLen + pipeData.YLen * pipeData.YLen +
-                                                    pipeData.ZLen * pipeData.ZLen));
-            vertAngleBetweenWallAndDuct = Extensions.GetAcuteAngle(vertAngleBetweenWallAndDuct);
-
-            return Extensions.CalculateSize(wallWidth, vertAngleBetweenWallAndDuct, pipeWidth, _offset);
-        }
-
-        private void CreateOpening(XYZ intersectionCenter, FamilySymbol familySymbol, Element wall,
-            double minHeight, double minWidth, string categoryName, XYZ direction, double depth, TOFamily familyData)
+        private void CreateOpening(FamilyData familyData,FamilySymbol familySymbol, Element hostElement, OpeningParametrs parametrs)
         {
             using (var transaction = new Transaction(_document))
             {
                 transaction.Start("Create box");
                 familySymbol.Activate();
-                var newBox = _document.Create.NewFamilyInstance(intersectionCenter, familySymbol,
-                    direction, wall, StructuralType.NonStructural);
+                var newBox = _document.Create.NewFamilyInstance(parametrs.IntersectionCenter, familySymbol,
+                    parametrs.Direction, hostElement, StructuralType.NonStructural);
                 if (familyData.DiametrParametr != null)
-                    newBox.LookupParameter(familyData.DiametrParametr).Set(Math.Max(minWidth, minHeight));
+                    newBox.LookupParameter(familyData.DiametrParametr).Set(Math.Max(parametrs.Width, parametrs.Heigth));
                 else
                 {
-                    newBox.LookupParameter(familyData.HeightParametr).Set(minHeight);
-                    newBox.LookupParameter(familyData.WidthParametr).Set(minWidth);
+                    newBox.LookupParameter(familyData.HeightParametr).Set(parametrs.Heigth);
+                    newBox.LookupParameter(familyData.WidthParametr).Set(parametrs.Width);
                 }
 
-                newBox.LookupParameter(familyData.DepthParametr).Set(depth);
+                newBox.LookupParameter(familyData.DepthParametr).Set(parametrs.Depth);
 
                 transaction.Commit();
             }

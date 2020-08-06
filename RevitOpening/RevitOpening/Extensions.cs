@@ -39,9 +39,11 @@ namespace RevitOpening
             return pipeHeight;
         }
 
+        public static double GetOffsetInFoot(double offset) => offset / 304.8;
+
         public static double CalculateSize(double wallWidth, double angle, double ductWidth, double offset)
         {
-            return wallWidth / Math.Tan(angle) + ductWidth / Math.Sin(angle) + offset / 304.8;
+            return wallWidth / Math.Tan(angle) + ductWidth / Math.Sin(angle) + GetOffsetInFoot(offset);
         }
 
         public static double SqrtOfSqrSum(double a, double b)
