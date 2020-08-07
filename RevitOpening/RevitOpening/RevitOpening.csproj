@@ -54,19 +54,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BoxData.cs" />
+    <Compile Include="Class1.cs" />
     <Compile Include="CreateOpeningInTaskBoxes.cs" />
     <Compile Include="CreateTaskBoxes.cs" />
     <Compile Include="ElementGeometry.cs" />
     <Compile Include="Families.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="FamilyLoader.cs" />
-    <Compile Include="FloorCutter.cs" />
-    <Compile Include="ICutter.cs" />
+    <Compile Include="FloorBoxCalculator.cs" />
+    <Compile Include="IBoxCalculator.cs" />
+    <Compile Include="MySolidInfo.cs" />
+    <Compile Include="MyXYZ.cs" />
     <Compile Include="OpeningParentsData.cs" />
     <Compile Include="OpeningParametrs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="FamilyParameters.cs" />
-    <Compile Include="WallCutter.cs" />
+    <Compile Include="WallBoxCalculator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Families\Задание_Круглая_Стена_БезОсновы.rfa">

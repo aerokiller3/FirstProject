@@ -46,9 +46,14 @@ namespace RevitOpening
             };
         }
 
-        public static FamilyParameters GetFamilyData(string familyName)
+        public static FamilyParameters GetDataFromSymbolName(string familyName)
         {
             return AllFamilies.FirstOrDefault(f => f.SymbolName == familyName);
+        }
+
+        public static FamilyParameters GetDataFromInstanseName(string familyName)
+        {
+            return AllFamilies.FirstOrDefault(f => f.InstanseName == familyName);
         }
 
         public static FamilySymbol GetFamilySymbol(Document document, string familyName)

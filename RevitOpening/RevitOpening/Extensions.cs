@@ -9,6 +9,23 @@ namespace RevitOpening
 {
     public static class Extensions
     {
+        public static Element GetElementFromDocuments(IEnumerable<Document> documents, int id) =>
+            documents
+                .Select(document => document
+                    .GetElement(new ElementId(id)))
+                .FirstOrDefault(curEl => curEl != null);
+
+        public static double GetOffsetInFoot(double offset) => offset / 304.8;
+
+        public static double CalculateSize(double wallWidth, double angle, double ductWidth, double offset) 
+            => wallWidth / Math.Tan(angle) + ductWidth / Math.Sin(angle) + GetOffsetInFoot(offset);
+
+        public static double SqrtOfSqrSum(double a, double b) => Math.Sqrt(a * a + b * b);
+
+        public static double GetAcuteAngle(double angel) =>
+            angel > Math.PI / 2
+                ? Math.PI - angel
+                : angel;
         public static double GetPipeWidth(this MEPCurve pipe)
         {
             double pipeWidth;
@@ -37,25 +54,6 @@ namespace RevitOpening
             }
 
             return pipeHeight;
-        }
-
-        public static double GetOffsetInFoot(double offset) => offset / 304.8;
-
-        public static double CalculateSize(double wallWidth, double angle, double ductWidth, double offset)
-        {
-            return wallWidth / Math.Tan(angle) + ductWidth / Math.Sin(angle) + GetOffsetInFoot(offset);
-        }
-
-        public static double SqrtOfSqrSum(double a, double b)
-        {
-            return Math.Sqrt(a * a + b * b);
-        }
-
-        public static double GetAcuteAngle(double angel)
-        {
-            return angel > Math.PI / 2
-                ? Math.PI - angel
-                : angel;
         }
     }
 }

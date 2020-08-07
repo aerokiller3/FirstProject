@@ -11,28 +11,25 @@ namespace RevitOpening
 {
     public class OpeningParentsData
     {
-        public OpeningParentsData(int wallId, int pipeId, ElementGeometry hostData, ElementGeometry pipeData, Type hostType, Type pipeType)
+        public OpeningParentsData(int wallId, int pipeId, Type hostType, Type pipeType, OpeningParametrs boxData)
         {
             WallId = wallId;
             PipeId = pipeId;
-            HostData = hostData;
-            PipeData = pipeData;
             HostType = hostType;
             PipeType = pipeType;
+            BoxData = boxData;
         }
 
         public int WallId { get; set; }
 
         public int PipeId { get; set; }
 
-        public ElementGeometry HostData { get; set; }
-
         public Type HostType { get; set; }
-
-        public ElementGeometry PipeData { get; set; }
 
         public Type PipeType { get; set; }
 
-        public XYZ LocationPoint { get; set; }
+        public MyXYZ LocationPoint { get; set; }
+
+        public OpeningParametrs BoxData { get; set; }
     }
 }

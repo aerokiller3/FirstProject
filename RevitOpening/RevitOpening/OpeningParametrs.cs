@@ -9,19 +9,19 @@ namespace RevitOpening
 {
     public class OpeningParametrs
     {
-        public double Width { get; private set; }
+        public double Width { get; set; }
 
-        public double Heigth { get; private set; }
+        public double Heigth { get; set; }
 
-        public double Depth { get; private set; }
+        public double Depth { get; set; }
 
-        public XYZ Direction { get; private set; }
+        public MyXYZ Direction { get; set; }
 
-        public XYZ IntersectionCenter { get; private set; }
+        public MyXYZ IntersectionCenter { get; set; }
 
-        public ElementGeometry WallGeometry { get; private set; }
+        public ElementGeometry WallGeometry { get; set; }
 
-        public ElementGeometry PipeGeometry { get; private set; }
+        public ElementGeometry PipeGeometry { get; set; }
 
         public OpeningParametrs(double width, double heigth, double depth, XYZ direction,
             XYZ intersectionCenter, ElementGeometry wallGeometry, ElementGeometry pipeGeometry)
@@ -29,10 +29,15 @@ namespace RevitOpening
             Width = width;
             Heigth = heigth;
             Depth = depth;
-            Direction = direction;
-            IntersectionCenter = intersectionCenter;
+            Direction = new MyXYZ(direction);
+            IntersectionCenter = new MyXYZ(intersectionCenter);
             WallGeometry = wallGeometry;
             PipeGeometry = pipeGeometry;
+        }
+
+        public OpeningParametrs()
+        {
+
         }
     }
 }

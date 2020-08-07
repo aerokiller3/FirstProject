@@ -34,13 +34,13 @@ namespace RevitOpening
             var ductsInFloors = FindIntersectionsWith(floors, ducts);
             var pipesInFloors = FindIntersectionsWith(floors, pipes);
 
-            var wallCutter = new WallCutter();
-            var floorCutter = new FloorCutter();
+            var wallBoxCalculator = new WallBoxCalculator();
+            var floorBoxCalculator = new FloorBoxCalculator();
 
-            CreateAllTaskBoxes(ductsInWalls, wallCutter, Families.WallRectTaskFamily, offset);
-            CreateAllTaskBoxes(pipesInWalls, wallCutter, Families.WallRectTaskFamily, offset);
-            CreateAllTaskBoxes(ductsInFloors, floorCutter, Families.FloorRectTaskFamily, offset);
-            CreateAllTaskBoxes(pipesInFloors, floorCutter, Families.FloorRectTaskFamily, offset);
+            CreateAllTaskBoxes(ductsInWalls, wallBoxCalculator, Families.WallRectTaskFamily, offset);
+            CreateAllTaskBoxes(pipesInWalls, wallBoxCalculator, Families.WallRectTaskFamily, offset);
+            CreateAllTaskBoxes(ductsInFloors, floorBoxCalculator, Families.FloorRectTaskFamily, offset);
+            CreateAllTaskBoxes(pipesInFloors, floorBoxCalculator, Families.FloorRectTaskFamily, offset);
 
             return Result.Succeeded;
         }
@@ -71,7 +71,7 @@ namespace RevitOpening
             return intersections;
         }
 
-        private void CreateAllTaskBoxes(Dictionary<Element, List<MEPCurve>> pipesInElements, ICutter cutter,
+        private void CreateAllTaskBoxes(Dictionary<Element, List<MEPCurve>> pipesInElements, IBoxCalculator boxCalculator,
             FamilyParameters familyParameters, double offset)
         {
             using (var transaction = new Transaction(_document))
@@ -83,11 +83,11 @@ namespace RevitOpening
                 {
 
                     var openingParametrs =
-                        cutter.CalculateBoxInElement(ductsInWall.Key, curve, offset, familyParameters);
+                        boxCalculator.CalculateBoxInElement(ductsInWall.Key, curve, offset, familyParameters);
                     if (openingParametrs == null)
                         continue;
                     var parentsData = new OpeningParentsData(ductsInWall.Key.Id.IntegerValue, curve.Id.IntegerValue,
-                        openingParametrs.WallGeometry, openingParametrs.PipeGeometry,ductsInWall.Key.GetType(), curve.GetType());
+                        ductsInWall.Key.GetType(), curve.GetType(), openingParametrs);
                     CreateTaskBox(familyParameters, familySymbol, ductsInWall.Key, openingParametrs, parentsData);
                 }
 
@@ -112,8 +112,7 @@ namespace RevitOpening
             }
 
             newBox.LookupParameter(family.DepthName).Set(opening.Depth);
-            parentsData.LocationPoint = (newBox.Location as LocationPoint).Point;
-
+            parentsData.LocationPoint = new MyXYZ((newBox.Location as LocationPoint).Point);
             var json = JsonConvert.SerializeObject(parentsData);
             newBox.LookupParameter("Info").Set(json);
         }
