@@ -24,7 +24,7 @@ namespace RevitOpening
             {
                 transaction.Start("Loading families");
                 foreach (var family in Families.AllFamilies)
-                    LoadFamilyToProject(family.Name);
+                    LoadFamilyToProject(family.SymbolName);
                 transaction.Commit();
             }
         }

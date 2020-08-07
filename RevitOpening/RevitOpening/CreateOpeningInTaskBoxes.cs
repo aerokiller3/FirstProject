@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Plumbing;
 using Autodesk.Revit.UI;
 using Newtonsoft.Json;
 
@@ -21,33 +22,52 @@ namespace RevitOpening
             var allDocs = commandData.Application.Application
                 .Documents.Cast<Document>();
             new FamilyLoader(_document).LoadAllFamiliesToProject();
-            var wallRectTasks = GetTasksFromDocument(Families.WallRectTaskFamily);
+            var wallRectTasks = GetTasksFromDocument(Families.WallRectTaskFamily).ToList();
             var wallRoundTasks = GetTasksFromDocument(Families.WallRoundTaskFamily);
             var floorRectTasks = GetTasksFromDocument(Families.FloorRectTaskFamily); ;
 
-            var chekedWallRectTasks = GetCheckedBoxes(wallRectTasks);
+            var chekedWallRectTasks = GetCheckedBoxes(wallRectTasks).ToList();
 
             return Result.Succeeded;
         }
 
         private IEnumerable<Element> GetCheckedBoxes(IEnumerable<Element> wallRectTasks)
         {
-            return wallRectTasks.Where(wallRectTask => CheckElement(wallRectTask));
+            return wallRectTasks.Where(wallRectTask => CheckElement(wallRectTask)).ToList();
         }
 
         private bool CheckElement(Element wallRectTask)
         {
-            var parentsData = JsonConvert.DeserializeObject(wallRectTask.LookupParameter("Info").AsValueString(),
-                typeof(OpeningParentsData)) as OpeningParentsData;
+            var json = wallRectTask.LookupParameter("Info").AsString();
+            try
+            {
 
+                var parentsData = JsonConvert.DeserializeObject<OpeningParentsData>(json);
+                var oldPipe = _document.GetElement(new ElementId(parentsData.PipeId));
+                switch (parentsData.PipeType)
+                {
+                }
+            }
+            catch
+            {
 
+            }
+            return false;
+        }
+
+        private bool CheckPipeParametrs(Element oldPipe)
+        {
+            return false;
         }
 
         private IEnumerable<Element> GetTasksFromDocument(FamilyParameters familyParameters)
         {
-            return new FilteredElementCollector(_document)
+            var collector = new FilteredElementCollector(_document)
                 .OfCategory(BuiltInCategory.OST_Windows)
-                .Where(e => e.Name == familyParameters.Name);
+                .OfClass(typeof(FamilyInstance));
+
+            return  collector.Where(e => e.Name == familyParameters.InstanseName)
+                .ToList();
         }
     }
 }

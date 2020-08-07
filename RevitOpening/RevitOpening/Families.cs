@@ -21,17 +21,23 @@ namespace RevitOpening
         static Families()
         {
             WallRoundOpeningFamily =
-                new FamilyParameters("Отверстие_Круглое_Стена", "ТолщинаОсновы", null,null, "Размер_Диаметр");
+                new FamilyParameters("Отверстие_Круглое_Стена", "ТолщинаОсновы",
+                    /**/"Круглое отверстие", null,null, "Размер_Диаметр");
             FloorRectOpeningFamily =
-                new FamilyParameters("Отверстие_Прямоуг_Перекр", "Размер_Толщина основа", "Отверстие_Высота", "Отверстие_Ширина");
+                new FamilyParameters("Отверстие_Прямоуг_Перекр", "Размер_Толщина основа",
+                    "Отверстие","Отверстие_Высота", "Отверстие_Ширина", null);
             WallRectOpeningFamily =
-                new FamilyParameters("Отверстие_Прямоуг_Стена", "ТолщинаОсновы", "Отверстие_Высота", "Отверстие_Ширина");
+                new FamilyParameters("Отверстие_Прямоуг_Стена", "ТолщинаОсновы",
+                    "Отверстие","Отверстие_Высота", "Отверстие_Ширина", null);
             WallRectTaskFamily =
-                new FamilyParameters("Задание_Стена_Прямоугольник_БезОсновы", "Отверстие_Глубина", "Отверстие_Высота", "Отверстие_Ширина");
+                new FamilyParameters("Задание_Стена_Прямоугольник_БезОсновы", "Отверстие_Глубина",
+                    "Задание_Стена_Прямоугольное", "Отверстие_Высота", "Отверстие_Ширина", null);
             WallRoundTaskFamily =
-                new FamilyParameters("Задание_Круглая_Стена_БезОсновы", "ТолщинаОсновы", null,null, "Диаметр отверстия");
+                new FamilyParameters("Задание_Круглая_Стена_БезОсновы", "ТолщинаОсновы",
+                    "Круглое отверстие",null,null, "Диаметр отверстия");
             FloorRectTaskFamily =
-                new FamilyParameters("Задание_Перекрытие_БезОсновы", "Отверстие_Глубина", "Отверстие_Высота", "Отверстие_Ширина");
+                new FamilyParameters("Задание_Перекрытие_БезОсновы", "Отверстие_Глубина", 
+                    "Задание_Перекрытие","Отверстие_Высота", "Отверстие_Ширина", null);
             AllFamilies = new List<FamilyParameters>
             {
                 WallRoundOpeningFamily, FloorRectOpeningFamily,
@@ -42,7 +48,7 @@ namespace RevitOpening
 
         public static FamilyParameters GetFamilyData(string familyName)
         {
-            return AllFamilies.FirstOrDefault(f => f.Name == familyName);
+            return AllFamilies.FirstOrDefault(f => f.SymbolName == familyName);
         }
 
         public static FamilySymbol GetFamilySymbol(Document document, string familyName)

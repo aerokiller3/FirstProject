@@ -40,7 +40,7 @@ namespace RevitOpening
             var width = CalculateWidth(pipeWidth, wall.Width, wallData, pipeData, offset);
             var height = CalculateHeight(pipeWidth, wall.Width, pipeData, offset);
 
-            if(familyParameters.Name == Families.WallRectTaskFamily.Name)
+            if(familyParameters.SymbolName == Families.WallRectTaskFamily.SymbolName)
                 intersectionCenter -= new XYZ(0,0 , height / 2);
 
             var depth = wall.Width;

@@ -77,16 +77,17 @@ namespace RevitOpening
             using (var transaction = new Transaction(_document))
             {
                 transaction.Start("Create task box");
-                var familySymbol = Families.GetFamilySymbol(_document, familyParameters.Name);
+                var familySymbol = Families.GetFamilySymbol(_document, familyParameters.SymbolName);
                 foreach (var ductsInWall in pipesInElements)
                 foreach (var curve in ductsInWall.Value)
                 {
+
                     var openingParametrs =
                         cutter.CalculateBoxInElement(ductsInWall.Key, curve, offset, familyParameters);
                     if (openingParametrs == null)
                         continue;
                     var parentsData = new OpeningParentsData(ductsInWall.Key.Id.IntegerValue, curve.Id.IntegerValue,
-                        openingParametrs.WallGeometry, openingParametrs.PipeGeometry);
+                        openingParametrs.WallGeometry, openingParametrs.PipeGeometry,ductsInWall.Key.GetType(), curve.GetType());
                     CreateTaskBox(familyParameters, familySymbol, ductsInWall.Key, openingParametrs, parentsData);
                 }
 
@@ -100,17 +101,18 @@ namespace RevitOpening
             familySymbol.Activate();
             var newBox = _document.Create.NewFamilyInstance(opening.IntersectionCenter, familySymbol,
                 opening.Direction, hostElement, StructuralType.NonStructural);
-            if (family.DiametrParametr != null)
+            if (family.DiametrName != null)
             {
-                newBox.LookupParameter(family.DiametrParametr).Set(Math.Max(opening.Width, opening.Heigth));
+                newBox.LookupParameter(family.DiametrName).Set(Math.Max(opening.Width, opening.Heigth));
             }
             else
             {
-                newBox.LookupParameter(family.HeightParametr).Set(opening.Heigth);
-                newBox.LookupParameter(family.WidthParametr).Set(opening.Width);
+                newBox.LookupParameter(family.HeightName).Set(opening.Heigth);
+                newBox.LookupParameter(family.WidthName).Set(opening.Width);
             }
 
-            newBox.LookupParameter(family.DepthParametr).Set(opening.Depth);
+            newBox.LookupParameter(family.DepthName).Set(opening.Depth);
+            parentsData.LocationPoint = (newBox.Location as LocationPoint).Point;
 
             var json = JsonConvert.SerializeObject(parentsData);
             newBox.LookupParameter("Info").Set(json);

@@ -9,23 +9,27 @@ namespace RevitOpening
 {
     public class FamilyParameters
     {
-        public string Name { get; private set; }
+        public string SymbolName { get; private set; }
 
-        public string DepthParametr { get; private set; }
+        public string InstanseName { get; private set; }
 
-        public string HeightParametr { get; private set; }
+        public string DepthName { get; private set; }
 
-        public string WidthParametr { get; private set; }
+        public string HeightName { get; private set; }
 
-        public string DiametrParametr { get; private set; }
+        public string WidthName { get; private set; }
 
-        public FamilyParameters(string name, string depthParametr,string heightParametr = null, string widthParametr = null,string diametrParametr = null)
+        public string DiametrName { get; private set; }
+
+        public FamilyParameters(string symbolName, string depthName, string instanseName,
+            string heightName, string widthName, string diametrName)
         {
-            Name = name;
-            DepthParametr = depthParametr;
-            HeightParametr = heightParametr;
-            WidthParametr = widthParametr;
-            DiametrParametr = diametrParametr;
+            SymbolName = symbolName;
+            DepthName = depthName;
+            InstanseName = instanseName;
+            HeightName = heightName;
+            WidthName = widthName;
+            DiametrName = diametrName;
         }
     }
 }
