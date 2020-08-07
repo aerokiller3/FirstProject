@@ -11,9 +11,9 @@ namespace RevitOpening
     {
         public OpeningParametrs CalculateBoxInElement(Element element, MEPCurve pipe, double offset, FamilyParameters familyParameters)
         {
-            return CalculateBoxInFloor(element as Floor, pipe, offset, familyParameters);
+            return CalculateBoxInFloor(element as CeilingAndFloor, pipe, offset, familyParameters);
         }
-        private OpeningParametrs CalculateBoxInFloor(Floor floor, MEPCurve pipe, double offset, FamilyParameters familyParameters)
+        private OpeningParametrs CalculateBoxInFloor(CeilingAndFloor floor, MEPCurve pipe, double offset, FamilyParameters familyParameters)
         {
             var geomSolid = floor.get_Geometry(new Options()).FirstOrDefault() as Solid;
             var pipeData = new ElementGeometry(pipe);

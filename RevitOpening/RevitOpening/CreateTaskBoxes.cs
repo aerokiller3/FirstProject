@@ -16,16 +16,20 @@ namespace RevitOpening
     {
         private Document _document;
 
+        private AltecJsonSchema _schema;
+
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             _document = commandData.Application.ActiveUIDocument.Document;
+            _schema = new AltecJsonSchema();
+
             var allDocs = commandData.Application.Application
                 .Documents.Cast<Document>().ToList();
             new FamilyLoader(_document).LoadAllFamiliesToProject(); 
             var offset = 300;
 
             var walls = GetElementsList<Wall>(allDocs);
-            var floors = GetElementsList<Floor>(allDocs);
+            var floors = GetElementsList<CeilingAndFloor>(allDocs);
             var pipes = GetElementsList<Pipe>(allDocs);
             var ducts = GetElementsList<Duct>(allDocs);
 
@@ -88,33 +92,11 @@ namespace RevitOpening
                         continue;
                     var parentsData = new OpeningParentsData(ductsInWall.Key.Id.IntegerValue, curve.Id.IntegerValue,
                         ductsInWall.Key.GetType(), curve.GetType(), openingParametrs);
-                    CreateTaskBox(familyParameters, familySymbol, ductsInWall.Key, openingParametrs, parentsData);
+                    BoxCreator.CreateTaskBox(familyParameters, familySymbol, ductsInWall.Key, openingParametrs, parentsData,_document,_schema);
                 }
 
                 transaction.Commit();
             }
-        }
-
-        private void CreateTaskBox(FamilyParameters family, FamilySymbol familySymbol, Element hostElement,
-            OpeningParametrs opening, OpeningParentsData parentsData)
-        {
-            familySymbol.Activate();
-            var newBox = _document.Create.NewFamilyInstance(opening.IntersectionCenter, familySymbol,
-                opening.Direction, hostElement, StructuralType.NonStructural);
-            if (family.DiametrName != null)
-            {
-                newBox.LookupParameter(family.DiametrName).Set(Math.Max(opening.Width, opening.Heigth));
-            }
-            else
-            {
-                newBox.LookupParameter(family.HeightName).Set(opening.Heigth);
-                newBox.LookupParameter(family.WidthName).Set(opening.Width);
-            }
-
-            newBox.LookupParameter(family.DepthName).Set(opening.Depth);
-            parentsData.LocationPoint = new MyXYZ((newBox.Location as LocationPoint).Point);
-            var json = JsonConvert.SerializeObject(parentsData);
-            newBox.LookupParameter("Info").Set(json);
         }
     }
 }

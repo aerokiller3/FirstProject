@@ -54,8 +54,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BoxCreator.cs" />
     <Compile Include="BoxData.cs" />
-    <Compile Include="Class1.cs" />
+    <Compile Include="AltecJsonSchema.cs" />
     <Compile Include="CreateOpeningInTaskBoxes.cs" />
     <Compile Include="CreateTaskBoxes.cs" />
     <Compile Include="ElementGeometry.cs" />

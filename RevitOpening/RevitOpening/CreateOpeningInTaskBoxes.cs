@@ -14,10 +14,13 @@ namespace RevitOpening
     {
         private Document _document;
 
+        private AltecJsonSchema _schema;
+
         private IEnumerable<Document> _documents;
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            _schema = new AltecJsonSchema();
             _document = commandData.Application.ActiveUIDocument.Document;
             _documents = commandData.Application.Application
                 .Documents.Cast<Document>();
@@ -30,48 +33,59 @@ namespace RevitOpening
             var chekedWallRoundTasks = GetCheckedBoxes(wallRoundTasks);
             var chekedFloorRectTasks = GetCheckedBoxes(floorRectTasks);
 
-            //SwapTasksToOpenings(chekedWallRectTasks);
-            //SwapTasksToOpenings(chekedWallRoundTasks);
-            //SwapTasksToOpenings(chekedFloorRectTasks);
+            SwapTasksToOpenings(chekedWallRectTasks);
+            SwapTasksToOpenings(chekedWallRoundTasks);
+            SwapTasksToOpenings(chekedFloorRectTasks);
 
             return Result.Succeeded;
         }
 
-        //private void SwapTasksToOpenings(IEnumerable<Element> elements)
-        //{
-        //    using (var transaction = new Transaction(_document))
-        //    {
-        //        transaction.Start("Create opening");
-        //        foreach (var task in elements.Cast<FamilyInstance>())
-        //        {
-        //            switch (task.Name)
-        //            {
+        private void SwapTasksToOpenings(IEnumerable<Element> elements)
+        {
+            using (var transaction = new Transaction(_document))
+            {
+                transaction.Start("Create opening");
+                foreach (var task in elements.Cast<FamilyInstance>())
+                {
+                    if (task.Name == Families.WallRoundTaskFamily.InstanseName)
+                    {
+                        var familyData = Families.GetDataFromInstanseName(task.Name);
+                        var familySymbol = Families.GetFamilySymbol(_document, familyData.SymbolName);
+                        var parentsData = GetParentsData(task);
+                        var collector = new FilteredElementCollector(_document)
+                            .OfClass(parentsData.HostType);
+                        var host = _document.GetElement(new ElementId(parentsData.HostId));
+                        BoxCreator.CreateTaskBox(familyData,familySymbol,host, parentsData.BoxData, parentsData,_document,_schema);
+                    }  
+                    else if (task.Name == Families.WallRectTaskFamily.InstanseName)
+                    {
 
-        //            }
-        //        }
-        //        switch (@enum)
-        //        {
+                    }
+                    else if (task.Name == Families.FloorRectTaskFamily.InstanseName)
+                    {
 
-        //        }
-
-        //    }
-        //}
+                    }
+                    else
+                    {
+                        throw new Exception("Неизвестный экземпляр семейства");
+                    }
+                }
+            }
+        }
 
         private IEnumerable<Element> GetCheckedBoxes(IEnumerable<Element> wallRectTasks)
         {
             return wallRectTasks.Where(wallRectTask => CheckElement(wallRectTask)).ToList();
         }
 
-        private bool CheckElement(Element wallRectTask)
+        private bool CheckElement(Element element)
         {
-            var json = wallRectTask.LookupParameter("Info").AsString();
-            
-            var parentsData = JsonConvert.DeserializeObject<OpeningParentsData>(json);
+            var parentsData = GetParentsData(element);
             var pipe = Extensions.GetElementFromDocuments(_documents, parentsData.PipeId);
-            var wall = Extensions.GetElementFromDocuments(_documents, parentsData.WallId);
+            var wall = Extensions.GetElementFromDocuments(_documents, parentsData.HostId);
             var isOldPipe = CheckElementParametrs(pipe, parentsData.BoxData.PipeGeometry);
             var isOldWall = CheckElementParametrs(wall, parentsData.BoxData.WallGeometry);
-            var isOldBox = CheckBoxParametrs(wallRectTask, parentsData.BoxData);
+            var isOldBox = CheckBoxParametrs(element, parentsData.BoxData);
             return isOldBox && isOldPipe && isOldWall;
         }
 
@@ -88,6 +102,10 @@ namespace RevitOpening
                    Math.Abs(height - boxData.Heigth) < toleranse;
         }
 
+        private OpeningParentsData GetParentsData(Element element)
+        {
+            return JsonConvert.DeserializeObject<OpeningParentsData>(_schema.GetJson(element));
+        }
 
         private bool CheckElementParametrs(Element element, ElementGeometry oldData)
         {

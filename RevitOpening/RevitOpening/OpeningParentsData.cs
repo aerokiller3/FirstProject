@@ -11,16 +11,16 @@ namespace RevitOpening
 {
     public class OpeningParentsData
     {
-        public OpeningParentsData(int wallId, int pipeId, Type hostType, Type pipeType, OpeningParametrs boxData)
+        public OpeningParentsData(int hostId, int pipeId, Type hostType, Type pipeType, OpeningParametrs boxData)
         {
-            WallId = wallId;
+            HostId = hostId;
             PipeId = pipeId;
             HostType = hostType;
             PipeType = pipeType;
             BoxData = boxData;
         }
 
-        public int WallId { get; set; }
+        public int HostId { get; set; }
 
         public int PipeId { get; set; }
 

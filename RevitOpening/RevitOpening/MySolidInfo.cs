@@ -24,7 +24,8 @@ namespace RevitOpening
 
         public MySolidInfo(Element element)
         {
-            Solid = element.get_Geometry(new Options()).FirstOrDefault() as Solid;
+            Solid = element.get_Geometry(new Options())
+                .FirstOrDefault() as Solid;
             var geometry = element.get_Geometry(new Options()).GetBoundingBox();
             Min = new MyXYZ(geometry.Min);
             Max = new MyXYZ(geometry.Max);

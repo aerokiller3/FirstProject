@@ -73,20 +73,5 @@ namespace RevitOpening
 
             return a && b && c && d && e && f;
         }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                var hashCode = YLen.GetHashCode();
-                hashCode = (hashCode * 397) ^ XLen.GetHashCode();
-                hashCode = (hashCode * 397) ^ ZLen.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Curve != null ? Curve.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (SolidInfo != null ? SolidInfo.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Start != null ? Start.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (End != null ? End.GetHashCode() : 0);
-                return hashCode;
-            }
-        }
     }
 }
