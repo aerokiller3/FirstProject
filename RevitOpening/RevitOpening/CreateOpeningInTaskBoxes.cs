@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.DB.Plumbing;
 using Autodesk.Revit.UI;
 using Newtonsoft.Json;
@@ -18,6 +19,8 @@ namespace RevitOpening
 
         private IEnumerable<Document> _documents;
 
+        private double _offset = 300;
+
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             _schema = new AltecJsonSchema();
@@ -25,17 +28,17 @@ namespace RevitOpening
             _documents = commandData.Application.Application
                 .Documents.Cast<Document>();
             new FamilyLoader(_document).LoadAllFamiliesToProject();
-            var wallRectTasks = GetTasksFromDocument(Families.WallRectTaskFamily);
-            var wallRoundTasks = GetTasksFromDocument(Families.WallRoundTaskFamily);
-            var floorRectTasks = GetTasksFromDocument(Families.FloorRectTaskFamily);
+            var wallRectTasks = _document.GetTasksFromDocument(Families.WallRectTaskFamily);
+            var wallRoundTasks = _document.GetTasksFromDocument(Families.WallRoundTaskFamily);
+            var floorRectTasks = _document.GetTasksFromDocument(Families.FloorRectTaskFamily);
 
             var chekedWallRectTasks = GetCheckedBoxes(wallRectTasks);
             var chekedWallRoundTasks = GetCheckedBoxes(wallRoundTasks);
             var chekedFloorRectTasks = GetCheckedBoxes(floorRectTasks);
 
-            SwapTasksToOpenings(chekedWallRectTasks);
-            SwapTasksToOpenings(chekedWallRoundTasks);
-            SwapTasksToOpenings(chekedFloorRectTasks);
+            SwapTasksToOpenings(chekedWallRectTasks.Item1);
+            SwapTasksToOpenings(chekedWallRoundTasks.Item1);
+            SwapTasksToOpenings(chekedFloorRectTasks.Item1);
 
             return Result.Succeeded;
         }
@@ -47,46 +50,117 @@ namespace RevitOpening
                 transaction.Start("Create opening");
                 foreach (var task in elements.Cast<FamilyInstance>())
                 {
-                    if (task.Name == Families.WallRoundTaskFamily.InstanseName)
-                    {
-                        var familyData = Families.GetDataFromInstanseName(task.Name);
-                        var familySymbol = Families.GetFamilySymbol(_document, familyData.SymbolName);
-                        var parentsData = GetParentsData(task);
-                        var collector = new FilteredElementCollector(_document)
-                            .OfClass(parentsData.HostType);
-                        var host = _document.GetElement(new ElementId(parentsData.HostId));
-                        BoxCreator.CreateTaskBox(familyData,familySymbol,host, parentsData.BoxData, parentsData,_document,_schema);
-                    }  
-                    else if (task.Name == Families.WallRectTaskFamily.InstanseName)
-                    {
+                    var (familyData, familySymbol) = ChooseFamily(task.Name);
+                    var parentsData = GetParentsData(task);
+                    var host = _documents.GetElementFromDocuments(parentsData.HostId);
+                    _document.Delete(task.Id);
 
-                    }
-                    else if (task.Name == Families.FloorRectTaskFamily.InstanseName)
-                    {
+                    //
+                    // WallBoxCalculator fix
+                    //
+                    if (familyData == Families.WallRectOpeningFamily)
+                        parentsData.BoxData.IntersectionCenter += new MyXYZ(0, 0, parentsData.BoxData.Heigth / 2);
 
-                    }
-                    else
-                    {
-                        throw new Exception("Неизвестный экземпляр семейства");
-                    }
+                    BoxCreator.CreateTaskBox(familyData, familySymbol, host, parentsData.BoxData, parentsData, _document, _schema);
                 }
+
+                transaction.Commit();
             }
         }
 
-        private IEnumerable<Element> GetCheckedBoxes(IEnumerable<Element> wallRectTasks)
+        private (FamilyParameters, FamilySymbol) ChooseFamily(string taskName)
         {
-            return wallRectTasks.Where(wallRectTask => CheckElement(wallRectTask)).ToList();
+            FamilyParameters familyData;
+            FamilySymbol familySymbol;
+            if (taskName == Families.WallRoundTaskFamily.InstanseName)
+            {
+                familyData = Families.WallRoundOpeningFamily;
+                familySymbol = Families.GetFamilySymbol(_document, familyData.SymbolName);
+            }
+            else if (taskName == Families.WallRectTaskFamily.InstanseName)
+            {
+                familyData = Families.WallRectOpeningFamily;
+                familySymbol = Families.GetFamilySymbol(_document, familyData.SymbolName);
+            }
+            else if (taskName == Families.FloorRectTaskFamily.InstanseName)
+            {
+                familyData = Families.FloorRectOpeningFamily;
+                familySymbol = Families.GetFamilySymbol(_document, familyData.SymbolName);
+            }
+            else
+            {
+                throw new Exception("Неизвестный экземпляр семейства");
+            }
+
+            return (familyData, familySymbol);
+        }
+
+        private (IEnumerable<Element>, IEnumerable<Element>) GetCheckedBoxes(IEnumerable<Element> wallRectTasks)
+        {
+            var cheked = new List<Element>();
+            var uncheked = new List<Element>();
+            foreach (var element in wallRectTasks)
+                if (CheckElement(element))
+                    cheked.Add(element);
+                else
+                    uncheked.Add(element);
+            return (cheked,uncheked);
         }
 
         private bool CheckElement(Element element)
         {
+            var isAgreed = ChekcAgreed(element);
+            if (!isAgreed)
+                return false;
             var parentsData = GetParentsData(element);
-            var pipe = Extensions.GetElementFromDocuments(_documents, parentsData.PipeId);
-            var wall = Extensions.GetElementFromDocuments(_documents, parentsData.HostId);
+            var pipe = _documents.GetElementFromDocuments(parentsData.PipeId);
+            var wall = _documents.GetElementFromDocuments(parentsData.HostId);
             var isOldPipe = CheckElementParametrs(pipe, parentsData.BoxData.PipeGeometry);
             var isOldWall = CheckElementParametrs(wall, parentsData.BoxData.WallGeometry);
             var isOldBox = CheckBoxParametrs(element, parentsData.BoxData);
-            return isOldBox && isOldPipe && isOldWall;
+            var isImmutable = isOldBox && isOldPipe && isOldWall;
+            if (!isImmutable)
+                isImmutable = MatchOldAndNewTask(pipe, wall, parentsData);
+            return isImmutable;
+        }
+
+        private bool MatchOldAndNewTask(Element pipeElement, Element hostElement, OpeningParentsData parentsData)
+        {
+            switch (hostElement)
+            {
+                case CeilingAndFloor floor:
+                    return MatchTasks(new FloorBoxCalculator(), pipeElement as MEPCurve, floor, parentsData);
+                case Wall wall:
+                    return MatchTasks(new WallBoxCalculator(), pipeElement as MEPCurve, wall, parentsData);
+                default:
+                    throw new Exception("Неизвестный тип хост-элемента");
+            }
+        }
+
+        private bool MatchTasks(IBoxCalculator boxCalculator, MEPCurve pipeElement, Element host, OpeningParentsData parentsData)
+        {
+            var parametrs = boxCalculator.CalculateBoxInElement(host, pipeElement, _offset,
+                Families.GetDataFromSymbolName(parentsData.BoxData.FamilyName));
+            return parametrs != null && IsParametrsEquals(parentsData.BoxData, parametrs);
+        }
+
+        private bool ChekcAgreed(Element box)
+        {
+            var parametrN = box.LookupParameter("Несогласованно");
+            var ni = parametrN?.AsInteger();
+
+            return ni == 0;
+        }
+
+        private bool IsParametrsEquals(OpeningParametrs oldParametrs, OpeningParametrs parametrs)
+        {
+            var toleranse = Math.Pow(10, -7);
+            return Math.Abs(parametrs.Depth - oldParametrs.Depth) < toleranse
+                   && Math.Abs(parametrs.Heigth - oldParametrs.Heigth) < toleranse
+                   && Math.Abs(parametrs.Width - oldParametrs.Width) < toleranse
+                   && parametrs.Direction.Equals(oldParametrs.Direction)
+                   && parametrs.IntersectionCenter.Equals(oldParametrs.IntersectionCenter)
+                   && parametrs.FamilyName.Equals(oldParametrs.FamilyName);
         }
 
         private bool CheckBoxParametrs(Element wallRectTask, OpeningParametrs boxData)
@@ -109,18 +183,7 @@ namespace RevitOpening
 
         private bool CheckElementParametrs(Element element, ElementGeometry oldData)
         {
-            var isOld = oldData.Equals(new ElementGeometry(element));
-            return isOld;
-        }
-
-        private IEnumerable<Element> GetTasksFromDocument(FamilyParameters familyParameters)
-        {
-            var collector = new FilteredElementCollector(_document)
-                .OfCategory(BuiltInCategory.OST_Windows)
-                .OfClass(typeof(FamilyInstance));
-
-            return collector.Where(e => e.Name == familyParameters.InstanseName)
-                .ToList();
+            return oldData.Equals(new ElementGeometry(element));
         }
     }
 }

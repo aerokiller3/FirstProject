@@ -20,32 +20,39 @@ namespace RevitOpening
             var geomSolid = wall.get_Geometry(new Options()).FirstOrDefault() as Solid;
             var wallData = new ElementGeometry(wall);
             var pipeData = new ElementGeometry(pipe);
-            var direction = new XYZ(wallData.End.X - wallData.Start.X, wallData.End.Y - wallData.Start.Y, 0);
+            var direction = new XYZ(wallData.End.X - wallData.Start.X, wallData.End.Y - wallData.Start.Y, wallData.End.Z - wallData.Start.Z);
 
             var curves = geomSolid?
                 .IntersectWithCurve(pipeData.Curve, new SolidCurveIntersectionOptions());
             if (curves == null || curves.SegmentCount == 0)
                 return null;
+
             var wallOrentation = wall.Orientation;
             var pipeOrentation = ((pipe.Location as LocationCurve).Curve as Line).Direction;
             var intersectCurve = curves.GetCurveSegment(0);
             var intersectHalf = (intersectCurve.GetEndPoint(1) - intersectCurve.GetEndPoint(0)) / 2;
             var intersectionCenter = (intersectCurve.GetEndPoint(0) + intersectCurve.GetEndPoint(1)) / 2;
-            var bias = new XYZ(pipeOrentation.X*wallOrentation.X * intersectHalf.X, 
-                                         pipeOrentation.Y * wallOrentation.Y * intersectHalf.Y, 
-                                         pipeOrentation.Z * wallOrentation.Z * intersectHalf.Z);
+            var bias = new XYZ(
+                pipeOrentation.X * wallOrentation.X * intersectHalf.X,
+                pipeOrentation.Y * wallOrentation.Y * intersectHalf.Y,
+                pipeOrentation.Z * wallOrentation.Z * intersectHalf.Z);
+
             intersectionCenter -= bias;
             var pipeWidth = pipe.GetPipeWidth();
 
             var width = CalculateWidth(pipeWidth, wall.Width, wallData, pipeData, offset);
             var height = CalculateHeight(pipeWidth, wall.Width, pipeData, offset);
-
+            //
+            // При замене на овтерстия не забыть поднять обратно !!!
+            //
             if(familyParameters.SymbolName == Families.WallRectTaskFamily.SymbolName)
                 intersectionCenter -= new XYZ(0,0 , height / 2);
+            
+
 
             var depth = wall.Width;
 
-            return new OpeningParametrs(width,height,depth,direction, intersectionCenter, wallData,pipeData);
+            return new OpeningParametrs(width,height,depth,direction, intersectionCenter, wallData,pipeData, familyParameters.SymbolName);
         }
 
         private double CalculateWidth(double pipeWidth, double wallWidth, ElementGeometry wallData,

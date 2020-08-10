@@ -9,11 +9,22 @@ namespace RevitOpening
 {
     public static class Extensions
     {
-        public static Element GetElementFromDocuments(IEnumerable<Document> documents, int id) =>
+        public static Element GetElementFromDocuments(this IEnumerable<Document> documents, int id) =>
             documents
                 .Select(document => document
                     .GetElement(new ElementId(id)))
                 .FirstOrDefault(curEl => curEl != null);
+
+        public static IEnumerable<Element> GetTasksFromDocument(this Document document, FamilyParameters familyParameters)
+        {
+            var collector = new FilteredElementCollector(document)
+                .OfCategory(BuiltInCategory.OST_Windows)
+                .OfClass(typeof(FamilyInstance));
+
+            return collector
+                .Where(e => e.Name == familyParameters.InstanseName)
+                .ToList();
+        }
 
         public static double GetOffsetInFoot(double offset) => offset / 304.8;
 

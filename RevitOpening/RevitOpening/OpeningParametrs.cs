@@ -23,8 +23,10 @@ namespace RevitOpening
 
         public ElementGeometry PipeGeometry { get; set; }
 
+        public string FamilyName { get; set; }
+
         public OpeningParametrs(double width, double heigth, double depth, XYZ direction,
-            XYZ intersectionCenter, ElementGeometry wallGeometry, ElementGeometry pipeGeometry)
+            XYZ intersectionCenter, ElementGeometry wallGeometry, ElementGeometry pipeGeometry, string familyName)
         {
             Width = width;
             Heigth = heigth;
@@ -33,11 +35,29 @@ namespace RevitOpening
             IntersectionCenter = new MyXYZ(intersectionCenter);
             WallGeometry = wallGeometry;
             PipeGeometry = pipeGeometry;
+            FamilyName = familyName;
         }
 
         public OpeningParametrs()
         {
+        }
 
+        public override bool Equals(object obj)
+        {
+            var toleranse = Math.Pow(10, -7);
+            if (obj is OpeningParametrs parametrs)
+            {
+                return parametrs.WallGeometry.Equals(WallGeometry)
+                       && parametrs.PipeGeometry.Equals(PipeGeometry)
+                       && parametrs.FamilyName.Equals(FamilyName)
+                       && Math.Abs(parametrs.Heigth - Heigth) < toleranse 
+                       && Math.Abs(parametrs.Width - Width) < toleranse
+                       && Math.Abs(parametrs.Depth - Depth) < toleranse
+                       && parametrs.Direction.Equals(Direction)
+                       && parametrs.IntersectionCenter.Equals(IntersectionCenter);
+            }
+
+            return false;
         }
     }
 }

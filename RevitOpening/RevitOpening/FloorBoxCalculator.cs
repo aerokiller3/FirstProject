@@ -38,7 +38,7 @@ namespace RevitOpening
             var boundBox = (floor.get_Geometry(new Options()).FirstOrDefault() as Solid).GetBoundingBox();
             var depth = boundBox.Max.Z - boundBox.Min.Z;
 
-            return new OpeningParametrs(width,height,depth,direction,intersectionCenter,wallData,pipeData);
+            return new OpeningParametrs(width,height,depth,direction,intersectionCenter,wallData,pipeData, familyParameters.SymbolName);
         }
 
         private double CalculateWidth(double pipeWidth, double offset)

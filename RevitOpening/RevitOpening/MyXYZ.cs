@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace RevitOpening
 {
-    public class MyXYZ : XYZ
+    public class MyXYZ
     {
         public double X { get; set; }
 
@@ -22,7 +22,6 @@ namespace RevitOpening
         }
 
         public MyXYZ(double x, double y, double z)
-        : base(x,y,z)
         {
             X = x;
             Y = y;
@@ -30,7 +29,6 @@ namespace RevitOpening
         }
 
         public MyXYZ(XYZ point)
-        :base(point.X,point.Y,point.Z)
         {
             Point = point;
             X = point.X;
@@ -41,6 +39,11 @@ namespace RevitOpening
         public override string ToString()
         {
             return string.Format($"X: {X} Y: {Y} Z:{Z}");
+        }
+
+        public static MyXYZ operator +(MyXYZ p1, MyXYZ p2)
+        {
+            return new MyXYZ(p1.X+p2.X,p1.Y+p2.Y,p1.Z+p2.Z);
         }
 
         public override bool Equals(object obj)
