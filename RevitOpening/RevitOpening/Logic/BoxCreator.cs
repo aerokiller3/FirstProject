@@ -33,9 +33,9 @@ namespace RevitOpening.Logic
 
             newBox.LookupParameter(familyParameters.DepthName).Set(parentsData.BoxData.Depth);
             parentsData.LocationPoint = new MyXYZ((newBox.Location as LocationPoint).Point);
+            parentsData.BoxData.Id = newBox.Id.IntegerValue;
 
-            var json = JsonConvert.SerializeObject(parentsData);
-            schema.SetJson(newBox, json);
+            newBox.SetParentsData(parentsData, schema);
             return newBox;
         }
     }

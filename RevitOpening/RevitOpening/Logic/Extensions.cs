@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Autodesk.Revit.DB;
 using Newtonsoft.Json;
 using RevitOpening.Models;
@@ -9,6 +10,13 @@ namespace RevitOpening.Logic
 {
     public static class Extensions
     {
+        public static IEnumerable<Level> GetAllLevels(this Document document)
+        {
+            var collector = new FilteredElementCollector(document)
+                .OfClass(typeof(Level));
+            return collector.Cast<Level>();
+        }
+
         public static Element GetElementFromDocuments(this IEnumerable<Document> documents, int id)
         {
             return documents
@@ -48,6 +56,12 @@ namespace RevitOpening.Logic
         {
             var json = schema.GetJson(element);
             return JsonConvert.DeserializeObject<OpeningParentsData>(json);
+        }
+
+        public static void SetParentsData(this Element element, OpeningParentsData parentsData, AltecJsonSchema schema)
+        {
+            var json = JsonConvert.SerializeObject(parentsData);
+            schema.SetJson(element, json);
         }
 
         public static double GetAcuteAngle(double angel)

@@ -55,11 +55,10 @@ namespace RevitOpening.Logic
             if (familyParameters.SymbolName == Families.WallRectTaskFamily.SymbolName)
                 intersectionCenter -= new XYZ(0, 0, height / 2);
 
-
             var depth = wall.Width;
 
-            return new OpeningData(width, height, depth, new MyXYZ(direction),
-                new MyXYZ(intersectionCenter), wallData, pipeData, familyParameters.SymbolName);
+            return new OpeningData(null, width, height, depth, new MyXYZ(direction),
+                new MyXYZ(intersectionCenter), wallData, pipeData, familyParameters.SymbolName, null);
         }
 
         public OpeningData CalculateBoxInElement(CeilingAndFloor floor, MEPCurve pipe, double offset,
@@ -86,8 +85,8 @@ namespace RevitOpening.Logic
             var boundBox = (floor.get_Geometry(new Options()).FirstOrDefault() as Solid).GetBoundingBox();
             var depth = boundBox.Max.Z - boundBox.Min.Z;
 
-            return new OpeningData(width, height, depth, new MyXYZ(direction),
-                new MyXYZ(intersectionCenter), wallData, pipeData, familyParameters.SymbolName);
+            return new OpeningData(null, width, height, depth, new MyXYZ(direction),
+                new MyXYZ(intersectionCenter), wallData, pipeData, familyParameters.SymbolName, null);
         }
 
         private double CalculateOpeningWidthInWall(double pipeWidth, double wallWidth, ElementGeometry wallData,

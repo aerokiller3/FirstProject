@@ -83,10 +83,11 @@ namespace RevitOpening.Logic
                 foreach (var curve in ductsInWall.Value)
                 {
                     var openingParametrs =
-                        boxCalculator.CalculateBoxInElement(ductsInWall.Key, curve, offset, familyParameters);
+                        boxCalculator.CalculateBoxInElement(ductsInWall.Key, curve, offset, familyParameters); 
                     if (openingParametrs == null)
                         continue;
 
+                    openingParametrs.Level = ((Level) _document.GetElement(ductsInWall.Key.LevelId)).Name;
                     var parentsData = new OpeningParentsData(ductsInWall.Key.Id.IntegerValue, curve.Id.IntegerValue,
                         ductsInWall.Key.GetType(), curve.GetType(), openingParametrs);
                     BoxCreator.CreateTaskBox(parentsData, _document, _schema);

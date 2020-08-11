@@ -4,9 +4,10 @@ namespace RevitOpening.Models
 {
     public class OpeningData
     {
-        public OpeningData(double width, double heigth, double depth, MyXYZ direction,
-            MyXYZ intersectionCenter, ElementGeometry wallGeometry, ElementGeometry pipeGeometry, string familyName)
+        public OpeningData(int? id, double width, double heigth, double depth, MyXYZ direction,
+            MyXYZ intersectionCenter, ElementGeometry wallGeometry, ElementGeometry pipeGeometry, string familyName, string level)
         {
+            Id = id;
             Width = width;
             Heigth = heigth;
             Depth = depth;
@@ -15,11 +16,16 @@ namespace RevitOpening.Models
             WallGeometry = wallGeometry;
             PipeGeometry = pipeGeometry;
             FamilyName = familyName;
+            Level = level;
         }
 
         public OpeningData()
         {
         }
+
+        public int? Id { get; set; }
+
+        public string Level { get; set; }
 
         public double Width { get; set; }
 

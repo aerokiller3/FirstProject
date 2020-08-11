@@ -68,6 +68,9 @@
     <Compile Include="Logic\Families.cs" />
     <Compile Include="Logic\Extensions.cs" />
     <Compile Include="Logic\FamilyLoader.cs" />
+    <Compile Include="Models\LevelInfo.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="UI\MainControl.xaml.cs">
       <DependentUpon>MainControl.xaml</DependentUpon>
     </Compile>
