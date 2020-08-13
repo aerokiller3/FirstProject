@@ -64,11 +64,13 @@
     <Compile Include="Logic\AltecJsonSchema.cs" />
     <Compile Include="Logic\CreateOpeningInTaskBoxes.cs" />
     <Compile Include="Logic\CreateTaskBoxes.cs" />
+    <Compile Include="Logic\Сollisions.cs" />
     <Compile Include="Models\ElementGeometry.cs" />
     <Compile Include="Logic\Families.cs" />
     <Compile Include="Logic\Extensions.cs" />
     <Compile Include="Logic\FamilyLoader.cs" />
     <Compile Include="Models\LevelInfo.cs" />
+    <Compile Include="Opening.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="UI\MainControl.xaml.cs">
@@ -82,6 +84,7 @@
     <Compile Include="Models\FamilyParameters.cs" />
     <Compile Include="Logic\BoxCalculator.cs" />
     <Compile Include="ViewModels\MainVM.cs" />
+    <Compile Include="ViewModels\RelayCommand.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Families\Задание_Круглая_Стена_БезОсновы.rfa">
@@ -109,6 +112,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="opening.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

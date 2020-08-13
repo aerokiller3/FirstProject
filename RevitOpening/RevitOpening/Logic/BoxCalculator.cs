@@ -7,22 +7,20 @@ namespace RevitOpening.Logic
 {
     public class BoxCalculator
     {
-        public OpeningData CalculateBoxInElement(Element element, MEPCurve pipe, double offset,
-            FamilyParameters familyParameters)
+        public OpeningData CalculateBoxInElement(Element element, MEPCurve pipe, double offset, double maxDiametr)
         {
             switch (element)
             {
                 case Wall wall:
-                    return CalculateBoxInElement(wall, pipe, offset, familyParameters);
+                    return CalculateBoxInWall(wall, pipe, offset, maxDiametr);
                 case CeilingAndFloor floor:
-                    return CalculateBoxInElement(floor, pipe, offset, familyParameters);
+                    return CalculateBoxInFloor(floor, pipe, offset);
                 default:
                     throw new Exception("Неизсветный тип хост-элемента");
             }
         }
 
-        public OpeningData CalculateBoxInElement(Wall wall, MEPCurve pipe, double offset,
-            FamilyParameters familyParameters)
+        public OpeningData CalculateBoxInWall(Wall wall, MEPCurve pipe, double offset, double maxDiametr)
         {
             var geomSolid = wall.get_Geometry(new Options()).FirstOrDefault() as Solid;
             var wallData = new ElementGeometry(wall);
@@ -46,9 +44,11 @@ namespace RevitOpening.Logic
 
             intersectionCenter -= bias;
             var pipeWidth = pipe.GetPipeWidth();
-
-            var width = CalculateOpeningWidthInWall(pipeWidth, wall.Width, wallData, pipeData, offset);
-            var height = CalculateOpeningHeightInWall(pipeWidth, wall.Width, pipeData, offset);
+            var pipeHeight = pipe.GetPipeHeight();
+            var width = pipeWidth + Extensions.GetOffsetInFoot(offset);
+            var height = pipeHeight + Extensions.GetOffsetInFoot(offset);
+            var isRound = pipe.IsRoundPipe() && width <= Extensions.GetOffsetInFoot(maxDiametr);
+            var familyParameters = isRound ? Families.WallRoundTaskFamily : Families.WallRectTaskFamily;
             //
             // Фикс сдвига
             //
@@ -61,8 +61,7 @@ namespace RevitOpening.Logic
                 new MyXYZ(intersectionCenter), wallData, pipeData, familyParameters.SymbolName, null);
         }
 
-        public OpeningData CalculateBoxInElement(CeilingAndFloor floor, MEPCurve pipe, double offset,
-            FamilyParameters familyParameters)
+        public OpeningData CalculateBoxInFloor(CeilingAndFloor floor, MEPCurve pipe, double offset)
         {
             var geomSolid = floor.get_Geometry(new Options()).FirstOrDefault() as Solid;
             var pipeData = new ElementGeometry(pipe);
@@ -76,17 +75,25 @@ namespace RevitOpening.Logic
 
             var intersectCurve = curves.GetCurveSegment(0);
             var intersectHalf = (intersectCurve.GetEndPoint(1) - intersectCurve.GetEndPoint(0)) / 2;
-            var intersectionCenter = (intersectCurve.GetEndPoint(0) + intersectCurve.GetEndPoint(1)) / 2
-                                     + new XYZ(0, 0, intersectHalf.Z);
-            var pipeWidth = pipe.GetPipeWidth();
+            var intersectionCenter = (intersectCurve.GetEndPoint(0) + intersectCurve.GetEndPoint(1)) / 2;
+            var wallOrentation = new XYZ(0,0,-1);
+            var pipeOrentation = ((pipe.Location as LocationCurve).Curve as Line).Direction;
+            var bias = new XYZ(
+                pipeOrentation.X * wallOrentation.X * intersectHalf.X,
+                pipeOrentation.Y * wallOrentation.Y * intersectHalf.Y,
+                pipeOrentation.Z * wallOrentation.Z * intersectHalf.Z);
 
+            intersectionCenter -= bias;
+
+            var pipeWidth = pipe.GetPipeWidth();
+            var pipeHeight = pipe.GetPipeHeight();
             var width = pipeWidth + Extensions.GetOffsetInFoot(offset);
-            var height = pipeWidth + Extensions.GetOffsetInFoot(offset);
+            var height = pipeHeight + Extensions.GetOffsetInFoot(offset);
             var boundBox = (floor.get_Geometry(new Options()).FirstOrDefault() as Solid).GetBoundingBox();
             var depth = boundBox.Max.Z - boundBox.Min.Z;
 
-            return new OpeningData(null, width, height, depth, new MyXYZ(direction),
-                new MyXYZ(intersectionCenter), wallData, pipeData, familyParameters.SymbolName, null);
+            return new OpeningData(null, height, width, depth, new MyXYZ(direction),
+                new MyXYZ(intersectionCenter), wallData, pipeData, Families.FloorRectTaskFamily.SymbolName, null);
         }
 
         private double CalculateOpeningWidthInWall(double pipeWidth, double wallWidth, ElementGeometry wallData,

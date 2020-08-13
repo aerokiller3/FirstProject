@@ -12,36 +12,36 @@ namespace RevitOpening.Logic
     [Transaction(TransactionMode.Manual)]
     public class CreateTaskBoxes : IExternalCommand
     {
-        private readonly double _offset = 300;
+        private double _offset;
+        private double _maxDiametr;
+
         private Document _document;
         private AltecJsonSchema _schema;
+        private IEnumerable<Document> _documents;
+
+        public void SetTasksParametrs(string offset, string diametr)
+        {
+            _offset = double.Parse(offset);
+            _maxDiametr = double.Parse(diametr);
+        }
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             _document = commandData.Application.ActiveUIDocument.Document;
             _schema = new AltecJsonSchema();
-
-            var allDocs = commandData.Application.Application
+            _documents = commandData.Application.Application
                 .Documents.Cast<Document>()
                 .ToList();
             new FamilyLoader(_document).LoadAllFamiliesToProject();
 
-            var walls = GetElementsList<Wall>(allDocs);
-            var floors = GetElementsList<CeilingAndFloor>(allDocs);
-            var pipes = GetElementsList<Pipe>(allDocs);
-            var ducts = GetElementsList<Duct>(allDocs);
-
-            var ductsInWalls = FindIntersectionsWith(walls, ducts);
-            var pipesInWalls = FindIntersectionsWith(walls, pipes);
-            var ductsInFloors = FindIntersectionsWith(floors, ducts);
-            var pipesInFloors = FindIntersectionsWith(floors, pipes);
-
-            CreateAllTaskBoxes(ductsInWalls, Families.WallRectTaskFamily, _offset);
-            CreateAllTaskBoxes(pipesInWalls, Families.WallRectTaskFamily, _offset);
-            CreateAllTaskBoxes(ductsInFloors, Families.FloorRectTaskFamily, _offset);
-            CreateAllTaskBoxes(pipesInFloors, Families.FloorRectTaskFamily, _offset);
-            var boxCombiner = new BoxCombiner(_document, _schema);
-            boxCombiner.CombineAllBoxs();
+            var walls = GetElementsList<Wall>(_documents);
+            var floors = GetElementsList<CeilingAndFloor>(_documents);
+            var pipes = GetElementsList<Pipe>(_documents);
+            var ducts = GetElementsList<Duct>(_documents);
+            CreateAllTaskBoxes(FindIntersectionsWith(walls, ducts));
+            CreateAllTaskBoxes(FindIntersectionsWith(walls, pipes));
+            CreateAllTaskBoxes(FindIntersectionsWith(floors, ducts));
+            CreateAllTaskBoxes(FindIntersectionsWith(floors, pipes));
 
             return Result.Succeeded;
         }
@@ -72,8 +72,7 @@ namespace RevitOpening.Logic
             return intersections;
         }
 
-        private void CreateAllTaskBoxes(Dictionary<Element, List<MEPCurve>> pipesInElements,
-            FamilyParameters familyParameters, double offset)
+        private void CreateAllTaskBoxes(Dictionary<Element, List<MEPCurve>> pipesInElements)
         {
             using (var transaction = new Transaction(_document))
             {
@@ -83,11 +82,11 @@ namespace RevitOpening.Logic
                 foreach (var curve in ductsInWall.Value)
                 {
                     var openingParametrs =
-                        boxCalculator.CalculateBoxInElement(ductsInWall.Key, curve, offset, familyParameters); 
+                        boxCalculator.CalculateBoxInElement(ductsInWall.Key, curve, _offset, _maxDiametr);
                     if (openingParametrs == null)
                         continue;
 
-                    openingParametrs.Level = ((Level) _document.GetElement(ductsInWall.Key.LevelId)).Name;
+                    openingParametrs.Level = _documents.GetElementFromDocuments(ductsInWall.Key.LevelId.IntegerValue).Name;
                     var parentsData = new OpeningParentsData(ductsInWall.Key.Id.IntegerValue, curve.Id.IntegerValue,
                         ductsInWall.Key.GetType(), curve.GetType(), openingParametrs);
                     BoxCreator.CreateTaskBox(parentsData, _document, _schema);

@@ -12,12 +12,19 @@ namespace RevitOpening.Logic
     [Transaction(TransactionMode.Manual)]
     public class CreateOpeningInTaskBoxes : IExternalCommand
     {
-        private readonly double _offset = 300;
+        private double _offset;
+        private double _maxDiametr;
         private Document _document;
 
         private IEnumerable<Document> _documents;
 
         private AltecJsonSchema _schema;
+
+        public void SetTasksParametrs(string offset, string diametr)
+        {
+            _offset = double.Parse(offset);
+            _maxDiametr = double.Parse(diametr);
+        }
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -127,8 +134,7 @@ namespace RevitOpening.Logic
         private bool MatchTasks(BoxCalculator boxCalculator, MEPCurve pipeElement, Element host,
             OpeningParentsData parentsData)
         {
-            var parametrs = boxCalculator.CalculateBoxInElement(host, pipeElement, _offset,
-                Families.GetDataFromSymbolName(parentsData.BoxData.FamilyName));
+            var parametrs = boxCalculator.CalculateBoxInElement(host, pipeElement, _offset, _maxDiametr);
             return parametrs != null && parentsData.BoxData.Equals(parametrs);
         }
 

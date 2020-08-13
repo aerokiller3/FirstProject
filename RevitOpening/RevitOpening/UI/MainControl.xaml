@@ -16,6 +16,7 @@
             <Setter Property="Control.Margin" Value="5" />
             <Setter Property="Control.Padding" Value="5"/>
         </Style>
+
     </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
@@ -24,12 +25,14 @@
         </Grid.ColumnDefinitions>
         <DataGrid Grid.Column="1"  AutoGenerateColumns="False"
                   ItemsSource="{Binding Path=Openings}"
-                  Style="{StaticResource Indent}">
+                  IsReadOnly="True"
+                  Style="{StaticResource Indent}"
+                  x:Name="TasksGrid">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Ид элемента" Binding="{Binding Path=Id}"/>
                     <DataGridTextColumn Header="Тип" Binding="{Binding Path=FamilyName}"/>
                     <DataGridTextColumn Header="Уровень" Binding="{Binding Path=Level}"/>
-                    <DataGridTextColumn Header="Статус"/>
+                    <DataGridTextColumn Header="Статус" />
                 </DataGrid.Columns>
         </DataGrid>
         <Grid Grid.Column="0">
@@ -45,29 +48,21 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <TextBlock Grid.Column="0" Grid.Row="0" Text="Отступ мм"
                            Style="{StaticResource Indent}"/>
                 <TextBlock Grid.Column="0" Grid.Row="1" Text="Макс. диаметр мм"
                            Style="{StaticResource Indent}"/>
-                <TextBlock Grid.Column="0" Grid.Row="2" Text="Уровень"
-                           Style="{StaticResource Indent}"/>
                 <TextBox Grid.Column="1" Grid.Row="0" x:Name="Offset"
-                         Style="{StaticResource Indent}" Text="100"/>
+                         Style="{StaticResource Indent}"
+                         Text="{Binding Path=Offset}"/>
                 <TextBox Grid.Column="1" Grid.Row="1" x:Name="Diametr"
-                         Style="{StaticResource Indent}" Text="200"/>
-                <ComboBox Grid.Column="1" Grid.Row="2" x:Name="Levels"
-                          Style="{StaticResource Indent}"
-                          ItemsSource="{Binding Path=Levels}"/>
-                <Button Grid.Column="0" Grid.Row="3" Content="Создать все задания на уровне"
-                        Style="{StaticResource Indent}"/>
-                <Button Grid.Column="1" Grid.Row="3" Content="Создать задания в выделенном эелементе"
-                        Style="{StaticResource Indent}"/>
+                         Style="{StaticResource Indent}"
+                         Text="{Binding Path=Diametr}"/>
             </Grid>
             <Grid Grid.Row="1">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -78,15 +73,21 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Button Grid.Column="1" Grid.Row="0" Content="Фильтр списка заданий"
+                <Button Grid.Column="1" Grid.Row="0" Content="Создать задания"
+                        Style="{StaticResource Indent}"
+                        Command="{Binding CreateAllTasks}"
+                        CommandParameter="{Binding ElementName=Offset}"/>
+                <Button Grid.Column="1" Grid.Row="1" Content="Фильтр списка заданий"
                         Style="{StaticResource Indent}"/>
-                <Button Grid.Column="1" Grid.Row="1" Content="Объединить выделенные задания"
+                <Button Grid.Column="1" Grid.Row="2" Content="Объединить выделенные задания"
                         Style="{StaticResource Indent}"/>
-                <Button Grid.Column="1" Grid.Row="2" Content="Заменить все согласованные задания на отверстия"
+                <Button Grid.Column="1" Grid.Row="3" Content="Заменить все согласованные задания на отверстия"
                         Style="{StaticResource Indent}"/>
-                <Button Grid.Column="1" Grid.Row="3" Content="Заменить выделенное задание на отверстие"
+                <Button Grid.Column="1" Grid.Row="4" Content="Заменить выделенные задания на отверстия"
                         Style="{StaticResource Indent}"/>
-                <Button Grid.Column="1" Grid.Row="4" Content="Экспорт заданий в файл"
+                <Button Grid.Column="1" Grid.Row="5" Content="Показать выбранный элемент"
+                        Command="{Binding ShowCurrentTask}"
+                        CommandParameter="{Binding ElementName=TasksGrid}"
                         Style="{StaticResource Indent}"/>
             </Grid>
         </Grid>

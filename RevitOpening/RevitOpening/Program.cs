@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
@@ -23,8 +18,9 @@ namespace RevitOpening
         {
             _document = commandData.Application.ActiveUIDocument.Document;
             _schema = new AltecJsonSchema();
+            var localMessage = message;
             var main = new MainControl();
-            (main.DataContext as MainVM).Init(_document, _schema);
+            (main.DataContext as MainVM).Init(commandData, localMessage, elements, _schema);
             var window = new Window
             {
                 Title = "Altec Openings",
@@ -34,8 +30,7 @@ namespace RevitOpening
                 MinHeight = 450,
                 MinWidth = 1000
             };
-            window.Show();
-
+            window.ShowDialog();
             return Result.Succeeded;
         }
     }

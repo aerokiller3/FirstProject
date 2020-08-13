@@ -71,6 +71,23 @@ namespace RevitOpening.Logic
                 : angel;
         }
 
+        public static bool IsRoundPipe(this MEPCurve pipe)
+        {
+            bool isRound;
+            try
+            {
+                var p = pipe.Width;
+                isRound = false;
+            }
+            catch
+            {
+                isRound = true;
+            }
+
+            return isRound;
+        }
+
+
         public static double GetPipeWidth(this MEPCurve pipe)
         {
             double pipeWidth;
