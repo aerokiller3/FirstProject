@@ -21,7 +21,7 @@ namespace RevitOpening.Logic
         {
             WallRoundOpeningFamily =
                 new FamilyParameters("Отверстие_Круглое_Стена", "ТолщинаОсновы",
-                    /**/"Круглое отверстие", null, null, "Размер_Диаметр");
+                    "Круглое отверстие", null, null, "Размер_Диаметр");
             FloorRectOpeningFamily =
                 new FamilyParameters("Отверстие_Прямоуг_Перекр", "Размер_Толщина основа",
                     "Отверстие", "Отверстие_Высота", "Отверстие_Ширина", null);

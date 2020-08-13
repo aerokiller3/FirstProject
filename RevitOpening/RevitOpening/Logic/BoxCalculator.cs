@@ -92,7 +92,7 @@ namespace RevitOpening.Logic
             var boundBox = (floor.get_Geometry(new Options()).FirstOrDefault() as Solid).GetBoundingBox();
             var depth = boundBox.Max.Z - boundBox.Min.Z;
 
-            return new OpeningData(null, height, width, depth, new MyXYZ(direction),
+            return new OpeningData(null, width, height, depth, new MyXYZ(direction),
                 new MyXYZ(intersectionCenter), wallData, pipeData, Families.FloorRectTaskFamily.SymbolName, null);
         }
 

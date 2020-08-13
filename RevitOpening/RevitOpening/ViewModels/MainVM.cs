@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -14,10 +13,42 @@ namespace RevitOpening.ViewModels
 {
     public class MainVM : INotifyPropertyChanged
     {
+        private RelayCommand _changeTasksToOpenings;
+        private RelayCommand _createAllTasks;
+        private RelayCommand _showCurrentTask;
+        private RelayCommand _changeSelectedTaskToOpening;
+
         private ExternalCommandData _commandData;
         private ElementSet _elements;
         private string _message;
-        private RelayCommand _createAllTasks;
+
+        public Document Document { get; set; }
+        public AltecJsonSchema Schema { get; set; }
+        public string Offset { get; set; } = "200";
+        public string Diameter { get; set; } = "200";
+        public List<OpeningData> Openings { get; set; }
+        public bool CombineAll { get; set; }
+
+        public RelayCommand ChangeSelectedTaskToOpening
+        {
+            get
+            {
+                return _changeSelectedTaskToOpening ??
+                       (_changeSelectedTaskToOpening = new RelayCommand(obj =>
+                       {
+                           var createOpeningInTaskBoxes = new CreateOpeningInTaskBoxes(Document,
+                               _commandData.Application.Application.Documents.Cast<Document>());
+                           var task = _commandData.Application.ActiveUIDocument.Selection
+                                   .GetElementIds()
+                                   .FirstOrDefault()
+                                   .GetElement(_commandData.Application.Application.Documents
+                                       .Cast<Document>())
+                               as FamilyInstance;
+                           createOpeningInTaskBoxes.SetTasksParametrs(Offset,Diameter);
+                           createOpeningInTaskBoxes.SwapTasksToOpenings(new []{task});
+                       }));
+            }
+        }
 
         public RelayCommand CreateAllTasks
         {
@@ -27,15 +58,13 @@ namespace RevitOpening.ViewModels
                        (_createAllTasks = new RelayCommand(obj =>
                            {
                                var createTask = new CreateTaskBoxes();
-                               createTask.SetTasksParametrs(Offset, Diametr);
+                               createTask.SetTasksParametrs(Offset, Diameter, CombineAll);
                                createTask.Execute(_commandData, ref _message, _elements);
                                InitOpenings();
                            },
-                           obj => double.TryParse(Offset, out _) && double.TryParse(Diametr, out _)));
+                           obj => double.TryParse(Offset, out _) && double.TryParse(Diameter, out _)));
             }
         }
-
-        private RelayCommand _showCurrentTask;
 
         public RelayCommand ShowCurrentTask
         {
@@ -49,16 +78,26 @@ namespace RevitOpening.ViewModels
                                .Cast<OpeningData>()
                                .Select(el => new ElementId(el.Id.Value))
                                .ToList();
+                           _commandData.Application.ActiveUIDocument.Selection.SetElementIds(selectItems);
                            _commandData.Application.ActiveUIDocument.ShowElements(selectItems);
                        }));
             }
         }
 
-        public Document Document { get; set; }
-        public AltecJsonSchema Schema { get; set; }
-        public string Offset { get; set; } = "200";
-        public string Diametr { get; set; } = "200";
-        public List<OpeningData> Openings { get; set; }
+        public RelayCommand ChangeTasksToOpening
+        {
+            get
+            {
+                return _changeTasksToOpenings ??
+                       (_changeTasksToOpenings = new RelayCommand(obj =>
+                       {
+                           var createOpeningInTaskBoxes = new CreateOpeningInTaskBoxes();
+                           createOpeningInTaskBoxes.SetTasksParametrs(Offset, Diameter);
+                           createOpeningInTaskBoxes.Execute(_commandData, ref _message, _elements);
+                           InitOpenings();
+                       }));
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

@@ -4,7 +4,6 @@ using System.Linq;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Newtonsoft.Json;
 using RevitOpening.Models;
 
 namespace RevitOpening.Logic
@@ -12,18 +11,23 @@ namespace RevitOpening.Logic
     [Transaction(TransactionMode.Manual)]
     public class CreateOpeningInTaskBoxes : IExternalCommand
     {
-        private double _offset;
-        private double _maxDiametr;
         private Document _document;
-
         private IEnumerable<Document> _documents;
+        private double _maxDiameter;
+        private double _offset;
 
         private AltecJsonSchema _schema;
 
-        public void SetTasksParametrs(string offset, string diametr)
+        public CreateOpeningInTaskBoxes(Document document, IEnumerable<Document> documents)
         {
-            _offset = double.Parse(offset);
-            _maxDiametr = double.Parse(diametr);
+            _document = document;
+            _documents = documents;
+            _schema= new AltecJsonSchema();
+        }
+
+        public CreateOpeningInTaskBoxes()
+        {
+
         }
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
@@ -48,8 +52,15 @@ namespace RevitOpening.Logic
             return Result.Succeeded;
         }
 
-        private void SwapTasksToOpenings(IEnumerable<Element> elements)
+        public void SetTasksParametrs(string offset, string diameter)
         {
+            _offset = double.Parse(offset);
+            _maxDiameter = double.Parse(diameter);
+        }
+
+        public void SwapTasksToOpenings(IEnumerable<Element> elements)
+        {
+            var elementList = new List<Element>();
             using (var transaction = new Transaction(_document))
             {
                 transaction.Start("Create opening");
@@ -64,10 +75,24 @@ namespace RevitOpening.Logic
                     //
                     //if (familyData == Families.WallRectOpeningFamily)
                     //parentsData.BoxData.IntersectionCenter += new MyXYZ(0, 0, parentsData.BoxData.Heigth / 2);
-                    BoxCreator.CreateTaskBox(parentsData, _document, _schema);
+                    var el = BoxCreator.CreateTaskBox(parentsData, _document, _schema);
+                    elementList.Add(el);
                 }
 
                 transaction.Commit();
+            }
+
+            using (var t = new Transaction(_document))
+            {
+                t.Start("UP");
+                foreach (var el in elementList)
+                {
+                    var v = el.LookupParameter("Отверстие_Дисциплина").AsString();
+                    el.LookupParameter("Отверстие_Дисциплина").Set(v + "1");
+                    el.LookupParameter("Отверстие_Дисциплина").Set(v);
+                }
+
+                t.Commit();
             }
         }
 
@@ -116,25 +141,11 @@ namespace RevitOpening.Logic
             return isImmutable;
         }
 
-        private bool MatchOldAndNewTask(Element pipeElement, Element hostElement, OpeningParentsData parentsData)
+        private bool MatchOldAndNewTask(Element pipeElement, Element host, OpeningParentsData parentsData)
         {
             var boxCalculator = new BoxCalculator();
             var pipe = pipeElement as MEPCurve;
-            switch (hostElement)
-            {
-                case CeilingAndFloor floor:
-                    return MatchTasks(boxCalculator, pipe, floor, parentsData);
-                case Wall wall:
-                    return MatchTasks(boxCalculator, pipe, wall, parentsData);
-                default:
-                    throw new Exception("Неизвестный тип хост-элемента");
-            }
-        }
-
-        private bool MatchTasks(BoxCalculator boxCalculator, MEPCurve pipeElement, Element host,
-            OpeningParentsData parentsData)
-        {
-            var parametrs = boxCalculator.CalculateBoxInElement(host, pipeElement, _offset, _maxDiametr);
+            var parametrs = boxCalculator.CalculateBoxInElement(host, pipe, _offset, _maxDiameter);
             return parametrs != null && parentsData.BoxData.Equals(parametrs);
         }
 
@@ -149,17 +160,25 @@ namespace RevitOpening.Logic
         {
             var toleranse = Math.Pow(10, -7);
             var familyInstanse = wallRectTask as FamilyInstance;
-            var familyData = Families.GetDataFromInstanseName(familyInstanse.Name);
+            var familyParameters = Families.GetDataFromInstanseName(familyInstanse.Name);
             var locPoint = new MyXYZ((familyInstanse.Location as LocationPoint).Point);
             double width, height;
             try
             {
-                width = wallRectTask.LookupParameter(familyData.WidthName).AsDouble();
-                height = wallRectTask.LookupParameter(familyData.HeightName).AsDouble();
+                if (familyParameters == Families.FloorRectTaskFamily)
+                {
+                    width = wallRectTask.LookupParameter(familyParameters.HeightName).AsDouble();
+                    height = wallRectTask.LookupParameter(familyParameters.WidthName).AsDouble();
+                }
+                else
+                {
+                    height = wallRectTask.LookupParameter(familyParameters.HeightName).AsDouble();
+                    width = wallRectTask.LookupParameter(familyParameters.WidthName).AsDouble();
+                }
             }
             catch
             {
-                width = height = wallRectTask.LookupParameter(familyData.DiametrName).AsDouble();
+                width = height = wallRectTask.LookupParameter(familyParameters.DiametrName).AsDouble();
             }
 
             return locPoint.Equals(boxData.IntersectionCenter) &&

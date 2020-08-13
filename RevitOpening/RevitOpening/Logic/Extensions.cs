@@ -10,6 +10,11 @@ namespace RevitOpening.Logic
 {
     public static class Extensions
     {
+        public static Element GetElement(this ElementId id, IEnumerable<Document> documents)
+        {
+            return documents.GetElementFromDocuments(id.IntegerValue);
+        }
+
         public static IEnumerable<Level> GetAllLevels(this Document document)
         {
             var collector = new FilteredElementCollector(document)

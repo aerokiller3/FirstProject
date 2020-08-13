@@ -1,9 +1,12 @@
 ﻿using System;
+using System.IO;
 using System.Reflection;
+using System.Windows;
 using System.Windows.Media.Imaging;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using static System.Windows.Interop.Imaging;
 
 namespace RevitOpening
 {
@@ -12,18 +15,13 @@ namespace RevitOpening
         public Result OnStartup(UIControlledApplication application)
         {
             var ribbonPanel = application.CreateRibbonPanel("Altec Openings");
-
-            var thisAssemblyPath = Assembly.GetExecutingAssembly().Location;
-            var buttonData = new PushButtonData("Openings",
-                "Openings", thisAssemblyPath, "RevitOpening.Program");
-
-            var pushButton = ribbonPanel.AddItem(buttonData) as PushButton;
             var currentDirectory = Assembly.GetExecutingAssembly().Location;
-            var endIndex = currentDirectory.LastIndexOf('\\');
-            var curDir = currentDirectory.Substring(0, endIndex);
-            var uriImage = new Uri($"{curDir}\\opening.jpg");
-            var largeImage = new BitmapImage(uriImage);
-            pushButton.LargeImage = largeImage;
+            var buttonData = new PushButtonData("Openings",
+                "Openings", currentDirectory, "RevitOpening.Program");
+            var pushButton = ribbonPanel.AddItem(buttonData) as PushButton;
+            var image = Properties.Resources.opening;
+            pushButton.LargeImage = CreateBitmapSourceFromHBitmap(image.GetHbitmap(),
+                IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromWidthAndHeight(32, 32));
 
             return Result.Succeeded;
         }

@@ -48,17 +48,26 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Column="0" Grid.Row="0" Text="Отступ мм"
+                <TextBlock Grid.Column="0" Grid.Row="0" 
+                           Text="Отступ мм"
                            Style="{StaticResource Indent}"/>
-                <TextBlock Grid.Column="0" Grid.Row="1" Text="Макс. диаметр мм"
+                <TextBlock Grid.Column="0" Grid.Row="1" 
+                           Text="Макс. диаметр мм"
                            Style="{StaticResource Indent}"/>
+                <TextBlock Grid.Column="0" Grid.Row="2"
+                           Text="Автоматические объединять пересекающиеся задания"/>
                 <TextBox Grid.Column="1" Grid.Row="0" x:Name="Offset"
                          Style="{StaticResource Indent}"
-                         Text="{Binding Path=Offset}"/>
+                         Text="{Binding Path=Offset}"
+                         HorizontalAlignment="Right"/>
                 <TextBox Grid.Column="1" Grid.Row="1" x:Name="Diametr"
                          Style="{StaticResource Indent}"
-                         Text="{Binding Path=Diametr}"/>
+                         Text="{Binding Path=Diameter}"
+                         HorizontalAlignment="Right"/>
+                <CheckBox Grid.Column="1" Grid.Row="2" x:Name="CombineBox"
+                          IsChecked="{Binding Path=CombineAll}"/>
             </Grid>
             <Grid Grid.Row="1">
                 <Grid.RowDefinitions>
@@ -71,21 +80,22 @@
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Button Grid.Column="1" Grid.Row="0" Content="Создать задания"
+                <Button Grid.Row="0" Content="Создать задания"
                         Style="{StaticResource Indent}"
                         Command="{Binding CreateAllTasks}"
                         CommandParameter="{Binding ElementName=Offset}"/>
-                <Button Grid.Column="1" Grid.Row="1" Content="Фильтр списка заданий"
+                <Button  Grid.Row="1" Content="Фильтр списка заданий"
                         Style="{StaticResource Indent}"/>
-                <Button Grid.Column="1" Grid.Row="2" Content="Объединить выделенные задания"
+                <Button  Grid.Row="2" Content="Объединить выделенные задания"
                         Style="{StaticResource Indent}"/>
-                <Button Grid.Column="1" Grid.Row="3" Content="Заменить все согласованные задания на отверстия"
+                <Button  Grid.Row="3" Content="Заменить согласованные задания на отверстия"
+                         Command="{Binding ChangeTasksToOpening}"
                         Style="{StaticResource Indent}"/>
-                <Button Grid.Column="1" Grid.Row="4" Content="Заменить выделенные задания на отверстия"
+                <Button  Grid.Row="4" Content="Заменить выделенное задание на отверстие"
+                         Command="{Binding ChangeSelectedTaskToOpening}"
                         Style="{StaticResource Indent}"/>
-                <Button Grid.Column="1" Grid.Row="5" Content="Показать выбранный элемент"
+                <Button Grid.Row="5" Content="Показать выбранный элемент"
                         Command="{Binding ShowCurrentTask}"
                         CommandParameter="{Binding ElementName=TasksGrid}"
                         Style="{StaticResource Indent}"/>

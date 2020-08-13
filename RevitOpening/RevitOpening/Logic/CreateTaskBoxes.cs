@@ -14,15 +14,17 @@ namespace RevitOpening.Logic
     {
         private double _offset;
         private double _maxDiametr;
+        private bool _combineAll;
 
         private Document _document;
         private AltecJsonSchema _schema;
         private IEnumerable<Document> _documents;
 
-        public void SetTasksParametrs(string offset, string diametr)
+        public void SetTasksParametrs(string offset, string diametr, bool combineAll)
         {
             _offset = double.Parse(offset);
             _maxDiametr = double.Parse(diametr);
+            _combineAll = combineAll;
         }
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
@@ -42,6 +44,9 @@ namespace RevitOpening.Logic
             CreateAllTaskBoxes(FindIntersectionsWith(walls, pipes));
             CreateAllTaskBoxes(FindIntersectionsWith(floors, ducts));
             CreateAllTaskBoxes(FindIntersectionsWith(floors, pipes));
+
+            if (_combineAll)
+                new BoxCombiner(_document, _schema).CombineAllBoxs();
 
             return Result.Succeeded;
         }
