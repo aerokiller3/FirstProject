@@ -19,21 +19,21 @@ namespace RevitOpening.Logic
             var direction = parentsData.BoxData.Direction.GetXYZ();
             var host = document.GetElement(new ElementId(parentsData.HostId));
             var newBox = document.Create.NewFamilyInstance(center, familySymbol, direction, host, StructuralType.NonStructural);
-            if (familyParameters.DiametrName != null)
+            if (familyParameters.DiameterName != null)
             {
-                newBox.LookupParameter(familyParameters.DiametrName)
-                    .Set(Math.Max(parentsData.BoxData.Width, parentsData.BoxData.Heigth));
+                newBox.LookupParameter(familyParameters.DiameterName)
+                    .Set(Math.Max(parentsData.BoxData.Width, parentsData.BoxData.Height));
             }
             else
             {
                 if (familyParameters == Families.FloorRectTaskFamily)
                 {
                     newBox.LookupParameter(familyParameters.HeightName).Set(parentsData.BoxData.Width);
-                    newBox.LookupParameter(familyParameters.WidthName).Set(parentsData.BoxData.Heigth);
+                    newBox.LookupParameter(familyParameters.WidthName).Set(parentsData.BoxData.Height);
                 }
                 else
                 {
-                    newBox.LookupParameter(familyParameters.HeightName).Set(parentsData.BoxData.Heigth);
+                    newBox.LookupParameter(familyParameters.HeightName).Set(parentsData.BoxData.Height);
                     newBox.LookupParameter(familyParameters.WidthName).Set(parentsData.BoxData.Width);
                 }
             }

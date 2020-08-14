@@ -12,20 +12,15 @@ namespace RevitOpening.Logic
     [Transaction(TransactionMode.Manual)]
     public class CreateTaskBoxes : IExternalCommand
     {
-        private double _offset;
-        private double _maxDiametr;
         private bool _combineAll;
 
         private Document _document;
-        private AltecJsonSchema _schema;
         private IEnumerable<Document> _documents;
-
-        public void SetTasksParametrs(string offset, string diametr, bool combineAll)
-        {
-            _offset = double.Parse(offset);
-            _maxDiametr = double.Parse(diametr);
-            _combineAll = combineAll;
-        }
+        private double _maxDiameter;
+        private double _offset;
+        private HashSet<MyXYZ> _openings;
+        private AltecJsonSchema _schema;
+        private HashSet<MyXYZ> _tasks;
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
@@ -44,11 +39,20 @@ namespace RevitOpening.Logic
             CreateAllTaskBoxes(FindIntersectionsWith(walls, pipes));
             CreateAllTaskBoxes(FindIntersectionsWith(floors, ducts));
             CreateAllTaskBoxes(FindIntersectionsWith(floors, pipes));
-
             if (_combineAll)
-                new BoxCombiner(_document, _schema).CombineAllBoxs();
+                new BoxCombiner(_document, _schema).CombineAllBoxes();
 
             return Result.Succeeded;
+        }
+
+        public void SetTasksParameters(string offset, string diameter, bool combineAll, List<OpeningData> tasks,
+            List<OpeningData> opening)
+        {
+            _openings = opening.Select(o => o.IntersectionCenter).ToHashSet();
+            _tasks = tasks.Select(o => o.IntersectionCenter).ToHashSet();
+            _offset = double.Parse(offset);
+            _maxDiameter = double.Parse(diameter);
+            _combineAll = combineAll;
         }
 
         public List<T> GetElementsList<T>(IEnumerable<Document> allDocs)
@@ -67,11 +71,11 @@ namespace RevitOpening.Logic
             foreach (var intersectionElement in elements)
             {
                 var intersection = new ElementIntersectsElementFilter(intersectionElement);
-                var currentInetsections = curves
+                var currentIntersections = curves
                     .Where(el => intersection.PassesFilter(el))
                     .ToList();
-                if (currentInetsections.Count > 0)
-                    intersections[intersectionElement] = currentInetsections;
+                if (currentIntersections.Count > 0)
+                    intersections[intersectionElement] = currentIntersections;
             }
 
             return intersections;
@@ -86,14 +90,20 @@ namespace RevitOpening.Logic
                 foreach (var ductsInWall in pipesInElements)
                 foreach (var curve in ductsInWall.Value)
                 {
-                    var openingParametrs =
-                        boxCalculator.CalculateBoxInElement(ductsInWall.Key, curve, _offset, _maxDiametr);
-                    if (openingParametrs == null)
+                    var openingParameters =
+                        boxCalculator.CalculateBoxInElement(ductsInWall.Key, curve, _offset, _maxDiameter);
+                    if (openingParameters == null)
                         continue;
 
-                    openingParametrs.Level = _documents.GetElementFromDocuments(ductsInWall.Key.LevelId.IntegerValue).Name;
+                    openingParameters.Level = _documents
+                        .GetElementFromDocuments(ductsInWall.Key.LevelId.IntegerValue).Name;
                     var parentsData = new OpeningParentsData(ductsInWall.Key.Id.IntegerValue, curve.Id.IntegerValue,
-                        ductsInWall.Key.GetType(), curve.GetType(), openingParametrs);
+                        ductsInWall.Key.GetType(), curve.GetType(), openingParameters);
+
+                    if ((_tasks?.Contains(openingParameters.IntersectionCenter) ?? false)
+                        || (_openings?.Contains(openingParameters.IntersectionCenter) ?? false))
+                        continue;
+
                     BoxCreator.CreateTaskBox(parentsData, _document, _schema);
                 }
 

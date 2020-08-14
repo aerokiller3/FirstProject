@@ -15,13 +15,6 @@ namespace RevitOpening.Logic
             return documents.GetElementFromDocuments(id.IntegerValue);
         }
 
-        public static IEnumerable<Level> GetAllLevels(this Document document)
-        {
-            var collector = new FilteredElementCollector(document)
-                .OfClass(typeof(Level));
-            return collector.Cast<Level>();
-        }
-
         public static Element GetElementFromDocuments(this IEnumerable<Document> documents, int id)
         {
             return documents
@@ -38,7 +31,7 @@ namespace RevitOpening.Logic
                 .OfClass(typeof(FamilyInstance));
 
             return collector
-                .Where(e => e.Name == familyParameters.InstanseName)
+                .Where(e => e.Name == familyParameters.InstanceName)
                 .ToList();
         }
 

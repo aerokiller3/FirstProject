@@ -41,14 +41,28 @@ namespace RevitOpening.Models
 
         public override bool Equals(object obj)
         {
-            var toleranse = Math.Pow(10, -7);
+            var tolerance = Math.Pow(10, -7);
             return obj is ElementGeometry geometry
-                   && Math.Abs(geometry.XLen - XLen) < toleranse
-                   && Math.Abs(geometry.YLen - YLen) < toleranse
-                   && Math.Abs(geometry.ZLen - ZLen) < toleranse
+                   && Math.Abs(geometry.XLen - XLen) < tolerance
+                   && Math.Abs(geometry.YLen - YLen) < tolerance
+                   && Math.Abs(geometry.ZLen - ZLen) < tolerance
                    && (geometry.Start?.Equals(Start) ?? true)
                    && (geometry.End?.Equals(End) ?? true)
                    && (geometry.SolidInfo?.Equals(SolidInfo) ?? true);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = YLen.GetHashCode();
+                hashCode = (hashCode * 397) ^ XLen.GetHashCode();
+                hashCode = (hashCode * 397) ^ ZLen.GetHashCode();
+                hashCode = (hashCode * 397) ^ (SolidInfo != null ? SolidInfo.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Start != null ? Start.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (End != null ? End.GetHashCode() : 0);
+                return hashCode;
+            }
         }
     }
 }

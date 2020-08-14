@@ -2,11 +2,10 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using RevitOpening.Logic;
 using RevitOpening.UI;
 using RevitOpening.ViewModels;
 
-namespace RevitOpening
+namespace RevitOpening.Logic
 {
     [Transaction(TransactionMode.Manual)]
     public class Program : IExternalCommand
@@ -23,7 +22,7 @@ namespace RevitOpening
             (main.DataContext as MainVM).Init(commandData, localMessage, elements, _schema);
             var window = new Window
             {
-                Title = "Altec Openings",
+                Title = "Altec Tasks",
                 Content = main,
                 Width = 1000,
                 Height = 450,

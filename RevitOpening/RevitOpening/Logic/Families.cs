@@ -8,14 +8,14 @@ namespace RevitOpening.Logic
 {
     public static class Families
     {
-        public static FamilyParameters WallRoundOpeningFamily;
-        public static FamilyParameters FloorRectOpeningFamily;
-        public static FamilyParameters WallRectOpeningFamily;
-        public static FamilyParameters WallRectTaskFamily;
-        public static FamilyParameters WallRoundTaskFamily;
-        public static FamilyParameters FloorRectTaskFamily;
+        public static readonly FamilyParameters WallRoundOpeningFamily;
+        public static readonly FamilyParameters FloorRectOpeningFamily;
+        public static readonly FamilyParameters WallRectOpeningFamily;
+        public static readonly FamilyParameters WallRectTaskFamily;
+        public static readonly FamilyParameters WallRoundTaskFamily;
+        public static readonly FamilyParameters FloorRectTaskFamily;
 
-        public static IEnumerable<FamilyParameters> AllFamilies;
+        public static readonly IEnumerable<FamilyParameters> AllFamilies;
 
         static Families()
         {
@@ -52,7 +52,7 @@ namespace RevitOpening.Logic
 
         public static FamilyParameters GetDataFromInstanseName(string familyName)
         {
-            return AllFamilies.FirstOrDefault(f => f.InstanseName == familyName);
+            return AllFamilies.FirstOrDefault(f => f.InstanceName == familyName);
         }
 
         public static FamilySymbol GetFamilySymbol(Document document, string familyName)

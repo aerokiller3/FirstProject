@@ -2,20 +2,20 @@
 {
     public class FamilyParameters
     {
-        public FamilyParameters(string symbolName, string depthName, string instanseName,
-            string heightName, string widthName, string diametrName)
+        public FamilyParameters(string symbolName, string depthName, string instanceName,
+            string heightName, string widthName, string diameterName)
         {
             SymbolName = symbolName;
             DepthName = depthName;
-            InstanseName = instanseName;
+            InstanceName = instanceName;
             HeightName = heightName;
             WidthName = widthName;
-            DiametrName = diametrName;
+            DiameterName = diameterName;
         }
 
         public string SymbolName { get; }
 
-        public string InstanseName { get; }
+        public string InstanceName { get; }
 
         public string DepthName { get; }
 
@@ -23,6 +23,6 @@
 
         public string WidthName { get; }
 
-        public string DiametrName { get; }
+        public string DiameterName { get; }
     }
 }

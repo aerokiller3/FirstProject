@@ -7,12 +7,12 @@ namespace RevitOpening.Logic
 {
     public class BoxCalculator
     {
-        public OpeningData CalculateBoxInElement(Element element, MEPCurve pipe, double offset, double maxDiametr)
+        public OpeningData CalculateBoxInElement(Element element, MEPCurve pipe, double offset, double maxDiameter)
         {
             switch (element)
             {
                 case Wall wall:
-                    return CalculateBoxInWall(wall, pipe, offset, maxDiametr);
+                    return CalculateBoxInWall(wall, pipe, offset, maxDiameter);
                 case CeilingAndFloor floor:
                     return CalculateBoxInFloor(floor, pipe, offset);
                 default:
@@ -20,7 +20,7 @@ namespace RevitOpening.Logic
             }
         }
 
-        public OpeningData CalculateBoxInWall(Wall wall, MEPCurve pipe, double offset, double maxDiametr)
+        public OpeningData CalculateBoxInWall(Wall wall, MEPCurve pipe, double offset, double maxDiameter)
         {
             var geomSolid = wall.get_Geometry(new Options()).FirstOrDefault() as Solid;
             var wallData = new ElementGeometry(wall);
@@ -32,22 +32,22 @@ namespace RevitOpening.Logic
             if (curves == null || curves.SegmentCount == 0)
                 return null;
 
-            var wallOrentation = wall.Orientation;
-            var pipeOrentation = ((pipe.Location as LocationCurve).Curve as Line).Direction;
+            var wallOrientation = wall.Orientation;
+            var pipeOrientation = ((pipe.Location as LocationCurve).Curve as Line).Direction;
             var intersectCurve = curves.GetCurveSegment(0);
             var intersectHalf = (intersectCurve.GetEndPoint(1) - intersectCurve.GetEndPoint(0)) / 2;
             var intersectionCenter = (intersectCurve.GetEndPoint(0) + intersectCurve.GetEndPoint(1)) / 2;
             var bias = new XYZ(
-                pipeOrentation.X * wallOrentation.X * intersectHalf.X,
-                pipeOrentation.Y * wallOrentation.Y * intersectHalf.Y,
-                pipeOrentation.Z * wallOrentation.Z * intersectHalf.Z);
+                pipeOrientation.X * wallOrientation.X * intersectHalf.X,
+                pipeOrientation.Y * wallOrientation.Y * intersectHalf.Y,
+                pipeOrientation.Z * wallOrientation.Z * intersectHalf.Z);
 
             intersectionCenter -= bias;
             var pipeWidth = pipe.GetPipeWidth();
             var pipeHeight = pipe.GetPipeHeight();
             var width = pipeWidth + Extensions.GetOffsetInFoot(offset);
             var height = pipeHeight + Extensions.GetOffsetInFoot(offset);
-            var isRound = pipe.IsRoundPipe() && width <= Extensions.GetOffsetInFoot(maxDiametr);
+            var isRound = pipe.IsRoundPipe() && width <= Extensions.GetOffsetInFoot(maxDiameter);
             var familyParameters = isRound ? Families.WallRoundTaskFamily : Families.WallRectTaskFamily;
             //
             // Фикс сдвига
@@ -76,12 +76,12 @@ namespace RevitOpening.Logic
             var intersectCurve = curves.GetCurveSegment(0);
             var intersectHalf = (intersectCurve.GetEndPoint(1) - intersectCurve.GetEndPoint(0)) / 2;
             var intersectionCenter = (intersectCurve.GetEndPoint(0) + intersectCurve.GetEndPoint(1)) / 2;
-            var wallOrentation = new XYZ(0,0,-1);
-            var pipeOrentation = ((pipe.Location as LocationCurve).Curve as Line).Direction;
+            var wallOrientation = new XYZ(0,0,-1);
+            var pipeOrientation = ((pipe.Location as LocationCurve).Curve as Line).Direction;
             var bias = new XYZ(
-                pipeOrentation.X * wallOrentation.X * intersectHalf.X,
-                pipeOrentation.Y * wallOrentation.Y * intersectHalf.Y,
-                pipeOrentation.Z * wallOrentation.Z * intersectHalf.Z);
+                pipeOrientation.X * wallOrientation.X * intersectHalf.X,
+                pipeOrientation.Y * wallOrientation.Y * intersectHalf.Y,
+                pipeOrientation.Z * wallOrientation.Z * intersectHalf.Z);
 
             intersectionCenter -= bias;
 
@@ -111,12 +111,12 @@ namespace RevitOpening.Logic
         private double CalculateOpeningHeightInWall(double pipeWidth, double wallWidth, ElementGeometry pipeData,
             double offset)
         {
-            var vertAngleBetweenWallAndDuct =
+            var verAngleBetweenWallAndDuct =
                 Math.Acos(pipeData.ZLen / Math.Sqrt(pipeData.XLen * pipeData.XLen + pipeData.YLen * pipeData.YLen +
                                                     pipeData.ZLen * pipeData.ZLen));
-            vertAngleBetweenWallAndDuct = Extensions.GetAcuteAngle(vertAngleBetweenWallAndDuct);
+            verAngleBetweenWallAndDuct = Extensions.GetAcuteAngle(verAngleBetweenWallAndDuct);
 
-            return Extensions.CalculateSize(wallWidth, vertAngleBetweenWallAndDuct, pipeWidth, offset);
+            return Extensions.CalculateSize(wallWidth, verAngleBetweenWallAndDuct, pipeWidth, offset);
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using RevitOpening.Logic;
+using System;
+using System.Collections.Generic;
 
 namespace RevitOpening.Models
 {

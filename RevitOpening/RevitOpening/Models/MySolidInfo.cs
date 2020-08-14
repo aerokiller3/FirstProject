@@ -8,23 +8,20 @@ namespace RevitOpening.Models
     {
         public MySolidInfo(Element element)
         {
-            Solid = element.get_Geometry(new Options())
+            var solid = element.get_Geometry(new Options())
                 .FirstOrDefault() as Solid;
             var geometry = element
                 .get_Geometry(new Options())
                 .GetBoundingBox();
             Min = new MyXYZ(geometry.Min);
             Max = new MyXYZ(geometry.Max);
-            FacesCount = Solid.Faces.Size;
-            EdgesCount = Solid.Faces.Size;
+            FacesCount = solid.Faces.Size;
+            EdgesCount = solid.Faces.Size;
         }
 
         public MySolidInfo()
         {
         }
-
-        [JsonIgnore]
-        public Solid Solid { get; set; }
 
         public int FacesCount { get; set; }
 
@@ -41,6 +38,18 @@ namespace RevitOpening.Models
                    && info.Max.Equals(Max)
                    && info.FacesCount.Equals(FacesCount)
                    && info.EdgesCount.Equals(EdgesCount);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = FacesCount;
+                hashCode = (hashCode * 397) ^ EdgesCount;
+                hashCode = (hashCode * 397) ^ (Min != null ? Min.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Max != null ? Max.GetHashCode() : 0);
+                return hashCode;
+            }
         }
     }
 }

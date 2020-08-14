@@ -18,7 +18,6 @@ namespace RevitOpening.Models
 
         public MyXYZ(XYZ point)
         {
-            Point = point;
             X = point.X;
             Y = point.Y;
             Z = point.Z;
@@ -30,8 +29,6 @@ namespace RevitOpening.Models
 
         public double Z { get; set; }
 
-        public XYZ Point { get; set; }
-
         public override string ToString()
         {
             return string.Format($"X: {X} Y: {Y} Z:{Z}");
@@ -39,11 +36,22 @@ namespace RevitOpening.Models
 
         public override bool Equals(object obj)
         {
-            var toleranse = Math.Pow(10, -7);
+            var tolerance = Math.Pow(10, -7);
             return obj is MyXYZ point
-                   && Math.Abs(point.X - X) < toleranse
-                   && Math.Abs(point.Y - Y) < toleranse
-                   && Math.Abs(point.Z - Z) < toleranse;
+                   && Math.Abs(point.X - X) < tolerance
+                   && Math.Abs(point.Y - Y) < tolerance
+                   && Math.Abs(point.Z - Z) < tolerance;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = X.GetHashCode();
+                hashCode = (hashCode * 397) ^ Y.GetHashCode();
+                hashCode = (hashCode * 397) ^ Z.GetHashCode();
+                return hashCode;
+            }
         }
 
         public XYZ GetXYZ()

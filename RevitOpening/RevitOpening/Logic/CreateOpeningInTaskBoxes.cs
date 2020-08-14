@@ -22,12 +22,11 @@ namespace RevitOpening.Logic
         {
             _document = document;
             _documents = documents;
-            _schema= new AltecJsonSchema();
+            _schema = new AltecJsonSchema();
         }
 
         public CreateOpeningInTaskBoxes()
         {
-
         }
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
@@ -41,18 +40,18 @@ namespace RevitOpening.Logic
             var wallRoundTasks = _document.GetTasksFromDocument(Families.WallRoundTaskFamily);
             var floorRectTasks = _document.GetTasksFromDocument(Families.FloorRectTaskFamily);
 
-            var chekedWallRectTasks = GetCheckedBoxes(wallRectTasks);
-            var chekedWallRoundTasks = GetCheckedBoxes(wallRoundTasks);
-            var chekedFloorRectTasks = GetCheckedBoxes(floorRectTasks);
+            var checkedWallRectTasks = GetCheckedBoxes(wallRectTasks);
+            var checkedWallRoundTasks = GetCheckedBoxes(wallRoundTasks);
+            var checkedFloorRectTasks = GetCheckedBoxes(floorRectTasks);
 
-            SwapTasksToOpenings(chekedWallRectTasks.Item1);
-            SwapTasksToOpenings(chekedWallRoundTasks.Item1);
-            SwapTasksToOpenings(chekedFloorRectTasks.Item1);
+            SwapTasksToOpenings(checkedWallRectTasks.Item1);
+            SwapTasksToOpenings(checkedWallRoundTasks.Item1);
+            SwapTasksToOpenings(checkedFloorRectTasks.Item1);
 
             return Result.Succeeded;
         }
 
-        public void SetTasksParametrs(string offset, string diameter)
+        public void SetTasksParameters(string offset, string diameter)
         {
             _offset = double.Parse(offset);
             _maxDiameter = double.Parse(diameter);
@@ -70,11 +69,13 @@ namespace RevitOpening.Logic
                     var parentsData = task.GetParentsData(_schema);
                     parentsData.BoxData.FamilyName = familyData.SymbolName;
                     _document.Delete(task.Id);
+
+
                     //
                     // BoxCalculator fix
                     //
                     //if (familyData == Families.WallRectOpeningFamily)
-                    //parentsData.BoxData.IntersectionCenter += new MyXYZ(0, 0, parentsData.BoxData.Heigth / 2);
+                    //parentsData.BoxData.IntersectionCenter += new MyXYZ(0, 0, parentsData.BoxData.Height / 2);
                     var el = BoxCreator.CreateTaskBox(parentsData, _document, _schema);
                     elementList.Add(el);
                 }
@@ -99,11 +100,11 @@ namespace RevitOpening.Logic
         private FamilyParameters ChooseFamily(string taskName)
         {
             FamilyParameters familyData;
-            if (taskName == Families.WallRoundTaskFamily.InstanseName)
+            if (taskName == Families.WallRoundTaskFamily.InstanceName)
                 familyData = Families.WallRoundOpeningFamily;
-            else if (taskName == Families.WallRectTaskFamily.InstanseName)
+            else if (taskName == Families.WallRectTaskFamily.InstanceName)
                 familyData = Families.WallRectOpeningFamily;
-            else if (taskName == Families.FloorRectTaskFamily.InstanseName)
+            else if (taskName == Families.FloorRectTaskFamily.InstanceName)
                 familyData = Families.FloorRectOpeningFamily;
             else
                 throw new Exception("Неизвестный экземпляр семейства");
@@ -113,19 +114,19 @@ namespace RevitOpening.Logic
 
         private (IEnumerable<Element>, IEnumerable<Element>) GetCheckedBoxes(IEnumerable<Element> wallRectTasks)
         {
-            var cheked = new List<Element>();
-            var uncheked = new List<Element>();
+            var checkedElements = new List<Element>();
+            var uncheckedElements = new List<Element>();
             foreach (var element in wallRectTasks)
                 if (CheckElement(element))
-                    cheked.Add(element);
+                    checkedElements.Add(element);
                 else
-                    uncheked.Add(element);
-            return (cheked, uncheked);
+                    uncheckedElements.Add(element);
+            return (checkedElements, uncheckedElements);
         }
 
         private bool CheckElement(Element element)
         {
-            var isAgreed = ChekcAgreed(element);
+            var isAgreed = CheckAgreed(element);
             if (!isAgreed)
                 return false;
 
@@ -145,23 +146,23 @@ namespace RevitOpening.Logic
         {
             var boxCalculator = new BoxCalculator();
             var pipe = pipeElement as MEPCurve;
-            var parametrs = boxCalculator.CalculateBoxInElement(host, pipe, _offset, _maxDiameter);
-            return parametrs != null && parentsData.BoxData.Equals(parametrs);
+            var parameters = boxCalculator.CalculateBoxInElement(host, pipe, _offset, _maxDiameter);
+            return parameters != null && parentsData.BoxData.Equals(parameters);
         }
 
-        private bool ChekcAgreed(Element box)
+        private bool CheckAgreed(Element box)
         {
-            var parametrN = box.LookupParameter("Несогласованно");
-            var ni = parametrN?.AsInteger();
+            var parameterN = box.LookupParameter("Несогласованно");
+            var ni = parameterN?.AsInteger();
             return ni == 0;
         }
 
         private bool CheckBoxParametrs(Element wallRectTask, OpeningData boxData)
         {
-            var toleranse = Math.Pow(10, -7);
-            var familyInstanse = wallRectTask as FamilyInstance;
-            var familyParameters = Families.GetDataFromInstanseName(familyInstanse.Name);
-            var locPoint = new MyXYZ((familyInstanse.Location as LocationPoint).Point);
+            var tolerance = Math.Pow(10, -7);
+            var familyInstance = wallRectTask as FamilyInstance;
+            var familyParameters = Families.GetDataFromInstanseName(familyInstance.Name);
+            var locPoint = new MyXYZ((familyInstance.Location as LocationPoint).Point);
             double width, height;
             try
             {
@@ -178,12 +179,12 @@ namespace RevitOpening.Logic
             }
             catch
             {
-                width = height = wallRectTask.LookupParameter(familyParameters.DiametrName).AsDouble();
+                width = height = wallRectTask.LookupParameter(familyParameters.DiameterName).AsDouble();
             }
 
             return locPoint.Equals(boxData.IntersectionCenter) &&
-                   Math.Abs(width - boxData.Width) < toleranse &&
-                   Math.Abs(height - boxData.Heigth) < toleranse;
+                   Math.Abs(width - boxData.Width) < tolerance &&
+                   Math.Abs(height - boxData.Height) < tolerance;
         }
     }
 }

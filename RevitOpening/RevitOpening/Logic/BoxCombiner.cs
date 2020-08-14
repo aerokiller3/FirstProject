@@ -17,14 +17,14 @@ namespace RevitOpening.Logic
             _document = document;
         }
 
-        public void CombineAllBoxs()
+        public void CombineAllBoxes()
         {
             var isElementsUnited1 = true;
             var isElementsUnited2 = true;
             while (isElementsUnited1 && isElementsUnited2)
             {
-                isElementsUnited1 = CombineOneTypeBoxs(Families.WallRectTaskFamily);
-                isElementsUnited2 = CombineOneTypeBoxs(Families.FloorRectTaskFamily);
+                isElementsUnited1 = CombineOneTypeBoxes(Families.WallRectTaskFamily);
+                isElementsUnited2 = CombineOneTypeBoxes(Families.FloorRectTaskFamily);
             }
         }
 
@@ -38,7 +38,7 @@ namespace RevitOpening.Logic
             return BoxCreator.CreateTaskBox(data, _document, _schema);
         }
 
-        private bool CombineOneTypeBoxs(FamilyParameters familyData)
+        private bool CombineOneTypeBoxes(FamilyParameters familyData)
         {
             var isElementsUnited = false;
             using (var t = new Transaction(_document))
