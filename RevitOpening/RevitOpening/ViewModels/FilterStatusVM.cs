@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using RevitOpening.Annotations;
@@ -24,7 +20,7 @@ namespace RevitOpening.ViewModels
             Collisions.PipeNotPerpendicularHost,
             Collisions.TaskIntersectTask,
             Collisions.WallTaskIntersectFloor,
-            Collisions.TaskIntersectManyWalls,
+            Collisions.TaskIntersectManyWalls
         };
 
         public string SelectStatus { get; private set; }

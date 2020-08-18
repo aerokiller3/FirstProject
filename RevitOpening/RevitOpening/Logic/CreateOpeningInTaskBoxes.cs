@@ -133,8 +133,10 @@ namespace RevitOpening.Logic
             var parentsData = element.GetParentsData(_schema);
             var pipe = _documents.GetElementFromDocuments(parentsData.PipeId);
             var wall = _documents.GetElementFromDocuments(parentsData.HostId);
-            var isOldPipe = parentsData.BoxData.PipeGeometry.Equals(new ElementGeometry(pipe));
-            var isOldWall = parentsData.BoxData.WallGeometry.Equals(new ElementGeometry(wall));
+            var isOldPipe = parentsData.BoxData.PipeGeometry.Equals(new ElementGeometry(pipe,
+                new MyXYZ(((pipe.Location as LocationCurve).Curve as Line).Direction)));
+            var isOldWall = parentsData.BoxData.WallGeometry.Equals(new ElementGeometry(wall,
+                wall is Wall wall1 ? new MyXYZ(wall1.Orientation) : new MyXYZ(0,0,-1)));
             var isOldBox = CheckBoxParametrs(element, parentsData.BoxData);
             var isImmutable = isOldBox && isOldPipe && isOldWall;
             if (!isImmutable)

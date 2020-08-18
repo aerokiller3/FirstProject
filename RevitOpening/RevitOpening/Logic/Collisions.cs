@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace RevitOpening.Logic
 {
@@ -25,17 +22,8 @@ namespace RevitOpening.Logic
         {
             var str = new StringBuilder(ListOfCollisions.Count);
             foreach (var collision in ListOfCollisions)
-                str.AppendLine($"{collision}\n\r");
+                str.AppendLine($"{collision}");
             return str.ToString();
         }
-    }
-
-    public enum CollisionStatus
-    {
-        TaskIntersectManyWalls,
-        WallTaskIntersectFloor,
-        FloorTaskIntersectWall,
-        TaskIntersectTask,
-        PipeNotPerpendicularHost,
     }
 }

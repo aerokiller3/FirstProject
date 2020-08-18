@@ -25,7 +25,7 @@
                   ItemsSource="{Binding Path=Tasks}"
                   IsReadOnly="True"
                   Style="{StaticResource Indent}"
-                  SelectionUnit="Cell"
+                  SelectionUnit="FullRow"
                   x:Name="TasksGrid">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Ид элемента" Binding="{Binding Path=Id}"/>

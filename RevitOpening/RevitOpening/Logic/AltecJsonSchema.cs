@@ -7,8 +7,8 @@ namespace RevitOpening.Logic
     public class AltecJsonSchema
     {
         private const string VendorId = "E864A704-827E-4D2A-804C-5F0D3359CF35";
-        private readonly Schema _schema;
         private readonly Guid _jsonSchemaGuid = new Guid("FDE91B8C-D078-4297-997C-FB5575409341");
+        private readonly Schema _schema;
 
         public AltecJsonSchema()
         {

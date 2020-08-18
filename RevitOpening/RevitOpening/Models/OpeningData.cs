@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using RevitOpening.Logic;
 
 namespace RevitOpening.Models
@@ -7,7 +6,8 @@ namespace RevitOpening.Models
     public class OpeningData
     {
         public OpeningData(int? id, double width, double height, double depth, MyXYZ direction,
-            MyXYZ intersectionCenter, ElementGeometry wallGeometry, ElementGeometry pipeGeometry, string familyName, string level)
+            MyXYZ intersectionCenter, ElementGeometry wallGeometry, ElementGeometry pipeGeometry, string familyName,
+            string level)
         {
             Id = id;
             Width = width;
@@ -66,7 +66,7 @@ namespace RevitOpening.Models
         {
             unchecked
             {
-                var hashCode = (Level != null ? Level.GetHashCode() : 0);
+                var hashCode = Level != null ? Level.GetHashCode() : 0;
                 hashCode = (hashCode * 397) ^ Width.GetHashCode();
                 hashCode = (hashCode * 397) ^ Height.GetHashCode();
                 hashCode = (hashCode * 397) ^ Depth.GetHashCode();

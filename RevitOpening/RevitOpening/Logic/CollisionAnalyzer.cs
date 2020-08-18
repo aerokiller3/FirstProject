@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Autodesk.Revit.DB;
-using RevitOpening.Annotations;
 using RevitOpening.Models;
 
 namespace RevitOpening.Logic
@@ -60,6 +57,8 @@ namespace RevitOpening.Logic
                 data.BoxData.Collisions.Add(Collisions.FloorTaskIntersectWall);
             if (IsTaskIntersectTask(box))
                 data.BoxData.Collisions.Add(Collisions.TaskIntersectTask);
+            if (data.BoxData.Collisions.ListOfCollisions.Count == 0)
+                box.LookupParameter("Несогласованно").Set(0);
             box.SetParentsData(data, _schema);
         }
 

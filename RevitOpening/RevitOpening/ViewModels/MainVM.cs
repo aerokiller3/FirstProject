@@ -18,16 +18,16 @@ namespace RevitOpening.ViewModels
         private RelayCommand _changeSelectedTaskToOpening;
         private RelayCommand _changeTasksToOpenings;
         private RelayCommand _combineTwoBoxes;
-        private RelayCommand _createAllTasks;
-        private RelayCommand _showCurrentTask;
-        private RelayCommand _filterTasks;
 
         private ExternalCommandData _commandData;
+        private RelayCommand _createAllTasks;
         private Document _document;
         private IEnumerable<Document> _documents;
         private ElementSet _elements;
+        private RelayCommand _filterTasks;
         private string _message;
         private AltecJsonSchema _schema;
+        private RelayCommand _showCurrentTask;
 
         public string Offset { get; set; } = "200";
         public string Diameter { get; set; } = "200";
@@ -94,12 +94,14 @@ namespace RevitOpening.ViewModels
                            if (!IsOnlyTasksSelected(tasks))
                                return;
 
-                           if (tasks[0].GetParentsData(_schema).HostId != tasks[1].GetParentsData(_schema).HostId)
-                           {
-                               MessageBox.Show("У заданий должен быть общий хост элемент");
-                               return;
-                           }
-
+                           //var t1 = tasks[0].GetParentsData(_schema);
+                           //var t2 = tasks[1].GetParentsData(_schema);
+                           //if (t1.HostId != t2.HostId)
+                           //{
+                           //    MessageBox.Show("У заданий должен быть общий хост элемент");
+                           //    return;
+                           //}
+                           //JoinGeometryUtils.AreElementsJoined()
                            using (var t = new Transaction(_document))
                            {
                                t.Start("United tasks");
@@ -200,7 +202,7 @@ namespace RevitOpening.ViewModels
             _documents = commandData.Application.Application.Documents
                 .Cast<Document>();
             _schema = schema;
-            AnalyzeTasks();
+            //AnalyzeTasks();
             UpdateTasksAndOpenings();
         }
 
