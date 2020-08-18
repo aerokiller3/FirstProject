@@ -29,9 +29,8 @@ namespace RevitOpening.Logic
                 newBox.LookupParameter(familyParameters.WidthName).Set(parentsData.BoxData.Width);
             }
 
-            //newBox.LookupParameter("Несогласованно").Set(0);
             newBox.LookupParameter(familyParameters.DepthName).Set(parentsData.BoxData.Depth);
-            parentsData.LocationPoint = new MyXYZ((newBox.Location as LocationPoint).Point);
+            parentsData.LocationPoint = new MyXYZ(((LocationPoint) newBox.Location).Point);
             parentsData.BoxData.Id = newBox.Id.IntegerValue;
             newBox.SetParentsData(parentsData, schema);
 

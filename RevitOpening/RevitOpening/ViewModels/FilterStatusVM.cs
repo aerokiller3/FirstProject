@@ -20,7 +20,8 @@ namespace RevitOpening.ViewModels
             Collisions.PipeNotPerpendicularHost,
             Collisions.TaskIntersectTask,
             Collisions.WallTaskIntersectFloor,
-            Collisions.TaskIntersectManyWalls
+            Collisions.TaskIntersectManyWalls,
+            Collisions.TaskNotActual
         };
 
         public string SelectStatus { get; private set; }

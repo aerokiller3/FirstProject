@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -18,22 +19,53 @@ namespace RevitOpening.ViewModels
         private RelayCommand _changeSelectedTaskToOpening;
         private RelayCommand _changeTasksToOpenings;
         private RelayCommand _combineTwoBoxes;
-
-        private ExternalCommandData _commandData;
         private RelayCommand _createAllTasks;
+        private RelayCommand _showCurrentTask;
+        private RelayCommand _updateTaskInfo;
+        private RelayCommand _filterTasks;
+
         private Document _document;
         private IEnumerable<Document> _documents;
+        private ExternalCommandData _commandData;
         private ElementSet _elements;
-        private RelayCommand _filterTasks;
         private string _message;
         private AltecJsonSchema _schema;
-        private RelayCommand _showCurrentTask;
+
 
         public string Offset { get; set; } = "200";
         public string Diameter { get; set; } = "200";
+        public List<OpeningData> TasksAndOpenings { get; set; }
         public List<OpeningData> Tasks { get; set; }
         public List<OpeningData> Openings { get; set; }
         public bool CombineAll { get; set; }
+
+
+        public void OnCurrentCellChanged(object sender, EventArgs e)
+        {
+            var grid = sender as DataGrid;
+            var selectItems = grid.SelectedItems
+                .Cast<OpeningData>()
+                .Select(el => new ElementId(el.Id.Value))
+                .ToList();
+            if (selectItems.Count == 0)
+                return;
+
+            _commandData.Application.ActiveUIDocument.Selection.SetElementIds(selectItems);
+            _commandData.Application.ActiveUIDocument.ShowElements(selectItems);
+        }
+
+        public RelayCommand UpdateTaskInfo
+        {
+            get
+            {
+                return _updateTaskInfo ??
+                       (_updateTaskInfo = new RelayCommand(obj =>
+                       {
+                           AnalyzeTasks();
+                           UpdateTasksAndOpenings();
+                       }));
+            }
+        }
 
         public RelayCommand FilterTasks
         {
@@ -54,9 +86,9 @@ namespace RevitOpening.ViewModels
                                Title = "Выбор фильтра",
                                Content = control
                            };
-                           (control.DataContext as FilterStatusVM).HostWindow = dialogWindow;
+                           ((FilterStatusVM) control.DataContext).HostWindow = dialogWindow;
                            dialogWindow.ShowDialog();
-                           var type = (control.DataContext as FilterStatusVM).SelectStatus;
+                           var type = ((FilterStatusVM) control.DataContext).SelectStatus;
                            if (string.IsNullOrEmpty(type))
                            {
                                UpdateTasks();
@@ -101,7 +133,7 @@ namespace RevitOpening.ViewModels
                            //    MessageBox.Show("У заданий должен быть общий хост элемент");
                            //    return;
                            //}
-                           //JoinGeometryUtils.AreElementsJoined()
+
                            using (var t = new Transaction(_document))
                            {
                                t.Start("United tasks");
@@ -122,8 +154,8 @@ namespace RevitOpening.ViewModels
                        (_changeSelectedTaskToOpening = new RelayCommand(obj =>
                        {
                            var createOpeningInTaskBoxes = new CreateOpeningInTaskBoxes(_document, _documents);
-                           var taskId = GetSelectedElements();
-                           if (taskId.Length == 0)
+                           var taskId = GetSelectedElements().ToList();
+                           if (taskId.Count == 0)
                                return;
 
                            var tasks = taskId
@@ -149,7 +181,7 @@ namespace RevitOpening.ViewModels
                                createTask.SetTasksParameters(Offset, Diameter, CombineAll, Tasks, Openings);
                                createTask.Execute(_commandData, ref _message, _elements);
                                AnalyzeTasks();
-                               UpdateTasks();
+                               UpdateTasksAndOpenings();
                            },
                            obj => double.TryParse(Offset, out _) && double.TryParse(Diameter, out _)));
             }
@@ -202,7 +234,6 @@ namespace RevitOpening.ViewModels
             _documents = commandData.Application.Application.Documents
                 .Cast<Document>();
             _schema = schema;
-            //AnalyzeTasks();
             UpdateTasksAndOpenings();
         }
 
@@ -244,6 +275,10 @@ namespace RevitOpening.ViewModels
         {
             UpdateTasks();
             UpdateOpenings();
+            TasksAndOpenings = new List<OpeningData>(Tasks.Count+Openings.Count);
+            TasksAndOpenings.AddRange(Tasks);
+            TasksAndOpenings.AddRange(Openings);
+            OnPropertyChanged(nameof(TasksAndOpenings));
         }
 
         private void UpdateTasks()
@@ -252,7 +287,6 @@ namespace RevitOpening.ViewModels
             UpdateElementsCollection(Tasks, Families.FloorRectTaskFamily);
             UpdateElementsCollection(Tasks, Families.WallRectTaskFamily);
             UpdateElementsCollection(Tasks, Families.WallRoundTaskFamily);
-            OnPropertyChanged(nameof(Tasks));
         }
 
         private void UpdateOpenings()
@@ -261,14 +295,12 @@ namespace RevitOpening.ViewModels
             UpdateElementsCollection(Openings, Families.WallRectOpeningFamily);
             UpdateElementsCollection(Openings, Families.FloorRectOpeningFamily);
             UpdateElementsCollection(Openings, Families.WallRoundOpeningFamily);
-            OnPropertyChanged(nameof(Openings));
         }
 
         private void UpdateElementsCollection(List<OpeningData> collection, FamilyParameters familyType)
         {
             var elements = _document.GetTasksFromDocument(familyType);
             collection.AddRange(elements.Select(el => el.GetParentsData(_schema).BoxData));
-            OnPropertyChanged(nameof(collection));
         }
 
         [NotifyPropertyChangedInvocator]

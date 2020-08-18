@@ -22,17 +22,25 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <DataGrid Grid.Column="1"  AutoGenerateColumns="False"
-                  ItemsSource="{Binding Path=Tasks}"
-                  IsReadOnly="True"
+                  ItemsSource="{Binding Path=TasksAndOpenings}"
                   Style="{StaticResource Indent}"
                   SelectionUnit="FullRow"
+                  SelectedCellsChanged="TasksGrid_OnCurrentCellChanged"
                   x:Name="TasksGrid">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Ид элемента" Binding="{Binding Path=Id}"/>
-                    <DataGridTextColumn Header="Тип" Binding="{Binding Path=FamilyName}"/>
-                    <DataGridTextColumn Header="Уровень" Binding="{Binding Path=Level}"/>
-                    <DataGridTextColumn Header="Статус" Binding="{Binding Path=Collisions}"/>
-                </DataGrid.Columns>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Ид элемента"
+                                    Binding="{Binding Path=Id}"
+                                    IsReadOnly="True"
+                                    Width="Auto"/>
+                <DataGridTextColumn Header="Тип"
+                                    Binding="{Binding Path=FamilyName}"
+                                    IsReadOnly="True"
+                                    Width="*"/>
+                <DataGridTextColumn Header="Статус"
+                                    Binding="{Binding Path=Collisions}"
+                                    IsReadOnly="True"
+                                    Width="*"/>
+            </DataGrid.Columns>
         </DataGrid>
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
@@ -78,6 +86,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -95,12 +104,16 @@
                 <Button  Grid.Row="3" Content="Заменить согласованные задания на отверстия"
                          Command="{Binding ChangeTasksToOpening}"
                         Style="{StaticResource Indent}"/>
-                <Button  Grid.Row="4" Content="Заменить выделенное задание на отверстие"
+                <Button  Grid.Row="4" Content="Заменить выделенные задания на отверстия"
                          CommandParameter="{Binding ElementName=TasksGrid}"
                          Command="{Binding ChangeSelectedTaskToOpening}"
                         Style="{StaticResource Indent}"/>
                 <Button Grid.Row="5" Content="Показать выбранный элемент"
                         Command="{Binding ShowCurrentTask}"
+                        CommandParameter="{Binding ElementName=TasksGrid}"
+                        Style="{StaticResource Indent}"/>
+                <Button Grid.Row="6" Content="Обновить информацию о заданиях"
+                        Command="{Binding UpdateTaskInfo}"
                         CommandParameter="{Binding ElementName=TasksGrid}"
                         Style="{StaticResource Indent}"/>
             </Grid>

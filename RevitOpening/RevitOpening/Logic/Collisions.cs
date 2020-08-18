@@ -10,6 +10,7 @@ namespace RevitOpening.Logic
         public const string FloorTaskIntersectWall = "Задание для перекрытия пересекает стену";
         public const string TaskIntersectTask = "Задание пересекается с другим заданием";
         public const string PipeNotPerpendicularHost = "Труба не перпендекулярна стене";
+        public const string TaskNotActual = "Расположение трубы или стены имзенилось с момента построения задания";
 
         public HashSet<string> ListOfCollisions = new HashSet<string>();
 

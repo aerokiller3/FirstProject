@@ -118,9 +118,17 @@ namespace RevitOpening.Logic
             var uncheckedElements = new List<Element>();
             foreach (var element in wallRectTasks)
                 if (CheckElement(element))
+                {
                     checkedElements.Add(element);
+                }
                 else
+                {
                     uncheckedElements.Add(element);
+                    element.LookupParameter("Несогласованно").Set(0);
+                    var data = element.GetParentsData(_schema);
+                    data.BoxData.Collisions.Add(Collisions.TaskNotActual);
+                }
+
             return (checkedElements, uncheckedElements);
         }
 
@@ -134,7 +142,7 @@ namespace RevitOpening.Logic
             var pipe = _documents.GetElementFromDocuments(parentsData.PipeId);
             var wall = _documents.GetElementFromDocuments(parentsData.HostId);
             var isOldPipe = parentsData.BoxData.PipeGeometry.Equals(new ElementGeometry(pipe,
-                new MyXYZ(((pipe.Location as LocationCurve).Curve as Line).Direction)));
+                new MyXYZ(((Line) ((LocationCurve) pipe.Location).Curve).Direction)));
             var isOldWall = parentsData.BoxData.WallGeometry.Equals(new ElementGeometry(wall,
                 wall is Wall wall1 ? new MyXYZ(wall1.Orientation) : new MyXYZ(0,0,-1)));
             var isOldBox = CheckBoxParametrs(element, parentsData.BoxData);
@@ -164,7 +172,7 @@ namespace RevitOpening.Logic
             var tolerance = Math.Pow(10, -7);
             var familyInstance = wallRectTask as FamilyInstance;
             var familyParameters = Families.GetDataFromInstanseName(familyInstance.Name);
-            var locPoint = new MyXYZ((familyInstance.Location as LocationPoint).Point);
+            var locPoint = new MyXYZ(((LocationPoint) familyInstance.Location).Point);
             double width, height;
             try
             {

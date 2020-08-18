@@ -15,7 +15,7 @@ namespace RevitOpening.Models
             Min = new MyXYZ(geometry.Min);
             Max = new MyXYZ(geometry.Max);
             FacesCount = solid.Faces.Size;
-            EdgesCount = solid.Faces.Size;
+            EdgesCount = solid.Edges.Size;
         }
 
         public MySolidInfo()
