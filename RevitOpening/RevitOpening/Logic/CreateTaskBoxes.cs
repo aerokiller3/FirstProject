@@ -40,7 +40,7 @@ namespace RevitOpening.Logic
             CreateAllTaskBoxes(FindIntersectionsWith(floors, ducts));
             CreateAllTaskBoxes(FindIntersectionsWith(floors, pipes));
             if (_combineAll)
-                new BoxCombiner(_document, _schema).CombineAllBoxes();
+                new BoxCombiner(_document, _schema,_documents).CombineAllBoxes();
 
             return Result.Succeeded;
         }

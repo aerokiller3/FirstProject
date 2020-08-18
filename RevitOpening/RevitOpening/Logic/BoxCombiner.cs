@@ -3,18 +3,46 @@ using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Structure;
+using Autodesk.Revit.UI;
 using RevitOpening.Models;
 
 namespace RevitOpening.Logic
 {
-    public class BoxCombiner
+    [Transaction(TransactionMode.Manual)]
+    public class BoxCombiner : IExternalCommand
     {
-        private readonly Document _document;
-        private readonly AltecJsonSchema _schema;
+        public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
+        {
+            _schema = new AltecJsonSchema();
+            _document = commandData.Application.ActiveUIDocument.Document;
+            _documents = commandData.Application.Application.Documents.Cast<Document>();
+            using (var t = new Transaction(_document))
+            {
+                t.Start("TestCombine");
+                var selected = commandData.Application.ActiveUIDocument.Selection
+                    .GetElementIds()
+                    .Select(x => _documents.GetElementFromDocuments(x.IntegerValue))
+                    .ToArray();
+                CreateUnitedTask(selected[0], selected[1]);
+                t.Commit();
+            }
 
-        public BoxCombiner(Document document, AltecJsonSchema schema)
+            return Result.Succeeded;
+        }
+
+        private Document _document;
+        private AltecJsonSchema _schema;
+        private IEnumerable<Document> _documents;
+
+        public BoxCombiner()
+        {
+        }
+
+        public BoxCombiner(Document document, AltecJsonSchema schema, IEnumerable<Document> documents)
         {
             _schema = schema;
+            _documents = documents;
             _document = document;
         }
 
@@ -33,15 +61,6 @@ namespace RevitOpening.Logic
         {
             var data1 = el1.GetParentsData(_schema);
             var data2 = el2.GetParentsData(_schema);
-
-            //var solid = el1.get_Geometry(new Options()).FirstOrDefault() as Solid;
-            //foreach (Face e in solid.Edges.Cast<Edge>().Select(x => x.AsCurve().GetEndPoint(0)))
-            //{
-            //    var computeNormal = e.ComputeNormal(UV.Zero);
-            //    if (computeNormal != XYZ.BasisZ || computeNormal != XYZ.BasisZ.Negate())
-            //}
-
-            //BooleanOperationsUtils.ExecuteBooleanOperation(el1, null, BooleanOperationsType.Union)
             var opening = CalculateOpening(el1, el2, data1, data2);
             data1.BoxData = opening;
             _document.Delete(el1.Id);
@@ -87,46 +106,28 @@ namespace RevitOpening.Logic
 
         private OpeningData CalculateOpening(Element el1, Element el2, OpeningParentsData data1, OpeningParentsData data2)
         {
-            var box1 = el1.get_BoundingBox(_document.ActiveView);
-            var box2 = el2.get_BoundingBox(_document.ActiveView);
             var s1 = el1.get_Geometry(new Options()).GetAllSolids().FirstOrDefault(s => s.Volume != 0);
             var s2 = el2.get_Geometry(new Options()).GetAllSolids().FirstOrDefault(s => s.Volume != 0);
             var min = GetMinFromSolids(s1, s2);
             var max = GetMaxFromSolids(s1, s2);
-            var bbox = new BoundingBoxXYZ();
-            bbox.Min = min;
-            bbox.Max = max;
-            var solid = bbox.SolidBoundingBox();
-            //using (var t = new SubTransaction(_document))
-            //{
-            //    t.Start();
-            //    var direct = DirectShape.CreateElement(_document, new ElementId(BuiltInCategory.OST_Doors));
-            //    direct.SetShape(new[] { solid });
-            //    t.Commit();
-            //}
+
             var middle = (min + max) / 2;
             var width = max.Y - min.Y;
             var height = max.Z - min.Z;
             var depth = max.X - min.X;
             var intersectHalf = (max - min) / 2;
 
-            var bias = new XYZ(
-                data1.BoxData.PipeGeometry.Orientation.X * data1.BoxData.WallGeometry.Orientation.X * intersectHalf.X,
-                data1.BoxData.PipeGeometry.Orientation.Y * data1.BoxData.WallGeometry.Orientation.Y * intersectHalf.Y,
-                data1.BoxData.PipeGeometry.Orientation.Z * data1.BoxData.WallGeometry.Orientation.Z * intersectHalf.Z);
+            //var bias = new XYZ(
+            //    data1.BoxData.PipeGeometry.Orientation.X * data1.BoxData.WallGeometry.Orientation.X * intersectHalf.X,
+            //    data1.BoxData.PipeGeometry.Orientation.Y * data1.BoxData.WallGeometry.Orientation.Y * intersectHalf.Y,
+            //    data1.BoxData.PipeGeometry.Orientation.Z * data1.BoxData.WallGeometry.Orientation.Z * intersectHalf.Z);
 
-            middle += bias;
+            if (data1.BoxData.IntersectionCenter.X >= data2.BoxData.IntersectionCenter.X
+                && data1.BoxData.IntersectionCenter.Y >= data2.BoxData.IntersectionCenter.Y)
+                middle = data1.BoxData.IntersectionCenter.GetXYZ();
+            else
+                middle = data2.BoxData.IntersectionCenter.GetXYZ();
 
-            if (data1.BoxData.FamilyName == Families.WallRectTaskFamily.SymbolName)
-                middle -= new XYZ(0, 0, height / 2);
-
-
-            if (data1.BoxData.FamilyName == Families.FloorRectTaskFamily.SymbolName)
-            {
-                var buf = width;
-                width = height;
-                height = buf;
-            }
 
             return new OpeningData(null,
                 width, height, depth,
@@ -143,25 +144,19 @@ namespace RevitOpening.Logic
             var maxX = double.MinValue;
             var maxY = double.MinValue;
             var maxZ = double.MinValue;
-            foreach (var curve in s1.Edges.Cast<Edge>().Select(e => e.AsCurve()))
+            foreach (var point in s1.Edges.Cast<Edge>()
+                .Select(e => e.AsCurve())
+                .Select(curve => curve.GetEndPoint(0)))
             {
-                var point = curve.GetEndPoint(0);
-                maxX = point.X > maxX ? point.X : maxX;
-                maxY = point.Y > maxY ? point.Y : maxY;
-                maxZ = point.Z > maxZ ? point.Z : maxZ;
-                point = curve.GetEndPoint(1);
                 maxX = point.X > maxX ? point.X : maxX;
                 maxY = point.Y > maxY ? point.Y : maxY;
                 maxZ = point.Z > maxZ ? point.Z : maxZ;
             }
 
-            foreach (var curve in s2.Edges.Cast<Edge>().Select(e => e.AsCurve()))
+            foreach (var point in s2.Edges.Cast<Edge>()
+                .Select(e => e.AsCurve())
+                .Select(curve => curve.GetEndPoint(0)))
             {
-                var point = curve.GetEndPoint(0);
-                maxX = point.X > maxX ? point.X : maxX;
-                maxY = point.Y > maxY ? point.Y : maxY;
-                maxZ = point.Z > maxZ ? point.Z : maxZ;
-                point = curve.GetEndPoint(1);
                 maxX = point.X > maxX ? point.X : maxX;
                 maxY = point.Y > maxY ? point.Y : maxY;
                 maxZ = point.Z > maxZ ? point.Z : maxZ;
@@ -175,25 +170,19 @@ namespace RevitOpening.Logic
             var minX = double.MaxValue;
             var minY = double.MaxValue;
             var minZ = double.MaxValue;
-            foreach (var curve in s1.Edges.Cast<Edge>().Select(e=>e.AsCurve()))
+            foreach (var point in s1.Edges.Cast<Edge>()
+                .Select(e => e.AsCurve())
+                .Select(curve => curve.GetEndPoint(0)))
             {
-                var point = curve.GetEndPoint(0);
-                minX = point.X < minX ? point.X : minX;
-                minY = point.Y < minY ? point.Y : minY;
-                minZ = point.Z < minZ ? point.Z : minZ;
-                point = curve.GetEndPoint(1);
                 minX = point.X < minX ? point.X : minX;
                 minY = point.Y < minY ? point.Y : minY;
                 minZ = point.Z < minZ ? point.Z : minZ;
             }
 
-            foreach (var curve in s2.Edges.Cast<Edge>().Select(e => e.AsCurve()))
+            foreach (var point in s2.Edges.Cast<Edge>()
+                .Select(e => e.AsCurve())
+                .Select(curve => curve.GetEndPoint(0)))
             {
-                var point = curve.GetEndPoint(0);
-                minX = point.X < minX ? point.X : minX;
-                minY = point.Y < minY ? point.Y : minY;
-                minZ = point.Z < minZ ? point.Z : minZ;
-                point = curve.GetEndPoint(1);
                 minX = point.X < minX ? point.X : minX;
                 minY = point.Y < minY ? point.Y : minY;
                 minZ = point.Z < minZ ? point.Z : minZ;

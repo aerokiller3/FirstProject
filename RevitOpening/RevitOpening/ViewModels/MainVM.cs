@@ -112,7 +112,7 @@ namespace RevitOpening.ViewModels
                 return _combineTwoBoxes ??
                        (_combineTwoBoxes = new RelayCommand(obj =>
                        {
-                           var boxCombiner = new BoxCombiner(_document, _schema);
+                           var boxCombiner = new BoxCombiner(_document, _schema, _documents);
                            var tasksId = GetSelectedElements();
                            if (tasksId.Length != 2)
                            {

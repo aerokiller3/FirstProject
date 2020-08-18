@@ -23,9 +23,12 @@ namespace RevitOpening.Logic
         public OpeningData CalculateBoxInWall(Wall wall, MEPCurve pipe, double offset, double maxDiameter)
         {
             var geomSolid = wall.get_Geometry(new Options()).FirstOrDefault() as Solid;
-            var wallData = new ElementGeometry(wall, new MyXYZ(wall.Orientation));
-            var pipeData = new ElementGeometry(pipe, new MyXYZ(((Line) ((LocationCurve) pipe.Location).Curve).Direction));
-            var direction = wallData.End.GetXYZ() - wallData.Start.GetXYZ();
+            var line = (Line)((LocationCurve)wall.Location).Curve;
+            var byLineWallOrientaion = line.Direction.CrossProduct(-XYZ.BasisZ);
+            var bias = wall.Width * byLineWallOrientaion / 2;
+            var wallData = new ElementGeometry(wall, new MyXYZ(wall.Orientation), new MyXYZ(bias));
+            var pipeData = new ElementGeometry(pipe, new MyXYZ(((Line) ((LocationCurve) pipe.Location).Curve).Direction), new MyXYZ(bias));
+
             var curves = geomSolid?
                 .IntersectWithCurve(pipeData.Curve, new SolidCurveIntersectionOptions());
 
@@ -33,14 +36,24 @@ namespace RevitOpening.Logic
                 return null;
 
             var intersectCurve = curves.GetCurveSegment(0);
-            var intersectHalf = (intersectCurve.GetEndPoint(1) - intersectCurve.GetEndPoint(0)) / 2;
+            //var intersectHalf = (intersectCurve.GetEndPoint(1) - intersectCurve.GetEndPoint(0)) / 2;
             var intersectionCenter = (intersectCurve.GetEndPoint(0) + intersectCurve.GetEndPoint(1)) / 2;
-            var bias = new XYZ(
-                pipeData.Orientation.X * wallData.Orientation.X * intersectHalf.X,
-                pipeData.Orientation.Y * wallData.Orientation.Y * intersectHalf.Y,
-                pipeData.Orientation.Z * wallData.Orientation.Z * intersectHalf.Z);
 
+            //var bias = new XYZ(
+            //    pipeData.Orientation.X * wallData.Orientation.X * intersectHalf.X,
+            //    pipeData.Orientation.Y * wallData.Orientation.Y * intersectHalf.Y,
+            //    pipeData.Orientation.Z * wallData.Orientation.Z * intersectHalf.Z);
+            var direction = (wallData.End.GetXYZ() - wallData.Start.GetXYZ()).Normalize();
+            //var t = Transform.CreateRotation(XYZ.BasisZ, Math.PI);
+            //var inverseDirection = t.OfVector(direction);
             intersectionCenter -= bias;
+            if (Math.Abs(direction.Y) < Math.Pow(10, -7) && direction.X < 0
+                || direction.X < Math.Pow(10, -7) && direction.Y < 0)
+            {
+                direction = direction.Negate();
+                intersectionCenter += 2 * bias;
+            }
+
             var pipeWidth = pipe.GetPipeWidth();
             var pipeHeight = pipe.GetPipeHeight();
             var width = pipeWidth + offset.GetInFoot();
@@ -62,9 +75,9 @@ namespace RevitOpening.Logic
         public OpeningData CalculateBoxInFloor(CeilingAndFloor floor, MEPCurve pipe, double offset)
         {
             var geomSolid = floor.get_Geometry(new Options()).FirstOrDefault() as Solid;
-            var pipeData = new ElementGeometry(pipe, new MyXYZ(((Line) ((LocationCurve) pipe.Location).Curve).Direction));
-            var floorData = new ElementGeometry(floor, new MyXYZ(0, 0, -1));
-            var direction = new XYZ();
+            var pipeData = new ElementGeometry(pipe, new MyXYZ(((Line) ((LocationCurve) pipe.Location).Curve).Direction), new MyXYZ());
+            var floorData = new ElementGeometry(floor, new MyXYZ(0, 0, -1), new MyXYZ());
+            var direction = new XYZ(0,0,-1);
 
             var curves = geomSolid?
                 .IntersectWithCurve(pipeData.Curve, new SolidCurveIntersectionOptions());
@@ -78,14 +91,19 @@ namespace RevitOpening.Logic
                 pipeData.Orientation.X * floorData.Orientation.X * intersectHalf.X,
                 pipeData.Orientation.Y * floorData.Orientation.Y * intersectHalf.Y,
                 pipeData.Orientation.Z * floorData.Orientation.Z * intersectHalf.Z);
+            floorData.Bias = new MyXYZ(bias);
+            pipeData.Bias = new MyXYZ(bias);
+            //Line line = (Line)((LocationCurve)wall.Location).Curve;
+            //var byLineWallOrientaion = line.Direction.CrossProduct(-XYZ.BasisZ);
+            //var bias = wall.Width * byLineWallOrientaion / 2;
 
             intersectionCenter -= bias;
 
             var pipeWidth = pipe.GetPipeWidth();
             var pipeHeight = pipe.GetPipeHeight();
-            var width = pipeWidth + Extensions.GetInFoot(offset);
-            var height = pipeHeight + Extensions.GetInFoot(offset);
-            var boundBox = (floor.get_Geometry(new Options()).FirstOrDefault() as Solid).GetBoundingBox();
+            var width = pipeWidth + offset.GetInFoot();
+            var height = pipeHeight + offset.GetInFoot();
+            var boundBox = ((Solid) floor.get_Geometry(new Options()).FirstOrDefault()).GetBoundingBox();
             var depth = boundBox.Max.Z - boundBox.Min.Z;
 
             return new OpeningData(null, height, width, depth, new MyXYZ(direction),
