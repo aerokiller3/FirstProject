@@ -47,17 +47,27 @@ namespace RevitOpening.Logic
             //var t = Transform.CreateRotation(XYZ.BasisZ, Math.PI);
             //var inverseDirection = t.OfVector(direction);
             intersectionCenter -= bias;
-            if (Math.Abs(direction.Y) < Math.Pow(10, -7) && direction.X < 0
-                || direction.X < Math.Pow(10, -7) && direction.Y < 0)
+
+
+            if (direction.X < 0 || Math.Abs(direction.X) < Math.Pow(10, -7) && Math.Abs(direction.Y + 1) < Math.Pow(10, -7))
             {
                 direction = direction.Negate();
                 intersectionCenter += 2 * bias;
             }
 
-            var pipeWidth = pipe.GetPipeWidth();
-            var pipeHeight = pipe.GetPipeHeight();
-            var width = pipeWidth + offset.GetInFoot();
-            var height = pipeHeight + offset.GetInFoot();
+            //if (Math.Abs(direction.Y - 1) < Math.Pow(10, -7) && direction.X < 0
+            //    || Math.Abs(direction.X - 1) < Math.Pow(10, -7) && direction.Y < 0)
+            //{
+            //    direction = direction.Negate();
+            //    intersectionCenter += 2 * bias;
+            //}
+
+            var width = CalculateOpeningWidthInWall(pipe.GetPipeWidth(), wall.Width, wallData, pipeData, offset);
+            var height = CalculateOpeningHeightInWall(pipe.GetPipeHeight(), wall.Width, pipeData, offset);
+            //var pipeWidth = pipe.GetPipeWidth();
+            //var pipeHeight = pipe.GetPipeWidth();
+            //var width = pipeWidth + offset.GetInFoot();
+            //var height = pipeHeight + offset.GetInFoot();
             var isRound = pipe.IsRoundPipe() && width <= maxDiameter.GetInFoot();
             var familyParameters = isRound ? Families.WallRoundTaskFamily : Families.WallRectTaskFamily;
             //
@@ -77,8 +87,8 @@ namespace RevitOpening.Logic
             var geomSolid = floor.get_Geometry(new Options()).FirstOrDefault() as Solid;
             var pipeData = new ElementGeometry(pipe, new MyXYZ(((Line) ((LocationCurve) pipe.Location).Curve).Direction), new MyXYZ());
             var floorData = new ElementGeometry(floor, new MyXYZ(0, 0, -1), new MyXYZ());
-            var direction = new XYZ(0,0,-1);
-
+            var direction = pipe.ConnectorManager.Connectors.Cast<Connector>().FirstOrDefault()?.CoordinateSystem
+                .BasisY;
             var curves = geomSolid?
                 .IntersectWithCurve(pipeData.Curve, new SolidCurveIntersectionOptions());
             if (curves == null || curves.SegmentCount == 0)

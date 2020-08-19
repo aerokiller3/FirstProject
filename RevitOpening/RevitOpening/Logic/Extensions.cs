@@ -9,6 +9,25 @@ namespace RevitOpening.Logic
 {
     public static class Extensions
     {
+        public static Solid CreateCylindricalSolidFromLine(this Line line, double radius = 0.1)
+        {
+            line = line.Fix();
+            Plane plane = Plane.CreateByNormalAndOrigin(line.Direction, line.Origin);
+            CurveLoop profile = CurveLoop.Create(new[] {
+                Arc.Create(plane, radius, 0, Math.PI),
+                Arc.Create(plane, radius, Math.PI, 2 * Math.PI)
+            });
+            return GeometryCreationUtilities.CreateExtrusionGeometry(new[] { profile }, line.Direction, line.Length);
+        }
+
+        public static Line Fix(this Line line)
+        {
+            if (line.IsBound)
+                return Line.CreateBound(line.GetEndPoint(0), line.GetEndPoint(1));
+            else
+                return line;
+        }
+
         public static Solid SolidBoundingBox(this BoundingBoxXYZ bbox)
         {
             // corners in BBox coords

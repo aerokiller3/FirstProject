@@ -72,6 +72,7 @@
     <Compile Include="Logic\Extensions.cs" />
     <Compile Include="Logic\FamilyLoader.cs" />
     <Compile Include="Models\LevelInfo.cs" />
+    <Compile Include="Models\SelectionFilter.cs" />
     <Compile Include="UI\FilterStatusControl.xaml.cs">
       <DependentUpon>FilterStatusControl.xaml</DependentUpon>
     </Compile>

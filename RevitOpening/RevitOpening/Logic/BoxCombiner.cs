@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
 using Autodesk.Revit.UI;
+using Autodesk.Revit.UI.Selection;
 using RevitOpening.Models;
 
 namespace RevitOpening.Logic
@@ -20,10 +22,13 @@ namespace RevitOpening.Logic
             using (var t = new Transaction(_document))
             {
                 t.Start("TestCombine");
-                var selected = commandData.Application.ActiveUIDocument.Selection
-                    .GetElementIds()
-                    .Select(x => _documents.GetElementFromDocuments(x.IntegerValue))
-                    .ToArray();
+                var select = commandData.Application.ActiveUIDocument.Selection;
+                var selected = select.PickObjects(ObjectType.Element, new SelectionFilter((x) =>
+                        x is FamilyInstance,
+                        (x, _) => true)).Select(x => _document.GetElement(x)).ToArray();
+                    //.GetElementIds()
+                    //.Select(x => _documents.GetElementFromDocuments(x.IntegerValue))
+                    //.ToArray();
                 CreateUnitedTask(selected[0], selected[1]);
                 t.Commit();
             }
@@ -65,7 +70,10 @@ namespace RevitOpening.Logic
             data1.BoxData = opening;
             _document.Delete(el1.Id);
             _document.Delete(el2.Id);
-            return BoxCreator.CreateTaskBox(data1, _document, _schema);
+            var createEl = BoxCreator.CreateTaskBox(data1, _document, _schema);
+            var analyzer = new CollisionAnalyzer(_document, new List<FamilyInstance> { createEl }, _documents);
+            analyzer.ExecuteAnalysis();
+            return createEl;
         }
 
         private bool CombineOneTypeBoxes(FamilyParameters familyData)
@@ -111,23 +119,73 @@ namespace RevitOpening.Logic
             var min = GetMinFromSolids(s1, s2);
             var max = GetMaxFromSolids(s1, s2);
 
-            var middle = (min + max) / 2;
-            var width = max.Y - min.Y;
-            var height = max.Z - min.Z;
-            var depth = max.X - min.X;
+            var orientation = data1.BoxData.IntersectionCenter.GetXYZ() - data2.BoxData.IntersectionCenter.GetXYZ();
+            XYZ middle;
+            var width = data1.BoxData.Width;
+            var height = data1.BoxData.Height;
+            var depth = data1.BoxData.Depth + data2.BoxData.Depth;
             var intersectHalf = (max - min) / 2;
-
+            var normalize = orientation.Normalize();
+            //var line = Line.CreateBound(data1.BoxData.IntersectionCenter.GetXYZ(),
+            //    data2.BoxData.IntersectionCenter.GetXYZ());
+            //var line1 = Line.CreateBound(data1.BoxData.IntersectionCenter.GetXYZ()
+            //    , data1.BoxData.IntersectionCenter.GetXYZ() + data1.BoxData.Direction.GetXYZ());
+            //var line2 = Line.CreateBound(data2.BoxData.IntersectionCenter.GetXYZ()
+            //    , data2.BoxData.IntersectionCenter.GetXYZ() + data2.BoxData.Direction.GetXYZ());
+            //using (var subtr = new SubTransaction(_document))
+            //{
+            //    subtr.Start();
+            //    var direct = DirectShape.CreateElement(_document, new ElementId(BuiltInCategory.OST_Floors));
+            //    direct.SetShape(new[]
+            //    {
+            //        line.CreateCylindricalSolidFromLine(),
+            //        line1.CreateCylindricalSolidFromLine(),
+            //        line2.CreateCylindricalSolidFromLine()
+            //    });
+            //    Clipboard.SetText(direct.Id.ToString());
+            //    subtr.Commit();
+            //}
+            var source = data1.BoxData.Direction.GetXYZ();
+            source = Transform.CreateRotation(-XYZ.BasisZ, Math.PI / 2).OfVector(source);
+            if (normalize.IsAlmostEqualTo(source))
+            {
+                middle = data1.BoxData.IntersectionCenter.GetXYZ();
+            }
+            else
+            {
+                middle = data2.BoxData.IntersectionCenter.GetXYZ();
+            }
             //var bias = new XYZ(
             //    data1.BoxData.PipeGeometry.Orientation.X * data1.BoxData.WallGeometry.Orientation.X * intersectHalf.X,
             //    data1.BoxData.PipeGeometry.Orientation.Y * data1.BoxData.WallGeometry.Orientation.Y * intersectHalf.Y,
             //    data1.BoxData.PipeGeometry.Orientation.Z * data1.BoxData.WallGeometry.Orientation.Z * intersectHalf.Z);
 
-            if (data1.BoxData.IntersectionCenter.X >= data2.BoxData.IntersectionCenter.X
-                && data1.BoxData.IntersectionCenter.Y >= data2.BoxData.IntersectionCenter.Y)
-                middle = data1.BoxData.IntersectionCenter.GetXYZ();
-            else
-                middle = data2.BoxData.IntersectionCenter.GetXYZ();
-
+            //if (Math.Abs(data1.BoxData.Direction.Y - 1) < Math.Pow(10, -7))
+            //{
+            //    middle = data1.BoxData.IntersectionCenter.X >= data2.BoxData.IntersectionCenter.X
+            //        ? data1.BoxData.IntersectionCenter.GetXYZ()
+            //        : data2.BoxData.IntersectionCenter.GetXYZ();
+            //    var buf = depth;
+            //    depth = width;
+            //    width = height;
+            //    height = buf;
+            //}
+            //else if (Math.Abs(data1.BoxData.Direction.X - 1) < Math.Pow(10, -7))
+            //{
+            //    middle = data1.BoxData.IntersectionCenter.Y < data2.BoxData.IntersectionCenter.Y
+            //        ? data1.BoxData.IntersectionCenter.GetXYZ()
+            //        : data2.BoxData.IntersectionCenter.GetXYZ();
+            //    var buf = depth;
+            //    depth = height;
+            //    height = buf;
+            //}
+            //else if (Math.Abs(data1.BoxData.Direction.Z + 1) < Math.Pow(10, -7))
+            //{
+            //    var z = data1.BoxData.IntersectionCenter.Z > data2.BoxData.IntersectionCenter.Z
+            //        ? data1.BoxData.IntersectionCenter.Z
+            //        : data2.BoxData.IntersectionCenter.Z;
+            //    middle =new XYZ(middle.X, middle.Y, z);
+            //}
 
             return new OpeningData(null,
                 width, height, depth,

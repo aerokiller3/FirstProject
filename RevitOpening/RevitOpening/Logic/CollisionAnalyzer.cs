@@ -23,12 +23,25 @@ namespace RevitOpening.Logic
 
         public void ExecuteAnalysis()
         {
-            using (var t = new Transaction(_document))
+            try
             {
-                t.Start("Collision Analysis");
-                foreach (var box in _elements)
-                    AnalyzeElement(box);
-                t.Commit();
+                using (var t = new SubTransaction(_document))
+                {
+                    t.Start();
+                    foreach (var box in _elements)
+                        AnalyzeElement(box);
+                    t.Commit();
+                }
+            }
+            catch
+            {
+                using (var t = new Transaction(_document))
+                {
+                    t.Start("Analyze");
+                    foreach (var box in _elements)
+                        AnalyzeElement(box);
+                    t.Commit();
+                }
             }
         }
 

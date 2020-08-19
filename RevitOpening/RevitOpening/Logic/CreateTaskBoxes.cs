@@ -2,6 +2,7 @@
 using System.Linq;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Electrical;
 using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.DB.Plumbing;
 using Autodesk.Revit.UI;
@@ -35,12 +36,15 @@ namespace RevitOpening.Logic
             var floors = GetElementsList<CeilingAndFloor>(_documents);
             var pipes = GetElementsList<Pipe>(_documents);
             var ducts = GetElementsList<Duct>(_documents);
+            var trays = GetElementsList<CableTrayConduitBase>(_documents);
             CreateAllTaskBoxes(FindIntersectionsWith(walls, ducts));
             CreateAllTaskBoxes(FindIntersectionsWith(walls, pipes));
+            CreateAllTaskBoxes(FindIntersectionsWith(walls, trays));
             CreateAllTaskBoxes(FindIntersectionsWith(floors, ducts));
             CreateAllTaskBoxes(FindIntersectionsWith(floors, pipes));
+            CreateAllTaskBoxes(FindIntersectionsWith(floors, trays));
             if (_combineAll)
-                new BoxCombiner(_document, _schema,_documents).CombineAllBoxes();
+                new BoxCombiner(_document, _schema, _documents).CombineAllBoxes();
 
             return Result.Succeeded;
         }

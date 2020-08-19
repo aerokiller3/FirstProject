@@ -18,6 +18,7 @@ namespace RevitOpening.Logic
             var host = document.GetElement(new ElementId(parentsData.HostId));
             var newBox =
                 document.Create.NewFamilyInstance(center, familySymbol, direction, host, StructuralType.NonStructural);
+
             if (familyParameters.DiameterName != null)
             {
                 newBox.LookupParameter(familyParameters.DiameterName)
@@ -30,6 +31,18 @@ namespace RevitOpening.Logic
             }
 
             newBox.LookupParameter(familyParameters.DepthName).Set(parentsData.BoxData.Depth);
+            //if (familyParameters.DiameterName != null)
+            //{
+            //    newBox.LookupParameter(familyParameters.DiameterName)
+            //        .Set(20.0.GetInFoot());
+            //}
+            //else
+            //{
+            //    newBox.LookupParameter(familyParameters.HeightName).Set(20.0.GetInFoot());
+            //    newBox.LookupParameter(familyParameters.WidthName).Set(20.0.GetInFoot());
+            //}
+
+            //newBox.LookupParameter(familyParameters.DepthName).Set(20.0.GetInFoot());
             parentsData.LocationPoint = new MyXYZ(((LocationPoint) newBox.Location).Point);
             parentsData.BoxData.Id = newBox.Id.IntegerValue;
             newBox.SetParentsData(parentsData, schema);
