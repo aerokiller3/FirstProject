@@ -1,5 +1,6 @@
 ﻿using System;
 using Autodesk.Revit.DB;
+using Newtonsoft.Json;
 
 namespace RevitOpening.Models
 {
@@ -22,6 +23,10 @@ namespace RevitOpening.Models
             Y = point.Y;
             Z = point.Z;
         }
+
+
+        [JsonIgnore]
+        public XYZ XYZ => new XYZ(X, Y, Z);
 
         public double X { get; set; }
 
@@ -52,11 +57,6 @@ namespace RevitOpening.Models
                 hashCode = (hashCode * 397) ^ Z.GetHashCode();
                 return hashCode;
             }
-        }
-
-        public XYZ GetXYZ()
-        {
-            return new XYZ(X, Y, Z);
         }
     }
 }

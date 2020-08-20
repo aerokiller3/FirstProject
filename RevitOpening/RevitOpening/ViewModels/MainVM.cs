@@ -91,15 +91,15 @@ namespace RevitOpening.ViewModels
                            var type = ((FilterStatusVM) control.DataContext).SelectStatus;
                            if (string.IsNullOrEmpty(type))
                            {
-                               UpdateTasks();
+                               UpdateTasksAndOpenings();
                            }
                            else
                            {
-                               Tasks = Tasks
+                               TasksAndOpenings = Tasks
                                    .Where(t => t.Collisions.ListOfCollisions
                                        .Contains(type))
                                    .ToList();
-                               OnPropertyChanged(nameof(Tasks));
+                               OnPropertyChanged(nameof(TasksAndOpenings));
                            }
                        }));
             }

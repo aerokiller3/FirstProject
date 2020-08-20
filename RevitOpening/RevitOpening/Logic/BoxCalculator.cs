@@ -43,7 +43,7 @@ namespace RevitOpening.Logic
             //    pipeData.Orientation.X * wallData.Orientation.X * intersectHalf.X,
             //    pipeData.Orientation.Y * wallData.Orientation.Y * intersectHalf.Y,
             //    pipeData.Orientation.Z * wallData.Orientation.Z * intersectHalf.Z);
-            var direction = (wallData.End.GetXYZ() - wallData.Start.GetXYZ()).Normalize();
+            var direction = (wallData.End.XYZ - wallData.Start.XYZ).Normalize();
             //var t = Transform.CreateRotation(XYZ.BasisZ, Math.PI);
             //var inverseDirection = t.OfVector(direction);
             intersectionCenter -= bias;

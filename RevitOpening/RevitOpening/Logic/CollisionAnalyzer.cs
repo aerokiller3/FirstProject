@@ -118,8 +118,8 @@ namespace RevitOpening.Logic
             switch (_document.GetElement(new ElementId(data.HostId)))
             {
                 case Wall _:
-                    var pipeVec = data.BoxData.PipeGeometry.End.GetXYZ() - data.BoxData.PipeGeometry.Start.GetXYZ();
-                    var wallVec = data.BoxData.WallGeometry.End.GetXYZ() - data.BoxData.WallGeometry.Start.GetXYZ();
+                    var pipeVec = data.BoxData.PipeGeometry.End.XYZ - data.BoxData.PipeGeometry.Start.XYZ;
+                    var wallVec = data.BoxData.WallGeometry.End.XYZ - data.BoxData.WallGeometry.Start.XYZ;
                     return !(Math.Abs(pipeVec.AngleTo(wallVec) - Math.PI / 2) < Math.Pow(10, -7));
                 case CeilingAndFloor _:
                     return false;

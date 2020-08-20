@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define small
+using System;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
 using RevitOpening.Models;
@@ -13,8 +14,8 @@ namespace RevitOpening.Logic
             var familyParameters = Families.GetDataFromSymbolName(parentsData.BoxData.FamilyName);
             var familySymbol = Families.GetFamilySymbol(document, parentsData.BoxData.FamilyName);
             familySymbol.Activate();
-            var center = parentsData.BoxData.IntersectionCenter.GetXYZ();
-            var direction = parentsData.BoxData.Direction.GetXYZ();
+            var center = parentsData.BoxData.IntersectionCenter.XYZ;
+            var direction = parentsData.BoxData.Direction.XYZ;
             var host = document.GetElement(new ElementId(parentsData.HostId));
             var newBox =
                 document.Create.NewFamilyInstance(center, familySymbol, direction, host, StructuralType.NonStructural);
@@ -31,18 +32,20 @@ namespace RevitOpening.Logic
             }
 
             newBox.LookupParameter(familyParameters.DepthName).Set(parentsData.BoxData.Depth);
-            //if (familyParameters.DiameterName != null)
-            //{
-            //    newBox.LookupParameter(familyParameters.DiameterName)
-            //        .Set(20.0.GetInFoot());
-            //}
-            //else
-            //{
-            //    newBox.LookupParameter(familyParameters.HeightName).Set(20.0.GetInFoot());
-            //    newBox.LookupParameter(familyParameters.WidthName).Set(20.0.GetInFoot());
-            //}
+#if !small
+            if (familyParameters.DiameterName != null)
+            {
+                newBox.LookupParameter(familyParameters.DiameterName)
+                    .Set(20.0.GetInFoot());
+            }
+            else
+            {
+                newBox.LookupParameter(familyParameters.HeightName).Set(20.0.GetInFoot());
+                newBox.LookupParameter(familyParameters.WidthName).Set(20.0.GetInFoot());
+            }
 
-            //newBox.LookupParameter(familyParameters.DepthName).Set(20.0.GetInFoot());
+            newBox.LookupParameter(familyParameters.DepthName).Set(20.0.GetInFoot());
+#endif
             parentsData.LocationPoint = new MyXYZ(((LocationPoint) newBox.Location).Point);
             parentsData.BoxData.Id = newBox.Id.IntegerValue;
             newBox.SetParentsData(parentsData, schema);
