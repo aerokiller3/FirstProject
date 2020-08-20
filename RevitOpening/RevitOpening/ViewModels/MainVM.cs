@@ -126,13 +126,14 @@ namespace RevitOpening.ViewModels
                            if (!IsOnlyTasksSelected(tasks))
                                return;
 
-                           //var t1 = tasks[0].GetParentsData(_schema);
-                           //var t2 = tasks[1].GetParentsData(_schema);
-                           //if (t1.HostId != t2.HostId)
-                           //{
-                           //    MessageBox.Show("У заданий должен быть общий хост элемент");
-                           //    return;
-                           //}
+                           var t1 = tasks[0].GetParentsData(_schema);
+                           var t2 = tasks[1].GetParentsData(_schema);
+                           var isValidPair = boxCombiner.ValidateTasksForCombine(t1, t2);
+                           if (t1.HostId != t2.HostId)
+                           {
+                               MessageBox.Show("У заданий должен быть общий хост элемент");
+                               return;
+                           }
 
                            using (var t = new Transaction(_document))
                            {
