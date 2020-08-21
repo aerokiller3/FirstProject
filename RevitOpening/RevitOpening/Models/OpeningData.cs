@@ -1,24 +1,22 @@
 ﻿using System;
+using Autodesk.Revit.DB;
 using RevitOpening.Logic;
 
 namespace RevitOpening.Models
 {
     public class OpeningData
     {
-        public OpeningData(int? id, double width, double height, double depth, MyXYZ direction,
-            MyXYZ intersectionCenter, ElementGeometry wallGeometry, ElementGeometry pipeGeometry, string familyName,
-            string level)
+        public OpeningData(double width, double height, double depth, XYZ direction,
+            XYZ intersectionCenter, ElementGeometry wallGeometry, ElementGeometry pipeGeometry, string familyName)
         {
-            Id = id;
             Width = width;
             Height = height;
             Depth = depth;
-            Direction = direction;
-            IntersectionCenter = intersectionCenter;
+            Direction = new MyXYZ(direction);
+            IntersectionCenter = new MyXYZ(intersectionCenter);
             WallGeometry = wallGeometry;
             PipeGeometry = pipeGeometry;
             FamilyName = familyName;
-            Level = level;
             Collisions = new Collisions();
         }
 
@@ -26,9 +24,7 @@ namespace RevitOpening.Models
         {
         }
 
-        public int? Id { get; set; }
-
-        public string Level { get; set; }
+        public int Id { get; set; }
 
         public double Width { get; set; }
 
@@ -66,8 +62,7 @@ namespace RevitOpening.Models
         {
             unchecked
             {
-                var hashCode = Level != null ? Level.GetHashCode() : 0;
-                hashCode = (hashCode * 397) ^ Width.GetHashCode();
+                var hashCode = Width.GetHashCode();
                 hashCode = (hashCode * 397) ^ Height.GetHashCode();
                 hashCode = (hashCode * 397) ^ Depth.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Direction != null ? Direction.GetHashCode() : 0);

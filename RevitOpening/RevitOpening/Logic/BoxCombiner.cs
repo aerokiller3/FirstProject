@@ -119,14 +119,12 @@ namespace RevitOpening.Logic
             var height = maxUnited.X - minUnited.X;
             var depth = data1.BoxData.Depth;
 
-            return new OpeningData(null,
+            return new OpeningData(
                 width, height, depth,
-                new MyXYZ( direction),
-                new MyXYZ(middle),
+                direction, middle,
                 data1.BoxData.WallGeometry,
                 data1.BoxData.PipeGeometry,
-                data1.BoxData.FamilyName,
-                data1.BoxData.Level);
+                data1.BoxData.FamilyName);
         }
 
         public Solid GetUnitedSolidForFloor(FamilyInstance el1, FamilyInstance el2)
@@ -181,14 +179,13 @@ namespace RevitOpening.Logic
             var height = maxUnited.Z - minUnited.Z;
             var depth = data1.BoxData.Depth;
 
-            return new OpeningData(null,
+            return new OpeningData(
                 width, height, depth,
-                data1.BoxData.Direction,
-                middle,
+                data1.BoxData.Direction.XYZ,
+                middle.XYZ,
                 data1.BoxData.WallGeometry,
                 data1.BoxData.PipeGeometry,
-                data1.BoxData.FamilyName,
-                data1.BoxData.Level);
+                data1.BoxData.FamilyName);
         }
 
         private MyXYZ FindTasksMiddle(OpeningParentsData data1, OpeningParentsData data2, Solid unitedSolid)
@@ -359,14 +356,13 @@ namespace RevitOpening.Logic
             var middle = normalize.IsAlmostEqualTo(source)
                 ? data1.BoxData.IntersectionCenter.XYZ
                 : data2.BoxData.IntersectionCenter.XYZ;
-            return new OpeningData(null,
+            return new OpeningData(
                 width, height, depth,
-                data1.BoxData.Direction,
-                new MyXYZ(middle),
+                data1.BoxData.Direction.XYZ,
+                middle,
                 data1.BoxData.WallGeometry,
                 data1.BoxData.PipeGeometry,
-                data1.BoxData.FamilyName,
-                data1.BoxData.Level);
+                data1.BoxData.FamilyName);
         }
 
         public bool ValidateTasksForCombine(OpeningParentsData data1, OpeningParentsData data2)

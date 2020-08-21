@@ -23,72 +23,81 @@ namespace RevitOpening.Logic
 
         private static OpeningData CalculateBoxInWall(Wall wall, MEPCurve pipe, double offsetRatio, double maxDiameter)
         {
-            var geomSolid = wall.get_Geometry(new Options()).FirstOrDefault() as Solid;
-            var line = (Line) ((LocationCurve) wall.Location).Curve;
-            var byLineWallOrientation = line.Direction.CrossProduct(XYZ.BasisZ.Negate());
-            var bias = wall.Width * byLineWallOrientation / 2;
             var wallData = new ElementGeometry(wall);
             var pipeData = new ElementGeometry(pipe);
-
-            var curves = geomSolid?
-                .IntersectWithCurve(pipeData.Curve, new SolidCurveIntersectionOptions());
-
-            if (curves == null || curves.SegmentCount == 0)
-                return null;
-
-            var intersectCurve = curves.GetCurveSegment(0);
-            var intersectionCenter = (intersectCurve.GetEndPoint(0) + intersectCurve.GetEndPoint(1)) / 2;
-            var direction = (wallData.End.XYZ - wallData.Start.XYZ).Normalize();
-            intersectionCenter -= bias;
-            if (direction.X < 0 || Math.Abs(direction.X) < Math.Pow(10, -7) && Math.Abs(direction.Y + 1) < Math.Pow(10, -7))
-            {
-                direction = direction.Negate();
-                intersectionCenter += 2 * bias;
-            }
-
-
-            var width = CalculateWidthInWall(pipe.GetPipeWidth(), wall.Width, wallData, pipeData, offsetRatio);
-            var height = CalculateHeightInWall(pipe.GetPipeHeight(), wall.Width, pipeData, offsetRatio);
-            var isRound = pipe.IsRoundPipe() && width <= maxDiameter.GetInFoot();
-            var familyParameters = isRound ? Families.WallRoundTaskFamily : Families.WallRectTaskFamily;
+            var (intersectionCenter, direction) = CalculateCenterAndDirectionInWall(wallData, pipeData, wall);
+            var taskWidth = CalculateWidthInWall(pipe.GetPipeWidth(), wall.Width, wallData, pipeData, offsetRatio);
+            var taskHeight = CalculateHeightInWall(pipe.GetPipeHeight(), wall.Width, pipeData, offsetRatio);
+            var isRoundTask = pipe.IsRoundPipe() && taskWidth <= maxDiameter.GetInFoot();
+            var familyParameters = isRoundTask ? Families.WallRoundTaskFamily : Families.WallRectTaskFamily;
+            var taskDepth = wall.Width;
             //
-            // Фикс сдвига
+            // Фикс семейства
+            if (familyParameters == Families.WallRectTaskFamily)
+                intersectionCenter -= new XYZ(0, 0, taskHeight / 2);
             //
-            if (familyParameters.SymbolName == Families.WallRectTaskFamily.SymbolName)
-                intersectionCenter -= new XYZ(0, 0, height / 2);
-
-            var depth = wall.Width;
-
-            return new OpeningData(null, width, height, depth, new MyXYZ(direction),
-                new MyXYZ(intersectionCenter), wallData, pipeData, familyParameters.SymbolName, null);
+            return new OpeningData(taskWidth, taskHeight, taskDepth, direction,
+                intersectionCenter, wallData, pipeData, familyParameters.SymbolName);
         }
 
         private static OpeningData CalculateBoxInFloor(CeilingAndFloor floor, MEPCurve pipe, double offsetRatio)
         {
-            var floorSolid = floor.get_Geometry(new Options()).FirstOrDefault() as Solid;
             var pipeData = new ElementGeometry(pipe);
             var floorData = new ElementGeometry(floor);
+            var (intersectionCenter, direction) = CalculateCenterAndDirectionInFloor(pipeData, floor, pipe);
+
+            var pipeWidth = pipe.GetPipeWidth();
+            var pipeHeight = pipe.GetPipeHeight();
+            var taskWidth = pipeHeight * offsetRatio;
+            var taskHeight = pipeWidth * offsetRatio;
+            var taskDepth = floorData.SolidInfo.Max.Z - floorData.SolidInfo.Min.Z;
+
+            return new OpeningData(taskWidth, taskHeight, taskDepth, direction,
+                intersectionCenter, floorData, pipeData, Families.FloorRectTaskFamily.SymbolName);
+        }
+
+        private static (XYZ, XYZ) CalculateCenterAndDirectionInFloor(ElementGeometry pipeData, CeilingAndFloor floor, MEPCurve pipe)
+        {
+            var floorSolid = floor.get_Geometry(new Options()).FirstOrDefault() as Solid;
             var direction = pipe.ConnectorManager.Connectors
                 .Cast<Connector>()
                 .FirstOrDefault()?.CoordinateSystem.BasisY;
             var curves = floorSolid?
                 .IntersectWithCurve(pipeData.Curve, new SolidCurveIntersectionOptions());
             if (curves == null || curves.SegmentCount == 0)
-                return null;
+                return (null, null);
 
             var intersectCurve = curves.GetCurveSegment(0);
             var intersectVector = (intersectCurve.GetEndPoint(1) - intersectCurve.GetEndPoint(0)) / 2;
             var bias = new XYZ(0, 0, -intersectVector.Z / 2);
             var intersectionCenter = (intersectCurve.GetEndPoint(0) + intersectCurve.GetEndPoint(1)) / 2 - bias;
+            return (intersectionCenter, direction);
+        }
 
-            var pipeWidth = pipe.GetPipeWidth();
-            var pipeHeight = pipe.GetPipeHeight();
-            var taskWidth = pipeHeight * offsetRatio;
-            var taskHeight = pipeWidth * offsetRatio;
-            var taskDepth = Math.Abs(intersectVector.Z);
+        private static (XYZ, XYZ) CalculateCenterAndDirectionInWall(ElementGeometry wallData, ElementGeometry pipeData, Wall wall)
+        {
+            var geomSolid = wall.get_Geometry(new Options()).FirstOrDefault() as Solid;
+            var line = (Line)wallData.Curve;
+            var byLineWallOrientation = line.Direction.CrossProduct(XYZ.BasisZ.Negate());
+            var bias = wall.Width * byLineWallOrientation / 2;
+            var curves = geomSolid?
+                .IntersectWithCurve(pipeData.Curve, new SolidCurveIntersectionOptions());
 
-            return new OpeningData(null, taskWidth, taskHeight, taskDepth, new MyXYZ(direction),
-                new MyXYZ(intersectionCenter), floorData, pipeData, Families.FloorRectTaskFamily.SymbolName, null);
+            if (curves == null || curves.SegmentCount == 0)
+                return (null, null);
+
+            var intersectCurve = curves.GetCurveSegment(0);
+            var intersectionCenter = (intersectCurve.GetEndPoint(0) + intersectCurve.GetEndPoint(1)) / 2;
+            var direction = (wallData.End.XYZ - wallData.Start.XYZ).Normalize();
+            intersectionCenter -= bias;
+            if (direction.X < 0 ||
+                Math.Abs(direction.X) < Math.Pow(10, -7) && Math.Abs(direction.Y + 1) < Math.Pow(10, -7))
+            {
+                direction = direction.Negate();
+                intersectionCenter += 2 * bias;
+            }
+
+            return (intersectionCenter, direction);
         }
 
         private static double CalculateWidthInWall(double pipeWidth, double wallWidth, ElementGeometry wallData,

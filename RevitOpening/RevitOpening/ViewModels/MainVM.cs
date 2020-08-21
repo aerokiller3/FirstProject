@@ -44,7 +44,7 @@ namespace RevitOpening.ViewModels
             var grid = sender as DataGrid;
             var selectItems = grid.SelectedItems
                 .Cast<OpeningData>()
-                .Select(el => new ElementId(el.Id.Value))
+                .Select(el => new ElementId(el.Id))
                 .ToList();
             if (selectItems.Count == 0)
                 return;
@@ -193,7 +193,7 @@ namespace RevitOpening.ViewModels
                            var grid = obj as DataGrid;
                            var selectItems = grid.SelectedItems
                                .Cast<OpeningData>()
-                               .Select(el => new ElementId(el.Id.Value))
+                               .Select(el => new ElementId(el.Id))
                                .ToList();
                            if (selectItems.Count == 0)
                                return;

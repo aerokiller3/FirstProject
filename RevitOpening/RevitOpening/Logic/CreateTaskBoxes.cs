@@ -97,8 +97,6 @@ namespace RevitOpening.Logic
                     if (openingParameters == null)
                         continue;
 
-                    openingParameters.Level = _documents
-                        .GetElement(ductsInWall.Key.LevelId.IntegerValue).Name;
                     var parentsData = new OpeningParentsData(ductsInWall.Key.Id.IntegerValue, curve.Id.IntegerValue,
                         ductsInWall.Key.GetType(), curve.GetType(), openingParameters);
 
