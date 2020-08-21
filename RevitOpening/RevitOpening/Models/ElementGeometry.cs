@@ -6,13 +6,8 @@ namespace RevitOpening.Models
 {
     public class ElementGeometry
     {
-        public MyXYZ Orientation { get; set; }
-        public MyXYZ Bias { get; set; }
-
-        public ElementGeometry(Element element, MyXYZ orientation, MyXYZ bias)
+        public ElementGeometry(Element element)
         {
-            Orientation = orientation;
-            Bias = bias;
             SolidInfo = new MySolidInfo(element);
             Curve = (element.Location as LocationCurve)?.Curve;
             if (Curve == null)
@@ -35,7 +30,8 @@ namespace RevitOpening.Models
 
         public double ZLen { get; set; }
 
-        [JsonIgnore] public Curve Curve { get; set; }
+        [JsonIgnore]
+        public Curve Curve { get; set; }
 
         public MySolidInfo SolidInfo { get; set; }
 

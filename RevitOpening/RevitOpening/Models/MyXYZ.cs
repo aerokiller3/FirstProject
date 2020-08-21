@@ -25,8 +25,7 @@ namespace RevitOpening.Models
         }
 
 
-        [JsonIgnore]
-        public XYZ XYZ => new XYZ(X, Y, Z);
+        [JsonIgnore] public XYZ XYZ => new XYZ(X, Y, Z);
 
         public double X { get; set; }
 

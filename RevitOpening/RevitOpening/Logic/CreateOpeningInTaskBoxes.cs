@@ -4,6 +4,7 @@ using System.Linq;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using RevitOpening.Extensions;
 using RevitOpening.Models;
 
 namespace RevitOpening.Logic
@@ -16,13 +17,10 @@ namespace RevitOpening.Logic
         private double _maxDiameter;
         private double _offset;
 
-        private AltecJsonSchema _schema;
-
         public CreateOpeningInTaskBoxes(Document document, IEnumerable<Document> documents)
         {
             _document = document;
             _documents = documents;
-            _schema = new AltecJsonSchema();
         }
 
         public CreateOpeningInTaskBoxes()
@@ -31,14 +29,13 @@ namespace RevitOpening.Logic
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            _schema = new AltecJsonSchema();
             _document = commandData.Application.ActiveUIDocument.Document;
             _documents = commandData.Application.Application
                 .Documents.Cast<Document>();
             new FamilyLoader(_document).LoadAllFamiliesToProject();
-            var wallRectTasks = _document.GetTasksFromDocument(Families.WallRectTaskFamily);
-            var wallRoundTasks = _document.GetTasksFromDocument(Families.WallRoundTaskFamily);
-            var floorRectTasks = _document.GetTasksFromDocument(Families.FloorRectTaskFamily);
+            var wallRectTasks = _document.GetTasks(Families.WallRectTaskFamily);
+            var wallRoundTasks = _document.GetTasks(Families.WallRoundTaskFamily);
+            var floorRectTasks = _document.GetTasks(Families.FloorRectTaskFamily);
 
             var checkedWallRectTasks = GetCheckedBoxes(wallRectTasks);
             var checkedWallRoundTasks = GetCheckedBoxes(wallRoundTasks);
@@ -66,7 +63,7 @@ namespace RevitOpening.Logic
                 foreach (var task in elements.Cast<FamilyInstance>())
                 {
                     var familyData = ChooseFamily(task.Name);
-                    var parentsData = task.GetParentsData(_schema);
+                    var parentsData = task.GetParentsData();
                     parentsData.BoxData.FamilyName = familyData.SymbolName;
                     _document.Delete(task.Id);
 
@@ -76,7 +73,7 @@ namespace RevitOpening.Logic
                     //
                     //if (familyData == Families.WallRectOpeningFamily)
                     //parentsData.BoxData.IntersectionCenter += new MyXYZ(0, 0, parentsData.BoxData.Height / 2);
-                    var el = BoxCreator.CreateTaskBox(parentsData, _document, _schema);
+                    var el = BoxCreator.CreateTaskBox(parentsData, _document);
                     elementList.Add(el);
                 }
 
@@ -125,7 +122,7 @@ namespace RevitOpening.Logic
                 {
                     uncheckedElements.Add(element);
                     element.LookupParameter("Несогласованно").Set(0);
-                    var data = element.GetParentsData(_schema);
+                    var data = element.GetParentsData();
                     data.BoxData.Collisions.Add(Collisions.TaskNotActual);
                 }
 
@@ -138,13 +135,11 @@ namespace RevitOpening.Logic
             if (!isAgreed)
                 return false;
 
-            var parentsData = element.GetParentsData(_schema);
-            var pipe = _documents.GetElementFromDocuments(parentsData.PipeId);
-            var wall = _documents.GetElementFromDocuments(parentsData.HostId);
-            var isOldPipe = parentsData.BoxData.PipeGeometry.Equals(new ElementGeometry(pipe,
-                new MyXYZ(((Line) ((LocationCurve) pipe.Location).Curve).Direction), new MyXYZ()));
-            var isOldWall = parentsData.BoxData.WallGeometry.Equals(new ElementGeometry(wall,
-                wall is Wall wall1 ? new MyXYZ(wall1.Orientation) : new MyXYZ(0,0,-1), new MyXYZ()));
+            var parentsData = element.GetParentsData();
+            var pipe = _documents.GetElement(parentsData.PipeId);
+            var wall = _documents.GetElement(parentsData.HostId);
+            var isOldPipe = parentsData.BoxData.PipeGeometry.Equals(new ElementGeometry(pipe));
+            var isOldWall = parentsData.BoxData.WallGeometry.Equals(new ElementGeometry(wall));
             var isOldBox = CheckBoxParametrs(element, parentsData.BoxData);
             var isImmutable = isOldBox && isOldPipe && isOldWall;
             if (!isImmutable)
@@ -154,9 +149,8 @@ namespace RevitOpening.Logic
 
         private bool MatchOldAndNewTask(Element pipeElement, Element host, OpeningParentsData parentsData)
         {
-            var boxCalculator = new BoxCalculator();
             var pipe = pipeElement as MEPCurve;
-            var parameters = boxCalculator.CalculateBoxInElement(host, pipe, _offset, _maxDiameter);
+            var parameters = BoxCalculator.CalculateBoxInElement(host, pipe, _offset, _maxDiameter);
             return parameters != null && parentsData.BoxData.Equals(parameters);
         }
 

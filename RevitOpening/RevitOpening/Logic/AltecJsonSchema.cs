@@ -4,40 +4,41 @@ using Autodesk.Revit.DB.ExtensibleStorage;
 
 namespace RevitOpening.Logic
 {
-    public class AltecJsonSchema
+    public static class AltecJsonSchema
     {
         private const string VendorId = "E864A704-827E-4D2A-804C-5F0D3359CF35";
-        private readonly Guid _jsonSchemaGuid = new Guid("FDE91B8C-D078-4297-997C-FB5575409341");
-        private readonly Schema _schema;
+        private static readonly Guid JsonSchemaGuid = new Guid("FDE91B8C-D078-4297-997C-FB5575409341");
+        private static readonly Schema Schema;
 
-        public AltecJsonSchema()
+        static AltecJsonSchema()
         {
-            _schema = CheckOrInit();
+            Schema = CheckOrInit();
         }
 
-        public bool SetJson(Element element, string json)
+        public static bool SetJson(Element element, string json)
         {
-            var entity = element.GetEntity(_schema);
-            if (!entity.IsValid()) entity = new Entity(_schema);
+            var entity = element.GetEntity(Schema);
+            if (!entity.IsValid())
+                entity = new Entity(Schema);
             entity.Set("json", json);
             element.SetEntity(entity);
             return true;
         }
 
-        public string GetJson(Element element)
+        public static string GetJson(Element element)
         {
-            var entity = element.GetEntity(_schema);
+            var entity = element.GetEntity(Schema);
             return entity.IsValid() ? entity.Get<string>("json") : null;
         }
 
-        public Schema CheckOrInit()
+        private static Schema CheckOrInit()
         {
-            return Schema.Lookup(_jsonSchemaGuid) ?? Initialize();
+            return Schema.Lookup(JsonSchemaGuid) ?? Initialize();
         }
 
-        private Schema Initialize()
+        private static Schema Initialize()
         {
-            var e = new SchemaBuilder(_jsonSchemaGuid);
+            var e = new SchemaBuilder(JsonSchemaGuid);
             e.SetSchemaName("altec_json_schema");
             e.SetReadAccessLevel(AccessLevel.Public);
             e.SetWriteAccessLevel(AccessLevel.Public);

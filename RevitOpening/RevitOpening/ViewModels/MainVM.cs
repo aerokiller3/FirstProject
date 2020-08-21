@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using RevitOpening.Annotations;
+using RevitOpening.Extensions;
 using RevitOpening.Logic;
 using RevitOpening.Models;
 using RevitOpening.UI;
@@ -29,10 +30,8 @@ namespace RevitOpening.ViewModels
         private ExternalCommandData _commandData;
         private ElementSet _elements;
         private string _message;
-        private AltecJsonSchema _schema;
 
-
-        public string Offset { get; set; } = "200";
+        public string OffsetRatio { get; set; } = "1,5";
         public string Diameter { get; set; } = "200";
         public List<OpeningData> TasksAndOpenings { get; set; }
         public List<OpeningData> Tasks { get; set; }
@@ -112,7 +111,7 @@ namespace RevitOpening.ViewModels
                 return _combineTwoBoxes ??
                        (_combineTwoBoxes = new RelayCommand(obj =>
                        {
-                           var boxCombiner = new BoxCombiner(_document, _schema, _documents);
+                           var boxCombiner = new BoxCombiner(_document, _documents);
                            var tasksId = GetSelectedElements();
                            if (tasksId.Length != 2)
                            {
@@ -121,27 +120,23 @@ namespace RevitOpening.ViewModels
                            }
 
                            var tasks = tasksId
-                               .Select(t => t.GetElement(_documents))
+                               .Select(t => _documents.GetElement(t.IntegerValue))
                                .ToArray();
                            if (!IsOnlyTasksSelected(tasks))
                                return;
 
-                           var t1 = tasks[0].GetParentsData(_schema);
-                           var t2 = tasks[1].GetParentsData(_schema);
+                           var t1 = tasks[0].GetParentsData();
+                           var t2 = tasks[1].GetParentsData();
                            var isValidPair = boxCombiner.ValidateTasksForCombine(t1, t2);
-                           if (t1.HostId != t2.HostId)
+                           if (!isValidPair)
                            {
-                               MessageBox.Show("У заданий должен быть общий хост элемент");
+                               MessageBox.Show("Данные задания невозможно объеденить автоматически");
                                return;
                            }
 
-                           using (var t = new Transaction(_document))
-                           {
-                               t.Start("United tasks");
-                               boxCombiner.CreateUnitedTask(tasks[0], tasks[1]);
-                               t.Commit();
-                           }
+                           boxCombiner.CreateUnitedTask(tasks[0], tasks[1]);
 
+                           AnalyzeTasks();
                            UpdateTasks();
                        }));
             }
@@ -160,11 +155,11 @@ namespace RevitOpening.ViewModels
                                return;
 
                            var tasks = taskId
-                               .Select(t => t.GetElement(_documents));
+                               .Select(t => _documents.GetElement(t.IntegerValue));
                            if (!IsOnlyTasksSelected(tasks))
                                return;
 
-                           createOpeningInTaskBoxes.SetTasksParameters(Offset, Diameter);
+                           createOpeningInTaskBoxes.SetTasksParameters(OffsetRatio, Diameter);
                            createOpeningInTaskBoxes.SwapTasksToOpenings(tasks);
                            UpdateTasksAndOpenings();
                        }));
@@ -179,12 +174,12 @@ namespace RevitOpening.ViewModels
                        (_createAllTasks = new RelayCommand(obj =>
                            {
                                var createTask = new CreateTaskBoxes();
-                               createTask.SetTasksParameters(Offset, Diameter, CombineAll, Tasks, Openings);
+                               createTask.SetTasksParameters(OffsetRatio, Diameter, CombineAll, Tasks, Openings);
                                createTask.Execute(_commandData, ref _message, _elements);
                                AnalyzeTasks();
                                UpdateTasksAndOpenings();
                            },
-                           obj => double.TryParse(Offset, out _) && double.TryParse(Diameter, out _)));
+                           obj => double.TryParse(OffsetRatio, out _) && double.TryParse(Diameter, out _)));
             }
         }
 
@@ -217,7 +212,7 @@ namespace RevitOpening.ViewModels
                        (_changeTasksToOpenings = new RelayCommand(obj =>
                        {
                            var createOpeningInTaskBoxes = new CreateOpeningInTaskBoxes();
-                           createOpeningInTaskBoxes.SetTasksParameters(Offset, Diameter);
+                           createOpeningInTaskBoxes.SetTasksParameters(OffsetRatio, Diameter);
                            createOpeningInTaskBoxes.Execute(_commandData, ref _message, _elements);
                            UpdateTasksAndOpenings();
                        }));
@@ -226,7 +221,7 @@ namespace RevitOpening.ViewModels
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public void Init(ExternalCommandData commandData, string message, ElementSet elements, AltecJsonSchema schema)
+        public void Init(ExternalCommandData commandData, string message, ElementSet elements)
         {
             _commandData = commandData;
             _message = message;
@@ -234,24 +229,12 @@ namespace RevitOpening.ViewModels
             _document = commandData.Application.ActiveUIDocument.Document;
             _documents = commandData.Application.Application.Documents
                 .Cast<Document>();
-            _schema = schema;
             UpdateTasksAndOpenings();
         }
 
         private void AnalyzeTasks()
         {
-            var elements = new List<FamilyInstance>();
-            elements.AddRange(_document
-                .GetTasksFromDocument(Families.FloorRectTaskFamily)
-                .Cast<FamilyInstance>());
-            elements.AddRange(_document
-                .GetTasksFromDocument(Families.WallRectTaskFamily)
-                .Cast<FamilyInstance>());
-            elements.AddRange(_document
-                .GetTasksFromDocument(Families.WallRoundTaskFamily)
-                .Cast<FamilyInstance>());
-
-            new CollisionAnalyzer(_document, elements, _documents).ExecuteAnalysis();
+            new CollisionAnalyzer(_document, _documents).ExecuteAnalysis();
         }
 
         private ElementId[] GetSelectedElements()
@@ -284,24 +267,16 @@ namespace RevitOpening.ViewModels
 
         private void UpdateTasks()
         {
-            Tasks = new List<OpeningData>();
-            UpdateElementsCollection(Tasks, Families.FloorRectTaskFamily);
-            UpdateElementsCollection(Tasks, Families.WallRectTaskFamily);
-            UpdateElementsCollection(Tasks, Families.WallRoundTaskFamily);
+            Tasks = _documents.GetAllTasks()
+                .Select(t => t.GetParentsData().BoxData)
+                .ToList();
         }
 
         private void UpdateOpenings()
         {
-            Openings = new List<OpeningData>();
-            UpdateElementsCollection(Openings, Families.WallRectOpeningFamily);
-            UpdateElementsCollection(Openings, Families.FloorRectOpeningFamily);
-            UpdateElementsCollection(Openings, Families.WallRoundOpeningFamily);
-        }
-
-        private void UpdateElementsCollection(List<OpeningData> collection, FamilyParameters familyType)
-        {
-            var elements = _document.GetTasksFromDocument(familyType);
-            collection.AddRange(elements.Select(el => el.GetParentsData(_schema).BoxData));
+            Openings = _documents.GetAllOpenings()
+                .Select(op => op.GetParentsData().BoxData)
+                .ToList();
         }
 
         [NotifyPropertyChangedInvocator]

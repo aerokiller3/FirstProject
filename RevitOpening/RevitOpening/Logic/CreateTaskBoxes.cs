@@ -6,6 +6,7 @@ using Autodesk.Revit.DB.Electrical;
 using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.DB.Plumbing;
 using Autodesk.Revit.UI;
+using RevitOpening.Extensions;
 using RevitOpening.Models;
 
 namespace RevitOpening.Logic
@@ -20,13 +21,11 @@ namespace RevitOpening.Logic
         private double _maxDiameter;
         private double _offset;
         private HashSet<MyXYZ> _openings;
-        private AltecJsonSchema _schema;
         private HashSet<MyXYZ> _tasks;
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             _document = commandData.Application.ActiveUIDocument.Document;
-            _schema = new AltecJsonSchema();
             _documents = commandData.Application.Application
                 .Documents.Cast<Document>()
                 .ToList();
@@ -44,7 +43,7 @@ namespace RevitOpening.Logic
             CreateAllTaskBoxes(FindIntersectionsWith(floors, pipes));
             CreateAllTaskBoxes(FindIntersectionsWith(floors, trays));
             if (_combineAll)
-                new BoxCombiner(_document, _schema, _documents).CombineAllBoxes();
+                new BoxCombiner(_document, _documents).CombineAllBoxes();
 
             return Result.Succeeded;
         }
@@ -89,18 +88,17 @@ namespace RevitOpening.Logic
         {
             using (var transaction = new Transaction(_document))
             {
-                var boxCalculator = new BoxCalculator();
                 transaction.Start("Create task box");
                 foreach (var ductsInWall in pipesInElements)
                 foreach (var curve in ductsInWall.Value)
                 {
                     var openingParameters =
-                        boxCalculator.CalculateBoxInElement(ductsInWall.Key, curve, _offset, _maxDiameter);
+                        BoxCalculator.CalculateBoxInElement(ductsInWall.Key, curve, _offset, _maxDiameter);
                     if (openingParameters == null)
                         continue;
 
                     openingParameters.Level = _documents
-                        .GetElementFromDocuments(ductsInWall.Key.LevelId.IntegerValue).Name;
+                        .GetElement(ductsInWall.Key.LevelId.IntegerValue).Name;
                     var parentsData = new OpeningParentsData(ductsInWall.Key.Id.IntegerValue, curve.Id.IntegerValue,
                         ductsInWall.Key.GetType(), curve.GetType(), openingParameters);
 
@@ -108,7 +106,7 @@ namespace RevitOpening.Logic
                         || (_openings?.Contains(openingParameters.IntersectionCenter) ?? false))
                         continue;
 
-                    BoxCreator.CreateTaskBox(parentsData, _document, _schema);
+                    BoxCreator.CreateTaskBox(parentsData, _document);
                 }
 
                 transaction.Commit();

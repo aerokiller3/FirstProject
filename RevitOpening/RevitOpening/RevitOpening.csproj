@@ -60,6 +60,13 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\BoundingBoxExtensions.cs" />
+    <Compile Include="Extensions\DocumentExtensions.cs" />
+    <Compile Include="Extensions\DocumentsExtensions.cs" />
+    <Compile Include="Extensions\ElementExtensions.cs" />
+    <Compile Include="Extensions\GeometryElementExtensions.cs" />
+    <Compile Include="Extensions\LineExtensions.cs" />
+    <Compile Include="Extensions\MEPCurveExtensions.cs" />
     <Compile Include="Logic\BoxCombiner.cs" />
     <Compile Include="Logic\BoxCreator.cs" />
     <Compile Include="Logic\AltecJsonSchema.cs" />
@@ -69,10 +76,10 @@
     <Compile Include="Logic\Collisions.cs" />
     <Compile Include="Models\ElementGeometry.cs" />
     <Compile Include="Logic\Families.cs" />
-    <Compile Include="Logic\Extensions.cs" />
+    <Compile Include="Extensions\DoubleExtensions.cs" />
     <Compile Include="Logic\FamilyLoader.cs" />
     <Compile Include="Models\LevelInfo.cs" />
-    <Compile Include="Models\SelectionFilter.cs" />
+    <Compile Include="Logic\SelectionFilter.cs" />
     <Compile Include="UI\FilterStatusControl.xaml.cs">
       <DependentUpon>FilterStatusControl.xaml</DependentUpon>
     </Compile>
@@ -138,5 +145,6 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

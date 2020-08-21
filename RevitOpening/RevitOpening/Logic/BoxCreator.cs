@@ -2,14 +2,14 @@
 using System;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
+using RevitOpening.Extensions;
 using RevitOpening.Models;
 
 namespace RevitOpening.Logic
 {
     public static class BoxCreator
     {
-        public static FamilyInstance CreateTaskBox(OpeningParentsData parentsData, Document document,
-            AltecJsonSchema schema)
+        public static FamilyInstance CreateTaskBox(OpeningParentsData parentsData, Document document)
         {
             var familyParameters = Families.GetDataFromSymbolName(parentsData.BoxData.FamilyName);
             var familySymbol = Families.GetFamilySymbol(document, parentsData.BoxData.FamilyName);
@@ -48,7 +48,7 @@ namespace RevitOpening.Logic
 #endif
             parentsData.LocationPoint = new MyXYZ(((LocationPoint) newBox.Location).Point);
             parentsData.BoxData.Id = newBox.Id.IntegerValue;
-            newBox.SetParentsData(parentsData, schema);
+            newBox.SetParentsData(parentsData);
 
             return newBox;
         }
