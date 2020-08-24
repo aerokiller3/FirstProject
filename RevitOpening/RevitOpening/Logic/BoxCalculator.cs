@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.DB;
 using RevitOpening.Extensions;
@@ -8,7 +9,8 @@ namespace RevitOpening.Logic
 {
     public static class BoxCalculator
     {
-        public static OpeningData CalculateBoxInElement(Element element, MEPCurve pipe, double offsetRatio, double maxDiameter)
+        public static OpeningData CalculateBoxInElement(Element element, MEPCurve pipe, double offsetRatio,
+            double maxDiameter)
         {
             switch (element)
             {
@@ -36,8 +38,10 @@ namespace RevitOpening.Logic
             if (familyParameters == Families.WallRectTaskFamily)
                 intersectionCenter -= new XYZ(0, 0, taskHeight / 2);
             //
+
             return new OpeningData(taskWidth, taskHeight, taskDepth, direction,
-                intersectionCenter, wallData, pipeData, familyParameters.SymbolName);
+                intersectionCenter, new List<ElementGeometry> {wallData},
+                new List<ElementGeometry> {pipeData}, familyParameters.SymbolName);
         }
 
         private static OpeningData CalculateBoxInFloor(CeilingAndFloor floor, MEPCurve pipe, double offsetRatio)
@@ -53,10 +57,12 @@ namespace RevitOpening.Logic
             var taskDepth = floorData.SolidInfo.Max.Z - floorData.SolidInfo.Min.Z;
 
             return new OpeningData(taskWidth, taskHeight, taskDepth, direction,
-                intersectionCenter, floorData, pipeData, Families.FloorRectTaskFamily.SymbolName);
+                intersectionCenter, new List<ElementGeometry> {floorData},
+                new List<ElementGeometry> {pipeData}, Families.FloorRectTaskFamily.SymbolName);
         }
 
-        private static (XYZ, XYZ) CalculateCenterAndDirectionInFloor(ElementGeometry pipeData, CeilingAndFloor floor, MEPCurve pipe)
+        private static (XYZ, XYZ) CalculateCenterAndDirectionInFloor(ElementGeometry pipeData, CeilingAndFloor floor,
+            MEPCurve pipe)
         {
             var floorSolid = floor.get_Geometry(new Options()).FirstOrDefault() as Solid;
             var direction = pipe.ConnectorManager.Connectors
@@ -74,10 +80,11 @@ namespace RevitOpening.Logic
             return (intersectionCenter, direction);
         }
 
-        private static (XYZ, XYZ) CalculateCenterAndDirectionInWall(ElementGeometry wallData, ElementGeometry pipeData, Wall wall)
+        private static (XYZ, XYZ) CalculateCenterAndDirectionInWall(ElementGeometry wallData, ElementGeometry pipeData,
+            Wall wall)
         {
             var geomSolid = wall.get_Geometry(new Options()).FirstOrDefault() as Solid;
-            var line = (Line)wallData.Curve;
+            var line = (Line) wallData.Curve;
             var byLineWallOrientation = line.Direction.CrossProduct(XYZ.BasisZ.Negate());
             var bias = wall.Width * byLineWallOrientation / 2;
             var curves = geomSolid?
@@ -109,7 +116,7 @@ namespace RevitOpening.Logic
                            SqrtOfSqrSum(pipeData.XLen, pipeData.YLen)));
             horizontalAngleBetweenWallAndPipe = GetAcuteAngle(horizontalAngleBetweenWallAndPipe);
 
-            return CalculateSize(wallWidth, horizontalAngleBetweenWallAndPipe, pipeWidth, offsetRatio);
+            return CalculateTaskSize(wallWidth, horizontalAngleBetweenWallAndPipe, pipeWidth, offsetRatio);
         }
 
         private static double CalculateHeightInWall(double pipeWidth, double wallWidth, ElementGeometry pipeData,
@@ -120,20 +127,20 @@ namespace RevitOpening.Logic
                                                     pipeData.ZLen * pipeData.ZLen));
             verticalAngleBetweenWallAndPipe = GetAcuteAngle(verticalAngleBetweenWallAndPipe);
 
-            return CalculateSize(wallWidth, verticalAngleBetweenWallAndPipe, pipeWidth, offsetRatio);
+            return CalculateTaskSize(wallWidth, verticalAngleBetweenWallAndPipe, pipeWidth, offsetRatio);
         }
 
-        private static double CalculateSize(double wallWidth, double angle, double ductWidth, double offsetRatio)
+        private static double CalculateTaskSize(double wallWidth, double angle, double ductWidth, double offsetRatio)
         {
             return (wallWidth / Math.Tan(angle) + ductWidth / Math.Sin(angle)) * offsetRatio;
         }
 
-        public static double SqrtOfSqrSum(double a, double b)
+        private static double SqrtOfSqrSum(double a, double b)
         {
             return Math.Sqrt(a * a + b * b);
         }
 
-        public static double GetAcuteAngle(double angel)
+        private static double GetAcuteAngle(double angel)
         {
             return angel > Math.PI / 2
                 ? Math.PI - angel

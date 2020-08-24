@@ -65,26 +65,27 @@
     <Compile Include="Extensions\DocumentsExtensions.cs" />
     <Compile Include="Extensions\ElementExtensions.cs" />
     <Compile Include="Extensions\GeometryElementExtensions.cs" />
+    <Compile Include="Extensions\IEnumerableExtensions.cs" />
     <Compile Include="Extensions\LineExtensions.cs" />
     <Compile Include="Extensions\MEPCurveExtensions.cs" />
+    <Compile Include="ExternalCommands\CombineTwoBoxes.cs" />
     <Compile Include="Logic\BoxCombiner.cs" />
     <Compile Include="Logic\BoxCreator.cs" />
     <Compile Include="Logic\AltecJsonSchema.cs" />
     <Compile Include="Logic\CollisionAnalyzer.cs" />
-    <Compile Include="Logic\CreateOpeningInTaskBoxes.cs" />
-    <Compile Include="Logic\CreateTaskBoxes.cs" />
+    <Compile Include="ExternalCommands\CreateOpeningInTaskBoxes.cs" />
+    <Compile Include="ExternalCommands\CreateTaskBoxes.cs" />
     <Compile Include="Logic\Collisions.cs" />
     <Compile Include="Models\ElementGeometry.cs" />
     <Compile Include="Logic\Families.cs" />
     <Compile Include="Extensions\DoubleExtensions.cs" />
     <Compile Include="Logic\FamilyLoader.cs" />
-    <Compile Include="Models\LevelInfo.cs" />
-    <Compile Include="Logic\SelectionFilter.cs" />
+    <Compile Include="ExternalCommands\SelectionFilter.cs" />
     <Compile Include="UI\FilterStatusControl.xaml.cs">
       <DependentUpon>FilterStatusControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="UI\Opening.cs" />
-    <Compile Include="Logic\Program.cs" />
+    <Compile Include="ExternalCommands\StartProgram.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>

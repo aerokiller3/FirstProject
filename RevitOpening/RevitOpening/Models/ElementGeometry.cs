@@ -41,7 +41,7 @@ namespace RevitOpening.Models
 
         public override bool Equals(object obj)
         {
-            var tolerance = Math.Pow(10, -7);
+            const double tolerance = 0.000_000_1;
             return obj is ElementGeometry geometry
                    && Math.Abs(geometry.XLen - XLen) < tolerance
                    && Math.Abs(geometry.YLen - YLen) < tolerance

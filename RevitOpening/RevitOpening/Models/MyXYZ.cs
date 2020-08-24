@@ -40,7 +40,7 @@ namespace RevitOpening.Models
 
         public override bool Equals(object obj)
         {
-            var tolerance = Math.Pow(10, -7);
+            const double tolerance = 0.000_000_1;
             return obj is MyXYZ point
                    && Math.Abs(point.X - X) < tolerance
                    && Math.Abs(point.Y - Y) < tolerance

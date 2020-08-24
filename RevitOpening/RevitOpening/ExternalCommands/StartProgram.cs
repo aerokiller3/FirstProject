@@ -5,22 +5,19 @@ using Autodesk.Revit.UI;
 using RevitOpening.UI;
 using RevitOpening.ViewModels;
 
-namespace RevitOpening.Logic
+namespace RevitOpening.ExternalCommands
 {
     [Transaction(TransactionMode.Manual)]
-    public class Program : IExternalCommand
+    public class StartProgram : IExternalCommand
     {
-        private Document _document;
-
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            _document = commandData.Application.ActiveUIDocument.Document;
             var localMessage = message;
             var main = new MainControl();
-            (main.DataContext as MainVM).Init(commandData, localMessage, elements);
+            (main.DataContext as MainVM)?.Init(commandData, localMessage, elements);
             var window = new Window
             {
-                Title = "Altec Tasks",
+                Title = "Альтек Отверстия",
                 Content = main,
                 Width = 1000,
                 Height = 450,

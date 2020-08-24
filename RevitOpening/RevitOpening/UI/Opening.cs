@@ -12,10 +12,12 @@ namespace RevitOpening.UI
     {
         public Result OnStartup(UIControlledApplication application)
         {
-            var ribbonPanel = application.CreateRibbonPanel("Altec Tasks");
+            const string moduleName = "Альтек Отверстия";
+            application.CreateRibbonTab(moduleName);
+            var ribbonPanel = application.CreateRibbonPanel(moduleName, moduleName);
             var currentDirectory = Assembly.GetExecutingAssembly().Location;
-            var mainButtonData = new PushButtonData("Tasks",
-                "Tasks", currentDirectory, "RevitOpening.Program");
+            var mainButtonData = new PushButtonData("Create Tasks",
+                "Create Tasks", currentDirectory, "RevitOpening.ExternalCommands.StartProgram");
             var pushButton = ribbonPanel.AddItem(mainButtonData) as PushButton;
             var image = Resources.opening;
             pushButton.LargeImage = CreateBitmapSourceFromHBitmap(image.GetHbitmap(),

@@ -9,6 +9,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using RevitOpening.Annotations;
 using RevitOpening.Extensions;
+using RevitOpening.ExternalCommands;
 using RevitOpening.Logic;
 using RevitOpening.Models;
 using RevitOpening.UI;
@@ -25,7 +26,7 @@ namespace RevitOpening.ViewModels
         private RelayCommand _updateTaskInfo;
         private RelayCommand _filterTasks;
 
-        private Document _document;
+        private Document _currentDocument;
         private IEnumerable<Document> _documents;
         private ExternalCommandData _commandData;
         private ElementSet _elements;
@@ -111,7 +112,6 @@ namespace RevitOpening.ViewModels
                 return _combineTwoBoxes ??
                        (_combineTwoBoxes = new RelayCommand(obj =>
                        {
-                           var boxCombiner = new BoxCombiner(_document, _documents);
                            var tasksId = GetSelectedElements();
                            if (tasksId.Length != 2)
                            {
@@ -127,14 +127,14 @@ namespace RevitOpening.ViewModels
 
                            var t1 = tasks[0].GetParentsData();
                            var t2 = tasks[1].GetParentsData();
-                           var isValidPair = boxCombiner.ValidateTasksForCombine(t1, t2);
+                           var isValidPair = BoxCombiner.ValidateTasksForCombine(_documents, t1, t2);
                            if (!isValidPair)
                            {
                                MessageBox.Show("Данные задания невозможно объеденить автоматически");
                                return;
                            }
 
-                           boxCombiner.CreateUnitedTask(tasks[0], tasks[1]);
+                           BoxCombiner.CombineTwoBoxes(_documents, _currentDocument,tasks[0], tasks[1]);
 
                            AnalyzeTasks();
                            UpdateTasks();
@@ -149,7 +149,7 @@ namespace RevitOpening.ViewModels
                 return _changeSelectedTaskToOpening ??
                        (_changeSelectedTaskToOpening = new RelayCommand(obj =>
                        {
-                           var createOpeningInTaskBoxes = new CreateOpeningInTaskBoxes(_document, _documents);
+                           var createOpeningInTaskBoxes = new CreateOpeningInTaskBoxes(_currentDocument, _documents);
                            var taskId = GetSelectedElements().ToList();
                            if (taskId.Count == 0)
                                return;
@@ -173,10 +173,21 @@ namespace RevitOpening.ViewModels
                 return _createAllTasks ??
                        (_createAllTasks = new RelayCommand(obj =>
                            {
-                               var createTask = new CreateTaskBoxes();
-                               createTask.SetTasksParameters(OffsetRatio, Diameter, CombineAll, Tasks, Openings);
-                               createTask.Execute(_commandData, ref _message, _elements);
-                               AnalyzeTasks();
+                               using (var t = new Transaction(_currentDocument, "Создание заданий"))
+                               {
+                                   t.Start();
+                                   var createTask = new CreateTaskBoxes(OffsetRatio, Diameter, CombineAll, Tasks, Openings);
+                                   createTask.Execute(_documents,_currentDocument);
+                                   t.Commit();
+                               }
+
+                               using (var t = new Transaction(_currentDocument, "Анализ заданий"))
+                               {
+                                   t.Start();
+                                   AnalyzeTasks();
+                                   t.Commit();
+                               }
+
                                UpdateTasksAndOpenings();
                            },
                            obj => double.TryParse(OffsetRatio, out _) && double.TryParse(Diameter, out _)));
@@ -226,7 +237,7 @@ namespace RevitOpening.ViewModels
             _commandData = commandData;
             _message = message;
             _elements = elements;
-            _document = commandData.Application.ActiveUIDocument.Document;
+            _currentDocument = commandData.Application.ActiveUIDocument.Document;
             _documents = commandData.Application.Application.Documents
                 .Cast<Document>();
             UpdateTasksAndOpenings();
@@ -234,7 +245,7 @@ namespace RevitOpening.ViewModels
 
         private void AnalyzeTasks()
         {
-            new CollisionAnalyzer(_document, _documents).ExecuteAnalysis();
+            CollisionAnalyzer.ExecuteAnalysis(_documents);
         }
 
         private ElementId[] GetSelectedElements()

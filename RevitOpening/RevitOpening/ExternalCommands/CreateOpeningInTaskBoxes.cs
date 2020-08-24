@@ -5,9 +5,10 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using RevitOpening.Extensions;
+using RevitOpening.Logic;
 using RevitOpening.Models;
 
-namespace RevitOpening.Logic
+namespace RevitOpening.ExternalCommands
 {
     [Transaction(TransactionMode.Manual)]
     public class CreateOpeningInTaskBoxes : IExternalCommand
@@ -32,7 +33,7 @@ namespace RevitOpening.Logic
             _document = commandData.Application.ActiveUIDocument.Document;
             _documents = commandData.Application.Application
                 .Documents.Cast<Document>();
-            new FamilyLoader(_document).LoadAllFamiliesToProject();
+            FamilyLoader.LoadAllFamiliesToProject(_document);
             var wallRectTasks = _document.GetTasks(Families.WallRectTaskFamily);
             var wallRoundTasks = _document.GetTasks(Families.WallRoundTaskFamily);
             var floorRectTasks = _document.GetTasks(Families.FloorRectTaskFamily);
@@ -136,10 +137,10 @@ namespace RevitOpening.Logic
                 return false;
 
             var parentsData = element.GetParentsData();
-            var pipe = _documents.GetElement(parentsData.PipeId);
-            var wall = _documents.GetElement(parentsData.HostId);
-            var isOldPipe = parentsData.BoxData.PipeGeometry.Equals(new ElementGeometry(pipe));
-            var isOldWall = parentsData.BoxData.WallGeometry.Equals(new ElementGeometry(wall));
+            var pipe = _documents.GetElement(parentsData.PipesIds.FirstOrDefault());
+            var wall = _documents.GetElement(parentsData.HostsIds.FirstOrDefault());
+            var isOldPipe = parentsData.BoxData.PipesGeometries.Equals(new ElementGeometry(pipe));
+            var isOldWall = parentsData.BoxData.HostsGeometries.Equals(new ElementGeometry(wall));
             var isOldBox = CheckBoxParametrs(element, parentsData.BoxData);
             var isImmutable = isOldBox && isOldPipe && isOldWall;
             if (!isImmutable)
@@ -165,7 +166,7 @@ namespace RevitOpening.Logic
         {
             var tolerance = Math.Pow(10, -7);
             var familyInstance = wallRectTask as FamilyInstance;
-            var familyParameters = Families.GetDataFromInstanseName(familyInstance.Name);
+            var familyParameters = Families.GetDataFromInstanceName(familyInstance.Name);
             var locPoint = new MyXYZ(((LocationPoint) familyInstance.Location).Point);
             double width, height;
             try

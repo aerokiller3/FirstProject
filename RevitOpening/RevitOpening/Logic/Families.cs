@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using Autodesk.Revit.DB;
 using RevitOpening.Models;
 
 namespace RevitOpening.Logic
@@ -50,24 +48,9 @@ namespace RevitOpening.Logic
             return AllFamilies.FirstOrDefault(f => f.SymbolName == familyName);
         }
 
-        public static FamilyParameters GetDataFromInstanseName(string familyName)
+        public static FamilyParameters GetDataFromInstanceName(string familyName)
         {
             return AllFamilies.FirstOrDefault(f => f.InstanceName == familyName);
-        }
-
-        public static FamilySymbol GetFamilySymbol(Document document, string familyName)
-        {
-            var collector = new FilteredElementCollector(document)
-                .OfClass(typeof(FamilySymbol))
-                .OfCategory(BuiltInCategory.OST_Windows);
-
-            var familySymbol = collector
-                .Cast<FamilySymbol>()
-                .FirstOrDefault(x => x.FamilyName == familyName);
-            if (familySymbol == null)
-                throw new Exception("Невозможно найти семейство");
-            collector.Dispose();
-            return familySymbol;
         }
     }
 }

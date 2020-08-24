@@ -5,46 +5,33 @@ using Autodesk.Revit.DB;
 
 namespace RevitOpening.Logic
 {
-    public class FamilyLoader
+    public static class FamilyLoader
     {
-        private readonly Document _document;
-
-        public FamilyLoader(Document document)
+        public static void LoadAllFamiliesToProject(Document document)
         {
-            _document = document;
+            foreach (var family in Families.AllFamilies)
+                LoadFamilyToProject(family.SymbolName, document);
         }
 
-        public void LoadAllFamiliesToProject()
-        {
-            using (var transaction = new Transaction(_document))
-            {
-                transaction.Start("Loading families");
-                foreach (var family in Families.AllFamilies)
-                    LoadFamilyToProject(family.SymbolName);
-                transaction.Commit();
-            }
-        }
-
-        private bool IsFamilyInProject(string familyName)
-        {
-            var familiesInProject = new FilteredElementCollector(_document)
-                .OfClass(typeof(Family))
-                .Cast<Family>()
-                .FirstOrDefault(f => f.Name == familyName);
-
-            return familiesInProject != null;
-        }
-
-        private void LoadFamilyToProject(string familyName)
+        private static void LoadFamilyToProject(string familyName, Document document)
         {
             var currentDirectory = GetCurrentDirectory();
             var fileName = $"{currentDirectory}\\Families\\{familyName}.rfa";
-            var isInProj = IsFamilyInProject(familyName);
-            var exist = File.Exists(fileName);
-            if (!isInProj && exist) _document.LoadFamily(fileName);
+            var isInProj = IsFamilyInProject(familyName, document);
+            var isFileExist = File.Exists(fileName);
+            if (!isInProj && isFileExist)
+                document.LoadFamily(fileName);
         }
 
-        private string GetCurrentDirectory()
+        private static bool IsFamilyInProject(string familyName, Document document)
+        {
+            return new FilteredElementCollector(document)
+                .OfClass(typeof(Family))
+                .Cast<Family>()
+                .FirstOrDefault(f => f.Name == familyName) != null;
+        }
+
+        private static string GetCurrentDirectory()
         {
             var currentDirectory = Assembly.GetExecutingAssembly().Location;
             var endIndex = currentDirectory.LastIndexOf('\\');

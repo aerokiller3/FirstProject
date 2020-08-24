@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.DB;
 using RevitOpening.Models;
@@ -7,7 +8,7 @@ namespace RevitOpening.Extensions
 {
     public static class DocumentExtensions
     {
-        public static IEnumerable<Element> GetTasks(this Document document, FamilyParameters familyParameters)
+        public static List<FamilyInstance> GetTasks(this Document document, FamilyParameters familyParameters)
         {
             using (var collector = new FilteredElementCollector(document)
                 .OfCategory(BuiltInCategory.OST_Windows)
@@ -15,8 +16,25 @@ namespace RevitOpening.Extensions
             {
                 return collector
                     .Where(e => e.Name == familyParameters.InstanceName)
+                    .Cast<FamilyInstance>()
                     .ToList();
             }
+        }
+
+        public static FamilySymbol GetFamilySymbol(this Document document, string familyName)
+        {
+            var collector = new FilteredElementCollector(document)
+                .OfCategory(BuiltInCategory.OST_Windows)
+                .OfClass(typeof(FamilySymbol));
+
+            var familySymbol = collector
+                .Cast<FamilySymbol>()
+                .FirstOrDefault(x => x.FamilyName == familyName);
+            if (familySymbol == null)
+                throw new Exception("Невозможно найти семейство");
+
+            collector.Dispose();
+            return familySymbol;
         }
     }
 }

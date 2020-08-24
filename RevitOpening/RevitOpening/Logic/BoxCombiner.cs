@@ -1,204 +1,209 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
-using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Selection;
 using RevitOpening.Extensions;
 using RevitOpening.Models;
 
 namespace RevitOpening.Logic
 {
-    [Transaction(TransactionMode.Manual)]
-    public class BoxCombiner : IExternalCommand
+    public static class BoxCombiner
     {
-        private Document _document;
-        private IEnumerable<Document> _documents;
-
-        public BoxCombiner()
+        //?
+        public static bool ValidateTasksForCombine(IEnumerable<Document> documents, OpeningParentsData data1,
+            OpeningParentsData data2)
         {
+            return (data1.PipesIds.AlmostEqualTo(data2.PipesIds) || data1.HostsIds.AlmostEqualTo(data2.HostsIds))
+                   && data1.BoxData.FamilyName == data2.BoxData.FamilyName
+                   && (documents.GetElement(data1.HostsIds.FirstOrDefault()) is Wall
+                       || documents.GetElement(data1.HostsIds.FirstOrDefault()) is CeilingAndFloor);
         }
 
-        public BoxCombiner(Document document, IEnumerable<Document> documents)
+        public static void CombineAllBoxes(IEnumerable<Document> documents, Document currentDocument)
         {
-            _documents = documents;
-            _document = document;
-        }
-
-        public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
-        {
-            _document = commandData.Application.ActiveUIDocument.Document;
-            _documents = commandData.Application.Application.Documents.Cast<Document>();
-
-            var select = commandData.Application.ActiveUIDocument.Selection;
-            var selected = select.PickObjects(ObjectType.Element, new SelectionFilter(x =>
-                        x is FamilyInstance,
-                    (x, _) => true))
-                .Select(x => _document.GetElement(x))
-                .ToArray();
-            //.GetElementIds()
-            //.Select(x => _documents.GetElement(x.IntegerValue))
-            //.ToArray();
-            CreateUnitedTask(selected[0], selected[1]);
-
-            return Result.Succeeded;
-        }
-
-        public void CombineAllBoxes()
-        {
-            var isElementsUnited1 = true;
-            var isElementsUnited2 = true;
-            while (isElementsUnited1 && isElementsUnited2)
+            var isElementsUnited = true;
+            while (isElementsUnited)
             {
-                isElementsUnited1 = CombineOneTypeBoxes(Families.WallRectTaskFamily);
-                isElementsUnited2 = CombineOneTypeBoxes(Families.FloorRectTaskFamily);
+                isElementsUnited = false;
+                isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, Families.WallRectTaskFamily);
+                isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, Families.FloorRectTaskFamily);
+                isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, Families.WallRoundTaskFamily);
             }
         }
 
-        public Element CreateUnitedTask(Element el1, Element el2)
+        public static FamilyInstance CombineTwoBoxes(IEnumerable<Document> documents, Document currentDocument,
+            Element el1, Element el2)
         {
             var data1 = el1.GetParentsData();
             var data2 = el2.GetParentsData();
-            if (!ValidateTasksForCombine(data1, data2))
+            if (!ValidateTasksForCombine(documents, data1, data2))
                 throw new Exception("Недопустимый вариант объединения");
 
-            OpeningData opening = null;
-            if (data1.PipeId == data2.PipeId)
-                opening = CalculateUnitedTaskOnOnePipe(el1, el2, data1, data2);
-            else if (_documents.GetElement(data1.HostId) is Wall)
-                opening = CalculateUnitedTaskInWall(el1, el2, data1, data2);
-            else if (_documents.GetElement(data1.HostId) is CeilingAndFloor)
-                opening = CalculateUnitedTaskInFloor(el1, el2, data1, data2);
-            Element createdElement=null;
+            OpeningData newOpening = null;
+            if (data1.PipesIds.AlmostEqualTo(data2.PipesIds))
+                newOpening = CalculateUnitedTaskOnOnePipe(data1, data2);
+            else if (documents.GetElement(data1.HostsIds.FirstOrDefault()) is Wall)
+                if (data1.BoxData.FamilyName == Families.WallRoundTaskFamily.SymbolName
+                    || data1.BoxData.FamilyName == Families.WallRoundTaskFamily.SymbolName)
+                    newOpening = CalculateUnitedTaskInWallWithRounds(data1, data2);
+                else
+                    newOpening = CalculateUnitedTaskInWallWithRects(el1, el2, data1, data2);
+            else if (documents.GetElement(data1.HostsIds.FirstOrDefault()) is CeilingAndFloor)
+                newOpening = CalculateUnitedTaskInFloor(el1, el2, data1, data2);
 
-            using (var t = new Transaction(_document))
-            {
-                t.Start("TestCombine");
-                data1.BoxData = opening;
-                createdElement = BoxCreator.CreateTaskBox(data1, _document);
-                _document.Delete(el1.Id);
-                _document.Delete(el2.Id);
+            var newData = new OpeningParentsData(data1.HostsIds.Union(data2.HostsIds).ToList(),
+                data1.PipesIds.Union(data2.PipesIds).ToList(),
+                newOpening);
 
-                t.Commit();
-            }
-
+            var createdElement = BoxCreator.CreateTaskBox(newData, currentDocument);
+            currentDocument.Delete(el1.Id);
+            currentDocument.Delete(el2.Id);
 
             return createdElement;
         }
 
-        private OpeningData CalculateUnitedTaskInFloor(Element el1, Element el2, OpeningParentsData data1,
+        private static bool CombineOneTypeBoxes(IEnumerable<Document> documents, Document currentDocument,
+            FamilyParameters familyData)
+        {
+            var tasks = currentDocument.GetTasks(familyData);
+            var intersections = FindTaskIntersections(tasks).ToList();
+            foreach (var (task1, task2) in intersections)
+                CombineTwoBoxes(documents, currentDocument, task1, task2);
+            return intersections.Count > 0;
+        }
+
+        private static IEnumerable<(Element, Element)> FindTaskIntersections(List<FamilyInstance> elements)
+        {
+            for (var i = 0; i < elements.Count; i++)
+            {
+                var data = elements[i].GetParentsData();
+                var tolerance = new XYZ(0.001, 0.001, 0.001);
+                var angle = XYZ.BasisY.Negate().AngleTo(data.BoxData.Direction.XYZ);
+                var transform = Transform.CreateRotation(XYZ.BasisZ, -angle);
+                var solid = elements[i].GetUnitedSolid(null, transform, tolerance);
+                var filter = new ElementIntersectsSolidFilter(solid);
+                for (var j = i + 1; j < elements.Count; j++)
+                {
+                    if (elements[i].Id == elements[j].Id || !filter.PassesFilter(elements[j]))
+                        continue;
+
+                    yield return (elements[i], elements[j]);
+                    elements.RemoveAt(j);
+                    elements.RemoveAt(i);
+                    i -= 1;
+                    j -= 1;
+                }
+            }
+        }
+
+        private static OpeningData CalculateUnitedTaskOnOnePipe(OpeningParentsData data1, OpeningParentsData data2)
+        {
+            var direction = data1.BoxData.IntersectionCenter.XYZ - data2.BoxData.IntersectionCenter.XYZ;
+            var depth = data1.BoxData.Depth + data2.BoxData.Depth;
+            var normalDirection = direction.Normalize();
+            var source = data1.BoxData.Direction.XYZ;
+            source = Transform.CreateRotation(-XYZ.BasisZ, Math.PI / 2).OfVector(source);
+            var center = normalDirection.IsAlmostEqualTo(source)
+                ? data1.BoxData.IntersectionCenter.XYZ
+                : data2.BoxData.IntersectionCenter.XYZ;
+            var (hostsGeometries, pipesGeometries) = UnionTwoData(data1, data2);
+            return new OpeningData(
+                data1.BoxData.Width, data1.BoxData.Height, depth,
+                data1.BoxData.Direction.XYZ,
+                center,
+                hostsGeometries,
+                pipesGeometries,
+                data1.BoxData.FamilyName);
+        }
+
+        private static OpeningData CalculateUnitedTaskInFloor(Element el1, Element el2, OpeningParentsData data1,
             OpeningParentsData data2)
         {
-            var unitedSolid = GetUnitedSolidForFloor((FamilyInstance) el1, (FamilyInstance) el2);
-            var angle1 = XYZ.BasisX.AngleTo(data1.BoxData.Direction.XYZ);
-            var t = Transform.CreateRotation(XYZ.BasisZ, -angle1);
-            var backT = Transform.CreateRotation(XYZ.BasisZ, angle1);
-            var bSolid = SolidUtils.CreateTransformed(unitedSolid, t);
-            var faceOrigin = unitedSolid.Faces.Cast<PlanarFace>()
+            var angle = XYZ.BasisX.AngleTo(data1.BoxData.Direction.XYZ);
+            var transform = Transform.CreateRotation(XYZ.BasisZ, -angle);
+            var unitedSolid = el1.GetUnitedSolid(el2, transform);
+            var transformedSolid = SolidUtils.CreateTransformed(unitedSolid, transform);
+            var direction = unitedSolid.Faces.Cast<PlanarFace>()
                 .FirstOrDefault(f => Math.Abs(f.FaceNormal.Z + 1) < Math.Pow(10, -7))
                 .YVector;
-            var direction = faceOrigin;
-            var minUnited = bSolid.GetBoundingBox().Min;
-            var maxUnited = bSolid.GetBoundingBox().Max;
+            var minUnited = transformedSolid.GetBoundingBox().Min;
+            var maxUnited = transformedSolid.GetBoundingBox().Max;
 
-
-            var center1 = data1.BoxData.IntersectionCenter.XYZ;
-            var center2 = data2.BoxData.IntersectionCenter.XYZ;
-            var tCenter1 = t.OfPoint(center1);
-            var tCenter2 = t.OfPoint(center2);
-            var middleX = Math.Min(tCenter1.X, tCenter2.X);
-            var middleZ = Math.Min(tCenter1.Z, tCenter2.Z);
-            var middleY = (tCenter1.Y + tCenter2.Y) / 2;
-            var tMiddle = new XYZ(middleX, middleY, middleZ);
-
-            var middle = unitedSolid.ComputeCentroid();
-            middle = new XYZ(middle.X, middle.Y, data1.BoxData.IntersectionCenter.Z);
+            var center = unitedSolid.ComputeCentroid();
+            center = new XYZ(center.X, center.Y, data1.BoxData.IntersectionCenter.Z);
             var width = maxUnited.Y - minUnited.Y;
             var height = maxUnited.X - minUnited.X;
-            var depth = data1.BoxData.Depth;
-
+            var (hostsGeometries, pipesGeometries) = UnionTwoData(data1, data2);
             return new OpeningData(
-                width, height, depth,
-                direction, middle,
-                data1.BoxData.WallGeometry,
-                data1.BoxData.PipeGeometry,
-                data1.BoxData.FamilyName);
+                width, height, data1.BoxData.Depth,
+                direction, center,
+                hostsGeometries,
+                pipesGeometries,
+                Families.FloorRectTaskFamily.SymbolName);
         }
 
-        public Solid GetUnitedSolidForFloor(FamilyInstance el1, FamilyInstance el2)
-        {
-            var floors = new[] { el1, el2 };
-            var solids = floors
-                .Select(x =>
-                    x.get_Geometry(new Options())
-                        .GetAllSolids()
-                        .FirstOrDefault(s => Math.Abs(s.Volume) > 0.0000001));
-
-            var angle = XYZ.BasisX.AngleTo(el1.GetParentsData().BoxData.Direction.XYZ);
-            var t = Transform.CreateRotation(XYZ.BasisZ, -angle);
-            var backT = Transform.CreateRotation(XYZ.BasisZ, angle);
-            var tPoints = solids
-                .SelectMany(x => x?.Edges
-                    .Cast<Edge>()
-                    .Select(y => y.AsCurve().GetEndPoint(0))
-                    .Select(y => t.OfPoint(y)));
-
-            var min = GetMinPointsCoordinates(tPoints);
-            var max = GetMaxPointsCoordinates(tPoints);
-            var bbox = new BoundingBoxXYZ
-            {
-                Min = min,
-                Max = max
-            };
-            var solid = bbox.CreateSolid();
-            var backSolid = SolidUtils.CreateTransformed(solid, backT);
-            using (var tr = new SubTransaction(_document))
-            {
-                tr.Start();
-                var ds = DirectShape.CreateElement(_document, new ElementId(BuiltInCategory.OST_Doors));
-                ds.SetShape(new[] { backSolid });
-                tr.Commit();
-            }
-
-            return backSolid;
-        }
-
-        private OpeningData CalculateUnitedTaskInWall(Element el1, Element el2, OpeningParentsData data1,
+        private static OpeningData CalculateUnitedTaskInWallWithRounds(OpeningParentsData data1,
             OpeningParentsData data2)
         {
-            var unitedSolid = GetUnitedSolid((FamilyInstance) el1, (FamilyInstance) el2);
             var angle = XYZ.BasisY.Negate().AngleTo(data1.BoxData.Direction.XYZ);
-            var t = Transform.CreateRotation(XYZ.BasisZ, -angle);
-            var bSolid = SolidUtils.CreateTransformed(unitedSolid, t);
-            var minUnited = bSolid.GetBoundingBox().Min;
-            var maxUnited = bSolid.GetBoundingBox().Max;
-            var middle = FindTasksMiddle(data1, data2, unitedSolid);
-            var width = maxUnited.Y - minUnited.Y;
-            var height = maxUnited.Z - minUnited.Z;
-            var depth = data1.BoxData.Depth;
+            var transform = Transform.CreateRotation(XYZ.BasisZ, -angle);
+            var backT = transform.Inverse;
+            var center1 = transform.OfPoint(data1.BoxData.IntersectionCenter.XYZ);
+            var center2 = transform.OfPoint(data2.BoxData.IntersectionCenter.XYZ);
+            var width = Math.Abs(transform.OfPoint(center1).Y - transform.OfPoint(center2).Y)
+                        + Math.Max(data1.BoxData.Width, data2.BoxData.Width);
+            var height = Math.Abs(transform.OfPoint(center1).Z - transform.OfPoint(center2).Z)
+                         + Math.Max(data1.BoxData.Height, data2.BoxData.Height);
 
+            var center = (center1 + center2) / 2;
+            //
+            //Фикс семейства WallRectTask
+            center -= new XYZ(0, 0, height / 2);
+            //
+            center = backT.OfPoint(center);
+            var (hostsGeometries, pipesGeometries) = UnionTwoData(data1, data2);
             return new OpeningData(
-                width, height, depth,
+                width, height, data1.BoxData.Depth,
                 data1.BoxData.Direction.XYZ,
-                middle.XYZ,
-                data1.BoxData.WallGeometry,
-                data1.BoxData.PipeGeometry,
-                data1.BoxData.FamilyName);
+                center,
+                hostsGeometries,
+                pipesGeometries,
+                Families.WallRectTaskFamily.SymbolName);
         }
 
-        private MyXYZ FindTasksMiddle(OpeningParentsData data1, OpeningParentsData data2, Solid unitedSolid)
+        private static OpeningData CalculateUnitedTaskInWallWithRects(Element el1, Element el2,
+            OpeningParentsData data1, OpeningParentsData data2)
         {
             var angle = XYZ.BasisY.Negate().AngleTo(data1.BoxData.Direction.XYZ);
-            var t = Transform.CreateRotation(XYZ.BasisZ, -angle);
-            var edges = unitedSolid.Faces.Cast<Face>()
-                .FirstOrDefault(f => Math.Abs(t.OfPoint(f.ComputeNormal(UV.BasisU)).X + 1) < Math.Pow(10, -7))
-                .EdgeLoops.Cast<EdgeArray>()
-                .FirstOrDefault()
-                .Cast<Edge>()
+            var transform = Transform.CreateRotation(XYZ.BasisZ, -angle);
+            var unitedSolid = el1.GetUnitedSolid(el2, transform);
+            var bSolid = SolidUtils.CreateTransformed(unitedSolid, transform);
+            var minUnited = bSolid.GetBoundingBox().Min;
+            var maxUnited = bSolid.GetBoundingBox().Max;
+            var center = FindTasksCenterInWall(unitedSolid, transform);
+            var width = maxUnited.Y - minUnited.Y;
+            var height = maxUnited.Z - minUnited.Z;
+            var (hostsGeometries, pipesGeometries) = UnionTwoData(data1, data2);
+            return new OpeningData(
+                width, height, data1.BoxData.Depth,
+                data1.BoxData.Direction.XYZ,
+                center.XYZ,
+                hostsGeometries,
+                pipesGeometries,
+                Families.WallRectTaskFamily.SymbolName);
+        }
+
+        private static MyXYZ FindTasksCenterInWall(Solid unitedSolid, Transform transform)
+        {
+            const double tolerance = 0.000_000_1;
+            var edges = unitedSolid?.Faces?.Cast<Face>()?
+                .FirstOrDefault(face => Math.Abs(transform.OfPoint(
+                    face?.ComputeNormal(UV.BasisU)).X + 1) < tolerance)
+                ?.EdgeLoops?.Cast<EdgeArray>()?
+                .FirstOrDefault()?
+                .Cast<Edge>()?
                 .ToArray();
-            var minEdge = edges.First().AsCurve() as Line;
+            var minEdge = edges?.First().AsCurve() as Line;
             foreach (var edge in edges)
             {
                 var line = edge.AsCurve() as Line;
@@ -212,164 +217,16 @@ namespace RevitOpening.Logic
             return new MyXYZ((minEdge.GetEndPoint(0) + minEdge.GetEndPoint(1)) / 2);
         }
 
-        public Solid GetUnitedSolid(FamilyInstance el1, FamilyInstance el2)
-        {
-            var floors = new[] {el1, el2};
-            var solids = floors
-                .Select(x =>
-                    x.get_Geometry(new Options())
-                        .GetAllSolids()
-                        .FirstOrDefault(s => Math.Abs(s.Volume) > 0.0000001));
-
-            var angle = XYZ.BasisY.Negate().AngleTo(el1.GetParentsData().BoxData.Direction.XYZ);
-            var t = Transform.CreateRotation(XYZ.BasisZ, -angle);
-            var backT = Transform.CreateRotation(XYZ.BasisZ, angle);
-            var tPoints = solids
-                .SelectMany(x => x?.Edges
-                    .Cast<Edge>()
-                    .Select(y => y.AsCurve().GetEndPoint(0))
-                    .Select(y => t.OfPoint(y)));
-
-            var min = GetMinPointsCoordinates(tPoints);
-            var max = GetMaxPointsCoordinates(tPoints);
-            var bbox = new BoundingBoxXYZ
-            {
-                Min = min,
-                Max = max
-            };
-            var solid = bbox.CreateSolid();
-            var backSolid = SolidUtils.CreateTransformed(solid, backT);
-            using (var tr = new SubTransaction(_document))
-            {
-                tr.Start();
-                var ds = DirectShape.CreateElement(_document, new ElementId(BuiltInCategory.OST_Doors));
-                ds.SetShape(new[] { backSolid });
-                tr.Commit();
-            }
-
-            return backSolid;
-        }
-
-        public XYZ GetMaxPointsCoordinates(IEnumerable<XYZ> tPoints)
-        {
-            var maxX = double.MinValue;
-            var maxY = double.MinValue;
-            var maxZ = double.MinValue;
-            foreach (var point in tPoints)
-            {
-                maxX = Math.Max(maxX, point.X);
-                maxY = Math.Max(maxY, point.Y);
-                maxZ = Math.Max(maxZ, point.Z);
-            }
-
-            return new XYZ(maxX, maxY, maxZ);
-        }
-
-        public XYZ GetMinPointsCoordinates(IEnumerable<XYZ> tPoints)
-        {
-            var minX = double.MaxValue;
-            var minY = double.MaxValue;
-            var minZ = double.MaxValue;
-            foreach (var point in tPoints)
-            {
-                minX = Math.Min(point.X, minX);
-                minY = Math.Min(point.Y, minY);
-                minZ = Math.Min(point.Z, minZ);
-            }
-
-            return new XYZ(minX, minY, minZ);
-        }
-
-        private bool CombineOneTypeBoxes(FamilyParameters familyData)
-        {
-            var isElementsUnited = false;
-            using (var t = new TransactionGroup(_document))
-            {
-                t.Start("United");
-                var tasks = _document.GetTasks(familyData);
-                isElementsUnited |= FindTaskIntersections(tasks);
-                t.Commit();
-            }
-
-            return isElementsUnited;
-        }
-
-        private bool FindTaskIntersections(IEnumerable<Element> tasks)
-        {
-            var elements = tasks.ToList();
-            var isElementsUnited = false;
-            for (var i = 0; i < elements.Count; i++)
-            {
-                var data = elements[i].GetParentsData();
-                var toleranceXYZ = new XYZ(0.001, 0.001, 0.001);
-                var solids = elements[i].get_Geometry(new Options())
-                    .GetAllSolids()
-                    .FirstOrDefault(s => Math.Abs(s.Volume) > 0.0000001);
-
-                var angle = XYZ.BasisY.Negate().AngleTo(data.BoxData.Direction.XYZ);
-                var t = Transform.CreateRotation(XYZ.BasisZ, -angle);
-                var backT = Transform.CreateRotation(XYZ.BasisZ, angle);
-                var tPoints = solids.Edges
-                    .Cast<Edge>()
-                    .Select(y => y.AsCurve().GetEndPoint(0))
-                    .Select(y => t.OfPoint(y));
-
-                var min = new BoxCombiner(_document, _documents).GetMinPointsCoordinates(tPoints) - toleranceXYZ;
-                var max = new BoxCombiner(_document, _documents).GetMaxPointsCoordinates(tPoints) + toleranceXYZ;
-                var bbox = new BoundingBoxXYZ
-                {
-                    Min = min,
-                    Max = max
-                };
-                var solid = bbox.CreateSolid();
-                var backSolid = SolidUtils.CreateTransformed(solid, backT);
-                var filter = new ElementIntersectsSolidFilter(backSolid);
-                for (var j = i + 1; j < elements.Count; j++)
-                {
-                    if (elements[i].Id == elements[j].Id)
-                        continue;
-                    if (filter.PassesFilter(elements[j]))
-                    {
-                        elements.Add(CreateUnitedTask(elements[i], elements[j]));
-                        elements.RemoveAt(j);
-                        elements.RemoveAt(i);
-                        isElementsUnited = true;
-                        i -= 1;
-                        break;
-                    }
-                }
-            }
-
-            return isElementsUnited;
-        }
-
-        private OpeningData CalculateUnitedTaskOnOnePipe(Element el1, Element el2, OpeningParentsData data1,
+        private static (List<ElementGeometry>, List<ElementGeometry>) UnionTwoData(OpeningParentsData data1,
             OpeningParentsData data2)
         {
-            var orientation = data1.BoxData.IntersectionCenter.XYZ - data2.BoxData.IntersectionCenter.XYZ;
-            var width = data1.BoxData.Width;
-            var height = data1.BoxData.Height;
-            var depth = data1.BoxData.Depth + data2.BoxData.Depth;
-            var normalize = orientation.Normalize();
-            var source = data1.BoxData.Direction.XYZ;
-            source = Transform.CreateRotation(-XYZ.BasisZ, Math.PI / 2).OfVector(source);
-            var middle = normalize.IsAlmostEqualTo(source)
-                ? data1.BoxData.IntersectionCenter.XYZ
-                : data2.BoxData.IntersectionCenter.XYZ;
-            return new OpeningData(
-                width, height, depth,
-                data1.BoxData.Direction.XYZ,
-                middle,
-                data1.BoxData.WallGeometry,
-                data1.BoxData.PipeGeometry,
-                data1.BoxData.FamilyName);
-        }
-
-        public bool ValidateTasksForCombine(OpeningParentsData data1, OpeningParentsData data2)
-        {
-            return data1.PipeId == data2.PipeId
-                   || _documents.GetElement(data1.HostId) is Wall
-                   || _documents.GetElement(data1.HostId) is CeilingAndFloor;
+            var hostsGeometries = data1.BoxData.HostsGeometries
+                .Union(data2.BoxData.HostsGeometries)
+                .ToList();
+            var pipesGeometries = data1.BoxData.PipesGeometries
+                .Union(data2.BoxData.PipesGeometries)
+                .ToList();
+            return (hostsGeometries, pipesGeometries);
         }
     }
 }

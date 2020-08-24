@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Autodesk.Revit.DB;
+using RevitOpening.Extensions;
 using RevitOpening.Logic;
 
 namespace RevitOpening.Models
@@ -7,15 +10,15 @@ namespace RevitOpening.Models
     public class OpeningData
     {
         public OpeningData(double width, double height, double depth, XYZ direction,
-            XYZ intersectionCenter, ElementGeometry wallGeometry, ElementGeometry pipeGeometry, string familyName)
+            XYZ intersectionCenter, List<ElementGeometry> hostsGeometries, List<ElementGeometry> pipesGeometries, string familyName)
         {
             Width = width;
             Height = height;
             Depth = depth;
             Direction = new MyXYZ(direction);
             IntersectionCenter = new MyXYZ(intersectionCenter);
-            WallGeometry = wallGeometry;
-            PipeGeometry = pipeGeometry;
+            HostsGeometries = hostsGeometries;
+            PipesGeometries = pipesGeometries;
             FamilyName = familyName;
             Collisions = new Collisions();
         }
@@ -36,9 +39,9 @@ namespace RevitOpening.Models
 
         public MyXYZ IntersectionCenter { get; set; }
 
-        public ElementGeometry WallGeometry { get; set; }
+        public List<ElementGeometry> HostsGeometries { get; set; }
 
-        public ElementGeometry PipeGeometry { get; set; }
+        public List<ElementGeometry> PipesGeometries { get; set; }
 
         public string FamilyName { get; set; }
 
@@ -46,10 +49,10 @@ namespace RevitOpening.Models
 
         public override bool Equals(object obj)
         {
-            var tolerance = Math.Pow(10, -7);
+            const double tolerance = 0.000_000_1;
             return obj is OpeningData parameters
-                   && parameters.WallGeometry.Equals(WallGeometry)
-                   && parameters.PipeGeometry.Equals(PipeGeometry)
+                   && parameters.HostsGeometries.AlmostEqualTo(HostsGeometries)
+                   && parameters.PipesGeometries.AlmostEqualTo(PipesGeometries)
                    && parameters.FamilyName.Equals(FamilyName)
                    && Math.Abs(parameters.Height - Height) < tolerance
                    && Math.Abs(parameters.Width - Width) < tolerance
@@ -67,8 +70,6 @@ namespace RevitOpening.Models
                 hashCode = (hashCode * 397) ^ Depth.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Direction != null ? Direction.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (IntersectionCenter != null ? IntersectionCenter.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (WallGeometry != null ? WallGeometry.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (PipeGeometry != null ? PipeGeometry.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (FamilyName != null ? FamilyName.GetHashCode() : 0);
                 return hashCode;
             }
