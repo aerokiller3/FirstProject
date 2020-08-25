@@ -7,12 +7,12 @@ namespace RevitOpening.Extensions
 {
     public static class DocumentsExtensions
     {
-        public static Element GetElement(this IEnumerable<Document> documents, int id)
+        public static Element GetElement(this IEnumerable<Document> documents, string uniqueId)
         {
-            return documents
+            var els=documents
                 .Select(document => document
-                    .GetElement(new ElementId(id)))
-                .FirstOrDefault(curEl => curEl != null);
+                    .GetElement(uniqueId));
+            return els.FirstOrDefault(curEl => curEl != null);
         }
 
         public static List<Element> GetAllOpenings(this IEnumerable<Document> documents)
@@ -28,9 +28,9 @@ namespace RevitOpening.Extensions
             return elements;
         }
 
-        public static List<Element> GetAllTasks(this IEnumerable<Document> documents)
+        public static List<FamilyInstance> GetAllTasks(this IEnumerable<Document> documents)
         {
-            var elements = new List<Element>();
+            var elements = new List<FamilyInstance>();
             foreach (var document in documents)
             {
                 elements.AddRange(document.GetTasks(Families.FloorRectTaskFamily));

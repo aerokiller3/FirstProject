@@ -25,6 +25,8 @@
                   ItemsSource="{Binding Path=TasksAndOpenings}"
                   Style="{StaticResource Indent}"
                   SelectionUnit="FullRow"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
                   SelectedCellsChanged="TasksGrid_OnCurrentCellChanged"
                   x:Name="TasksGrid">
             <DataGrid.Columns>
@@ -56,6 +58,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <TextBlock Grid.Column="0" Grid.Row="0" 
                            Text="Коэффициент отступа"
@@ -66,6 +69,9 @@
                 <TextBlock Grid.Column="0" Grid.Row="2"
                            Text="Автоматические объединять пересекающиеся задания"
                            Style="{StaticResource Indent}"/>
+                <TextBlock Grid.Column="0" Grid.Row="3"
+                           Text="Проводить обновление информации о заданиях при запуске"
+                           Style="{StaticResource Indent}"/>
                 <TextBox Grid.Column="1" Grid.Row="0" x:Name="Offset"
                          Style="{StaticResource Indent}"
                          Text="{Binding Path=OffsetRatio}"
@@ -75,7 +81,10 @@
                          Text="{Binding Path=Diameter}"
                          HorizontalAlignment="Right"/>
                 <CheckBox Grid.Column="1" Grid.Row="2" x:Name="CombineBox"
-                          IsChecked="{Binding Path=CombineAll}"
+                          IsChecked="{Binding Path=IsCombineAll}"
+                          Style="{StaticResource Indent}"/>
+                <CheckBox Grid.Column="1" Grid.Row="3" x:Name="IsAnalysisOnStart"
+                          IsChecked="{Binding Path=IsAnalysisOnStart}"
                           Style="{StaticResource Indent}"/>
             </Grid>
             <Grid Style="{StaticResource Indent}" Grid.Row="1">
@@ -108,11 +117,7 @@
                          CommandParameter="{Binding ElementName=TasksGrid}"
                          Command="{Binding ChangeSelectedTaskToOpening}"
                         Style="{StaticResource Indent}"/>
-                <Button Grid.Row="5" Content="Показать выбранный элемент"
-                        Command="{Binding ShowCurrentTask}"
-                        CommandParameter="{Binding ElementName=TasksGrid}"
-                        Style="{StaticResource Indent}"/>
-                <Button Grid.Row="6" Content="Обновить информацию о заданиях"
+                <Button Grid.Row="5" Content="Обновить информацию о заданиях"
                         Command="{Binding UpdateTaskInfo}"
                         CommandParameter="{Binding ElementName=TasksGrid}"
                         Style="{StaticResource Indent}"/>

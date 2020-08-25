@@ -1,17 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Linq;
+using System.Reflection;
+using System.Resources;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using RevitOpening.Annotations;
 using RevitOpening.Extensions;
-using RevitOpening.ExternalCommands;
 using RevitOpening.Logic;
 using RevitOpening.Models;
+using RevitOpening.Properties;
+using RevitOpening.RevitExternal;
 using RevitOpening.UI;
 
 namespace RevitOpening.ViewModels
@@ -22,36 +28,64 @@ namespace RevitOpening.ViewModels
         private RelayCommand _changeTasksToOpenings;
         private RelayCommand _combineTwoBoxes;
         private RelayCommand _createAllTasks;
-        private RelayCommand _showCurrentTask;
         private RelayCommand _updateTaskInfo;
         private RelayCommand _filterTasks;
 
         private Document _currentDocument;
         private IEnumerable<Document> _documents;
         private ExternalCommandData _commandData;
-        private ElementSet _elements;
-        private string _message;
+
+        public bool IsAnalysisOnStart
+        {
+            get
+            {
+                if (ConfigurationManager.AppSettings[nameof(IsAnalysisOnStart)] == null)
+                    ConfigurationManager.AppSettings[nameof(IsAnalysisOnStart)] = false.ToString();
+
+                return bool.Parse(ConfigurationManager.AppSettings[nameof(IsAnalysisOnStart)]);
+            }
+            set
+            {
+                ConfigurationManager.AppSettings[nameof(IsAnalysisOnStart)] = value.ToString();
+            }
+        }
 
         public string OffsetRatio { get; set; } = "1,5";
         public string Diameter { get; set; } = "200";
         public List<OpeningData> TasksAndOpenings { get; set; }
         public List<OpeningData> Tasks { get; set; }
         public List<OpeningData> Openings { get; set; }
-        public bool CombineAll { get; set; }
+        public bool IsCombineAll { get; set; }
 
 
         public void OnCurrentCellChanged(object sender, EventArgs e)
         {
             var grid = sender as DataGrid;
-            var selectItems = grid.SelectedItems
-                .Cast<OpeningData>()
-                .Select(el => new ElementId(el.Id))
-                .ToList();
-            if (selectItems.Count == 0)
+            var selectItems = GetSelectedItemsFromGrid(grid).ToList();
+            if (selectItems.Count != 1)
                 return;
 
             _commandData.Application.ActiveUIDocument.Selection.SetElementIds(selectItems);
-            _commandData.Application.ActiveUIDocument.ShowElements(selectItems);
+            var commandId = RevitCommandId.LookupPostableCommandId(PostableCommand.SelectionBox);
+            var appUI = _commandData.Application.GetType();
+            var field = appUI
+                .GetField("sm_revitCommands",BindingFlags.NonPublic | BindingFlags.Static)
+                .GetValue(_commandData.Application);
+            var countCommands = (int)field.GetType().GetProperty("Count")?.GetValue(field);
+            using (var t = new Transaction(_currentDocument, "Test"))
+            {
+                t.Start();
+                while (true)
+                {
+                    if (countCommands > 0 || !_commandData.Application.CanPostCommand(commandId))
+                        return;
+
+                    _commandData.Application.PostCommand(commandId);
+                    break;
+                }
+
+                t.Commit();
+            }
         }
 
         public RelayCommand UpdateTaskInfo
@@ -112,7 +146,7 @@ namespace RevitOpening.ViewModels
                 return _combineTwoBoxes ??
                        (_combineTwoBoxes = new RelayCommand(obj =>
                        {
-                           var tasksId = GetSelectedElements();
+                           var tasksId = GetSelectedElementsFromDocument();
                            if (tasksId.Length != 2)
                            {
                                MessageBox.Show("Выберите 2 задания");
@@ -120,10 +154,13 @@ namespace RevitOpening.ViewModels
                            }
 
                            var tasks = tasksId
-                               .Select(t => _documents.GetElement(t.IntegerValue))
+                               .Select(t => _currentDocument.GetElement(t))
                                .ToArray();
-                           if (!IsOnlyTasksSelected(tasks))
+                           if (!tasks.IsOnlyTasks())
+                           {
+                               MessageBox.Show("Выберите только задания");
                                return;
+                           }
 
                            var t1 = tasks[0].GetParentsData();
                            var t2 = tasks[1].GetParentsData();
@@ -149,18 +186,23 @@ namespace RevitOpening.ViewModels
                 return _changeSelectedTaskToOpening ??
                        (_changeSelectedTaskToOpening = new RelayCommand(obj =>
                        {
-                           var createOpeningInTaskBoxes = new CreateOpeningInTaskBoxes(_currentDocument, _documents);
-                           var taskId = GetSelectedElements().ToList();
+                           var maxDiameter = double.Parse(Diameter);
+                           var offset = double.Parse(OffsetRatio);
+                           var createOpeningInTaskBoxes = new CreateOpeningInTaskBoxes(_currentDocument, _documents, maxDiameter, offset);
+                           var taskId = GetSelectedElementsFromDocument().ToList();
                            if (taskId.Count == 0)
                                return;
 
                            var tasks = taskId
-                               .Select(t => _documents.GetElement(t.IntegerValue));
-                           if (!IsOnlyTasksSelected(tasks))
+                               .Select(t =>_currentDocument.GetElement(t))
+                               .ToList();
+                           if (!tasks.IsOnlyTasks())
+                           {
+                               MessageBox.Show("Выберите только задания");
                                return;
+                           }
 
-                           createOpeningInTaskBoxes.SetTasksParameters(OffsetRatio, Diameter);
-                           createOpeningInTaskBoxes.SwapTasksToOpenings(tasks);
+                           createOpeningInTaskBoxes.SwapTasksToOpenings(tasks.Cast<FamilyInstance>());
                            UpdateTasksAndOpenings();
                        }));
             }
@@ -176,10 +218,20 @@ namespace RevitOpening.ViewModels
                                using (var t = new Transaction(_currentDocument, "Создание заданий"))
                                {
                                    t.Start();
-                                   var createTask = new CreateTaskBoxes(OffsetRatio, Diameter, CombineAll, Tasks, Openings);
-                                   createTask.Execute(_documents,_currentDocument);
+                                   var createTask = new CreateTaskBoxes(OffsetRatio, Diameter,
+                                       Tasks, Openings, _currentDocument, _documents);
+                                   createTask.Execute();
                                    t.Commit();
                                }
+
+
+                               if (IsCombineAll)
+                                   using (var t = new Transaction(_currentDocument, "Объединение заданий"))
+                                   {
+                                       t.Start();
+                                       BoxCombiner.CombineAllBoxes(_documents, _currentDocument);
+                                       t.Commit();
+                                   }
 
                                using (var t = new Transaction(_currentDocument, "Анализ заданий"))
                                {
@@ -194,27 +246,6 @@ namespace RevitOpening.ViewModels
             }
         }
 
-        public RelayCommand ShowCurrentTask
-        {
-            get
-            {
-                return _showCurrentTask ??
-                       (_showCurrentTask = new RelayCommand(obj =>
-                       {
-                           var grid = obj as DataGrid;
-                           var selectItems = grid.SelectedItems
-                               .Cast<OpeningData>()
-                               .Select(el => new ElementId(el.Id))
-                               .ToList();
-                           if (selectItems.Count == 0)
-                               return;
-
-                           _commandData.Application.ActiveUIDocument.Selection.SetElementIds(selectItems);
-                           _commandData.Application.ActiveUIDocument.ShowElements(selectItems);
-                       }));
-            }
-        }
-
         public RelayCommand ChangeTasksToOpening
         {
             get
@@ -222,9 +253,10 @@ namespace RevitOpening.ViewModels
                 return _changeTasksToOpenings ??
                        (_changeTasksToOpenings = new RelayCommand(obj =>
                        {
-                           var createOpeningInTaskBoxes = new CreateOpeningInTaskBoxes();
-                           createOpeningInTaskBoxes.SetTasksParameters(OffsetRatio, Diameter);
-                           createOpeningInTaskBoxes.Execute(_commandData, ref _message, _elements);
+                           var maxDiameter = double.Parse(Diameter);
+                           var offset = double.Parse(OffsetRatio);
+                           var createOpenings = new CreateOpeningInTaskBoxes(_currentDocument, _documents, maxDiameter, offset);
+                           createOpenings.SwapAllTasksToOpenings();
                            UpdateTasksAndOpenings();
                        }));
             }
@@ -232,38 +264,36 @@ namespace RevitOpening.ViewModels
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public void Init(ExternalCommandData commandData, string message, ElementSet elements)
+        public void Init(ExternalCommandData commandData)
         {
             _commandData = commandData;
-            _message = message;
-            _elements = elements;
             _currentDocument = commandData.Application.ActiveUIDocument.Document;
             _documents = commandData.Application.Application.Documents
                 .Cast<Document>();
+            if (bool.Parse(ConfigurationManager.AppSettings[nameof(IsAnalysisOnStart)]))
+                AnalyzeTasks();
             UpdateTasksAndOpenings();
         }
 
         private void AnalyzeTasks()
         {
-            CollisionAnalyzer.ExecuteAnalysis(_documents);
+            var offset = double.Parse(OffsetRatio);
+            var maxDiameter = double.Parse(Diameter);
+            CollisionAnalyzer.ExecuteAnalysis(_documents,_currentDocument, offset, maxDiameter);
         }
 
-        private ElementId[] GetSelectedElements()
+        private IEnumerable<ElementId> GetSelectedItemsFromGrid(DataGrid grid)
+        {
+            return grid.SelectedItems
+                .Cast<OpeningData>()
+                .Select(el => new ElementId(el.Id));
+        }
+
+        private ElementId[] GetSelectedElementsFromDocument()
         {
             return _commandData.Application.ActiveUIDocument.Selection
                 .GetElementIds()
                 .ToArray();
-        }
-
-        private bool IsOnlyTasksSelected(IEnumerable<Element> tasks)
-        {
-            if (tasks.All(t => Families.AllFamilies
-                .FirstOrDefault(f =>
-                    f.SymbolName == (t as FamilyInstance).Symbol.FamilyName) != null))
-                return true;
-
-            MessageBox.Show("Выберите только задания");
-            return false;
         }
 
         private void UpdateTasksAndOpenings()

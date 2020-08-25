@@ -16,7 +16,7 @@ namespace RevitOpening.Logic
             familySymbol.Activate();
             var center = parentsData.BoxData.IntersectionCenter.XYZ;
             var direction = parentsData.BoxData.Direction.XYZ;
-            var host = document.GetElement(new ElementId(parentsData.HostsIds.FirstOrDefault()));
+            var host = document.GetElement(parentsData.HostsIds.FirstOrDefault());
             var newBox =
                 document.Create.NewFamilyInstance(center, familySymbol, direction, host, StructuralType.NonStructural);
 

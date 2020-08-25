@@ -21,7 +21,8 @@ namespace RevitOpening.ViewModels
             Collisions.TaskIntersectTask,
             Collisions.WallTaskIntersectFloor,
             Collisions.TaskIntersectManyWalls,
-            Collisions.TaskNotActual
+            Collisions.TaskNotActual,
+            Collisions.TaskCouldNotBeProcessed,
         };
 
         public string SelectStatus { get; private set; }

@@ -7,6 +7,11 @@ namespace RevitOpening.Extensions
 {
     public static class IEnumerableExtensions
     {
+        public static bool IsOnlyTasks(this IEnumerable<Element> tasks)
+        {
+            return tasks.All(t => t.IsTask());
+        }
+
         public static bool AlmostEqualTo<T>(this IEnumerable<T> thisList,
             IEnumerable<T> otherList)
         {
@@ -42,6 +47,23 @@ namespace RevitOpening.Extensions
             }
 
             return new XYZ(minX, minY, minZ);
+        }
+
+        public static Dictionary<Element, List<MEPCurve>> FindIntersectionsWith(this IEnumerable<Element> elements,
+            IEnumerable<MEPCurve> curves)
+        {
+            var intersections = new Dictionary<Element, List<MEPCurve>>();
+            foreach (var intersectionElement in elements)
+            {
+                var intersection = new ElementIntersectsElementFilter(intersectionElement);
+                var currentIntersections = curves
+                    .Where(el => intersection.PassesFilter(el))
+                    .ToList();
+                if (currentIntersections.Count > 0)
+                    intersections[intersectionElement] = currentIntersections;
+            }
+
+            return intersections;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using RevitOpening.Models;
 
@@ -13,7 +14,7 @@ namespace RevitOpening.Logic
         public static readonly FamilyParameters WallRoundTaskFamily;
         public static readonly FamilyParameters FloorRectTaskFamily;
 
-        public static readonly IEnumerable<FamilyParameters> AllFamilies;
+        public static readonly HashSet<FamilyParameters> AllFamilies;
 
         static Families()
         {
@@ -35,12 +36,27 @@ namespace RevitOpening.Logic
             FloorRectTaskFamily =
                 new FamilyParameters("Задание_Перекрытие_БезОсновы", "Отверстие_Глубина",
                     "Задание_Перекрытие", "Отверстие_Высота", "Отверстие_Ширина", null);
-            AllFamilies = new List<FamilyParameters>
+            AllFamilies = new HashSet<FamilyParameters>
             {
                 WallRoundOpeningFamily, FloorRectOpeningFamily,
                 WallRectOpeningFamily, WallRectTaskFamily,
                 WallRoundTaskFamily, FloorRectTaskFamily
             };
+        }
+
+        public static FamilyParameters ChooseOpeningFamily(this FamilyParameters taskFamily)
+        {
+            FamilyParameters familyData;
+            if (taskFamily == WallRoundTaskFamily)
+                familyData = WallRoundOpeningFamily;
+            else if (taskFamily == WallRectTaskFamily)
+                familyData = WallRectOpeningFamily;
+            else if (taskFamily== FloorRectTaskFamily)
+                familyData = FloorRectOpeningFamily;
+            else
+                throw new Exception("Неизвестный экземпляр семейства");
+
+            return familyData;
         }
 
         public static FamilyParameters GetDataFromSymbolName(string familyName)

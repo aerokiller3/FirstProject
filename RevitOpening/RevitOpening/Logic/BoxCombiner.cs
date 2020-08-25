@@ -28,7 +28,18 @@ namespace RevitOpening.Logic
                 isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, Families.WallRectTaskFamily);
                 isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, Families.FloorRectTaskFamily);
                 isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, Families.WallRoundTaskFamily);
+                currentDocument.Regenerate();
             }
+        }
+
+        private static bool CombineOneTypeBoxes(IEnumerable<Document> documents, Document currentDocument,
+            FamilyParameters familyData)
+        {
+            var tasks = currentDocument.GetTasks(familyData);
+            var intersections = FindTaskIntersections(tasks).ToList();
+            foreach (var (task1, task2) in intersections)
+                CombineTwoBoxes(documents, currentDocument, task1, task2);
+            return intersections.Count > 0;
         }
 
         public static FamilyInstance CombineTwoBoxes(IEnumerable<Document> documents, Document currentDocument,
@@ -54,22 +65,13 @@ namespace RevitOpening.Logic
             var newData = new OpeningParentsData(data1.HostsIds.Union(data2.HostsIds).ToList(),
                 data1.PipesIds.Union(data2.PipesIds).ToList(),
                 newOpening);
+            newData.BoxData.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
 
             var createdElement = BoxCreator.CreateTaskBox(newData, currentDocument);
             currentDocument.Delete(el1.Id);
             currentDocument.Delete(el2.Id);
 
             return createdElement;
-        }
-
-        private static bool CombineOneTypeBoxes(IEnumerable<Document> documents, Document currentDocument,
-            FamilyParameters familyData)
-        {
-            var tasks = currentDocument.GetTasks(familyData);
-            var intersections = FindTaskIntersections(tasks).ToList();
-            foreach (var (task1, task2) in intersections)
-                CombineTwoBoxes(documents, currentDocument, task1, task2);
-            return intersections.Count > 0;
         }
 
         private static IEnumerable<(Element, Element)> FindTaskIntersections(List<FamilyInstance> elements)
@@ -88,10 +90,11 @@ namespace RevitOpening.Logic
                         continue;
 
                     yield return (elements[i], elements[j]);
+
                     elements.RemoveAt(j);
                     elements.RemoveAt(i);
                     i -= 1;
-                    j -= 1;
+                    break;
                 }
             }
         }

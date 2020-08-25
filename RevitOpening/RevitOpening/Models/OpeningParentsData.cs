@@ -9,16 +9,16 @@ namespace RevitOpening.Models
         {
         }
 
-        public OpeningParentsData(List<int> hostsIds, List<int> pipesIds, OpeningData boxData)
+        public OpeningParentsData(List<string> hostsIds, List<string> pipesIds, OpeningData boxData)
         {
             HostsIds = hostsIds;
             PipesIds = pipesIds;
             BoxData = boxData;
         }
 
-        public List<int> HostsIds { get; set; }
+        public List<string> HostsIds { get; set; }
 
-        public List<int> PipesIds { get; set; }
+        public List<string> PipesIds { get; set; }
 
         public OpeningData BoxData { get; set; }
 

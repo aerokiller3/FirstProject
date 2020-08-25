@@ -9,6 +9,13 @@ namespace RevitOpening.Extensions
 {
     public static class ElementExtensions
     {
+        public static bool IsTask(this Element element)
+        {
+            return Families.AllFamilies
+                .FirstOrDefault(f =>
+                    f.SymbolName == ((FamilyInstance) element).Symbol.FamilyName) != null;
+        }
+
         public static OpeningParentsData GetParentsData(this Element element)
         {
             var json = AltecJsonSchema.GetJson(element);
