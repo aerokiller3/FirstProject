@@ -63,9 +63,29 @@ namespace RevitOpening.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap createOp {
+            get {
+                object obj = ResourceManager.GetObject("createOp", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap opening {
             get {
                 object obj = ResourceManager.GetObject("opening", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Unite {
+            get {
+                object obj = ResourceManager.GetObject("Unite", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

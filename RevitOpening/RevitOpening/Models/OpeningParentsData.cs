@@ -7,6 +7,9 @@ namespace RevitOpening.Models
     {
         public OpeningParentsData()
         {
+            HostsIds=new List<string>();
+            PipesIds=new List<string>();
+            BoxData=new OpeningData();
         }
 
         public OpeningParentsData(List<string> hostsIds, List<string> pipesIds, OpeningData boxData)
@@ -25,9 +28,9 @@ namespace RevitOpening.Models
         public override bool Equals(object obj)
         {
             return obj is OpeningParentsData data
-                   && HostsIds.AlmostEqualTo(data.HostsIds)
-                   && PipesIds.AlmostEqualTo(data.PipesIds)
-                   && BoxData.Equals(data.BoxData);
+                   && (HostsIds?.AlmostEqualTo(data.HostsIds) ?? true)
+                   && (PipesIds?.AlmostEqualTo(data.PipesIds) ?? true)
+                   && (BoxData?.Equals(data.BoxData) ?? true);
         }
 
         public override int GetHashCode()

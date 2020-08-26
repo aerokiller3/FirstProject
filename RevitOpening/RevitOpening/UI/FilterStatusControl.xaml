@@ -29,7 +29,8 @@
                    Height="Auto"/>
         <ComboBox Grid.Row="1" ItemsSource="{Binding Path=Statuses}"
                   Style="{StaticResource Indent}"
-                  MinWidth="100"
+                  MinWidth="450"
+                  MaxDropDownHeight="300"
                   Text="Виды коллизий"
                   VerticalAlignment="Center"
                   HorizontalAlignment="Center"

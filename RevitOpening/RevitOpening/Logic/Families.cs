@@ -15,6 +15,7 @@ namespace RevitOpening.Logic
         public static readonly FamilyParameters FloorRectTaskFamily;
 
         public static readonly HashSet<FamilyParameters> AllFamilies;
+        public static readonly HashSet<string> AllFamiliesNames;
 
         static Families()
         {
@@ -41,6 +42,12 @@ namespace RevitOpening.Logic
                 WallRoundOpeningFamily, FloorRectOpeningFamily,
                 WallRectOpeningFamily, WallRectTaskFamily,
                 WallRoundTaskFamily, FloorRectTaskFamily
+            };
+            AllFamiliesNames = new HashSet<string>
+            {
+                WallRoundOpeningFamily.SymbolName, FloorRectOpeningFamily.SymbolName,
+                WallRectOpeningFamily.SymbolName, WallRectTaskFamily.SymbolName,
+                WallRoundTaskFamily.SymbolName, FloorRectTaskFamily.SymbolName
             };
         }
 

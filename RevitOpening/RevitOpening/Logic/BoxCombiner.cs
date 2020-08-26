@@ -37,8 +37,13 @@ namespace RevitOpening.Logic
         {
             var tasks = currentDocument.GetTasks(familyData);
             var intersections = FindTaskIntersections(tasks).ToList();
-            foreach (var (task1, task2) in intersections)
-                CombineTwoBoxes(documents, currentDocument, task1, task2);
+            for (var i=0;i<intersections.Count;i++)
+                if (CombineTwoBoxes(documents, currentDocument, intersections[i].Item1, intersections[i].Item2) == null)
+                {
+                    intersections.RemoveAt(i);
+                    i--;
+                }
+
             return intersections.Count > 0;
         }
 
@@ -48,17 +53,18 @@ namespace RevitOpening.Logic
             var data1 = el1.GetParentsData();
             var data2 = el2.GetParentsData();
             if (!ValidateTasksForCombine(documents, data1, data2))
-                throw new Exception("Недопустимый вариант объединения");
+            {
+                return null;
+                //throw new Exception("Недопустимый вариант объединения");
+            }
 
             OpeningData newOpening = null;
             if (data1.PipesIds.AlmostEqualTo(data2.PipesIds))
                 newOpening = CalculateUnitedTaskOnOnePipe(data1, data2);
             else if (documents.GetElement(data1.HostsIds.FirstOrDefault()) is Wall)
-                if (data1.BoxData.FamilyName == Families.WallRoundTaskFamily.SymbolName
-                    || data1.BoxData.FamilyName == Families.WallRoundTaskFamily.SymbolName)
-                    newOpening = CalculateUnitedTaskInWallWithRounds(data1, data2);
-                else
-                    newOpening = CalculateUnitedTaskInWallWithRects(el1, el2, data1, data2);
+                newOpening = data1.BoxData.FamilyName == Families.WallRoundTaskFamily.SymbolName
+                    ? CalculateUnitedTaskInWallWithRounds(data1, data2)
+                    : CalculateUnitedTaskInWallWithRects(el1, el2, data1, data2);
             else if (documents.GetElement(data1.HostsIds.FirstOrDefault()) is CeilingAndFloor)
                 newOpening = CalculateUnitedTaskInFloor(el1, el2, data1, data2);
 

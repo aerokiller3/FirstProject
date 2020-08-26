@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
@@ -23,7 +24,7 @@ namespace RevitOpening.Logic
             _offset = offset;
         }
 
-        public void SwapAllTasksToOpenings()
+        public List<Element> SwapAllTasksToOpenings()
         {
             FamilyLoader.LoadAllFamiliesToProject(_document);
 
@@ -35,35 +36,26 @@ namespace RevitOpening.Logic
             var (correctWallRoundTasks, incorrectWallRoundTasks) = GetCheckedBoxes(wallRoundTasks);
             var (correctFloorRectTasks, incorrectFloorRectTasks) = GetCheckedBoxes(floorRectTasks);
 
-            SwapTasksToOpenings(correctWallRectTasks);
-            SwapTasksToOpenings(correctWallRoundTasks);
-            SwapTasksToOpenings(correctFloorRectTasks);
+            var elementList = new List<Element>();
+            elementList.AddRange(SwapTasksToOpenings(correctWallRectTasks));
+            elementList.AddRange(SwapTasksToOpenings(correctWallRoundTasks));
+            elementList.AddRange(SwapTasksToOpenings(correctFloorRectTasks));
+            return elementList;
         }
 
-        public void SwapTasksToOpenings(IEnumerable<FamilyInstance> tasks)
+        public List<Element> SwapTasksToOpenings(IEnumerable<FamilyInstance> tasks)
         {
             var elementList = new List<Element>();
             foreach (var task in tasks)
             {
-                var familyData = Families.GetDataFromInstanceName(task.Name).ChooseOpeningFamily();
+                var familyData = Families.GetDataFromSymbolName(task.Symbol.FamilyName).ChooseOpeningFamily();
                 var parentsData = task.GetParentsData();
                 parentsData.BoxData.FamilyName = familyData.SymbolName;
                 _document.Delete(task.Id);
                 elementList.Add(BoxCreator.CreateTaskBox(parentsData, _document));
             }
 
-            using (var t = new SubTransaction(_document))
-            {
-                t.Start();
-                foreach (var el in elementList)
-                {
-                    var v = el.LookupParameter("Отверстие_Дисциплина").AsString();
-                    el.LookupParameter("Отверстие_Дисциплина").Set(v + "1");
-                    el.LookupParameter("Отверстие_Дисциплина").Set(v);
-                }
-
-                t.Commit();
-            }
+            return elementList;
         }
 
         private (IEnumerable<FamilyInstance>, IEnumerable<FamilyInstance>) GetCheckedBoxes(IEnumerable<FamilyInstance> wallRectTasks)
@@ -74,7 +66,8 @@ namespace RevitOpening.Logic
             {
                 //
                 var data = task.GetParentsData();
-                if (CheckAgreed(task) &&data.IsActualTask(task,_documents, _document,_offset, _maxDiameter))
+                if (CheckAgreed(task) &&
+                    (data.BoxData.Collisions.Count == 0 || data.BoxData.Collisions.Contains(Collisions.TaskCouldNotBeProcessed)))
                 {
                     correctTasks.Add(task);
                 }
@@ -94,7 +87,7 @@ namespace RevitOpening.Logic
         {
             var agreedParameter = box.LookupParameter("Несогласованно");
             //Проверку спец. атрибута
-            var intAgreedParameter = agreedParameter?.AsInteger();
+            var intAgreedParameter = agreedParameter.AsInteger();
             return intAgreedParameter == 0;
         }
     }

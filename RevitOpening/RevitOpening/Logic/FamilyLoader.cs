@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using Autodesk.Revit.DB;
+using RevitOpening.Extensions;
 
 namespace RevitOpening.Logic
 {
@@ -10,7 +11,11 @@ namespace RevitOpening.Logic
         public static void LoadAllFamiliesToProject(Document document)
         {
             foreach (var family in Families.AllFamilies)
+            {
                 LoadFamilyToProject(family.SymbolName, document);
+                var familySymbol = document.GetFamilySymbol(family.SymbolName);
+                familySymbol.Activate();
+            }
         }
 
         private static void LoadFamilyToProject(string familyName, Document document)

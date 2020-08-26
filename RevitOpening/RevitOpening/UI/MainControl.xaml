@@ -74,11 +74,17 @@
                            Style="{StaticResource Indent}"/>
                 <TextBox Grid.Column="1" Grid.Row="0" x:Name="Offset"
                          Style="{StaticResource Indent}"
-                         Text="{Binding Path=OffsetRatio}"
+                         Text="{Binding Path=Offset, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                         TextAlignment="Right"
+                         MaxWidth="100"
+                         MinWidth="100"
                          HorizontalAlignment="Right"/>
-                <TextBox Grid.Column="1" Grid.Row="1" x:Name="Diametr"
+                <TextBox Grid.Column="1" Grid.Row="1" x:Name="Diameter"
+                         TextAlignment="Right"
                          Style="{StaticResource Indent}"
-                         Text="{Binding Path=Diameter}"
+                         Text="{Binding Path=Diameter, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                         MaxWidth="100"
+                         MinWidth="100"
                          HorizontalAlignment="Right"/>
                 <CheckBox Grid.Column="1" Grid.Row="2" x:Name="CombineBox"
                           IsChecked="{Binding Path=IsCombineAll}"
@@ -107,19 +113,19 @@
                 <Button  Grid.Row="1" Content="Фильтр списка заданий"
                         Style="{StaticResource Indent}"
                         Command="{Binding Path=FilterTasks}"/>
-                <Button  Grid.Row="2" Content="Объединить выделенные задания"
-                        Style="{StaticResource Indent}"
-                        Command="{Binding CombineTwoBoxes}"/>
-                <Button  Grid.Row="3" Content="Заменить согласованные задания на отверстия"
+                <Button  Grid.Row="2" Content="Заменить согласованные задания на отверстия"
                          Command="{Binding ChangeTasksToOpening}"
                         Style="{StaticResource Indent}"/>
-                <Button  Grid.Row="4" Content="Заменить выделенные задания на отверстия"
+                <Button  Grid.Row="3" Content="Заменить выделенные задания на отверстия"
                          CommandParameter="{Binding ElementName=TasksGrid}"
-                         Command="{Binding ChangeSelectedTaskToOpening}"
+                         Command="{Binding ChangeSelectedTasksToOpenings}"
                         Style="{StaticResource Indent}"/>
-                <Button Grid.Row="5" Content="Обновить информацию о заданиях"
+                <Button Grid.Row="4" Content="Обновить информацию о заданиях"
                         Command="{Binding UpdateTaskInfo}"
                         CommandParameter="{Binding ElementName=TasksGrid}"
+                        Style="{StaticResource Indent}"/>
+                <Button Grid.Row="5" Content="Объеденить пересекающиеся задания"
+                        Command="{Binding CombineIntersectsTasks}"
                         Style="{StaticResource Indent}"/>
             </Grid>
         </Grid>

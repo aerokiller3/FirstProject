@@ -35,6 +35,7 @@
     <Reference Include="NewtonSoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\Revit 2019\NewtonSoft.Json.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -69,11 +70,17 @@
     <Compile Include="Extensions\IEnumerableExtensions.cs" />
     <Compile Include="Extensions\LineExtensions.cs" />
     <Compile Include="Extensions\MEPCurveExtensions.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="RevitExternal\ChangeSelectedTasksToOpenings.cs" />
     <Compile Include="RevitExternal\CombineTwoBoxes.cs" />
     <Compile Include="Logic\BoxCombiner.cs" />
     <Compile Include="Logic\BoxCreator.cs" />
     <Compile Include="Logic\AltecJsonSchema.cs" />
-    <Compile Include="Logic\CollisionAnalyzer.cs" />
+    <Compile Include="Logic\BoxAnalyzer.cs" />
     <Compile Include="Logic\CreateOpeningInTaskBoxes.cs" />
     <Compile Include="Logic\CreateTaskBoxes.cs" />
     <Compile Include="Logic\Collisions.cs" />
@@ -85,14 +92,9 @@
     <Compile Include="UI\FilterStatusControl.xaml.cs">
       <DependentUpon>FilterStatusControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="RevitExternal\Opening.cs" />
+    <Compile Include="RevitExternal\OpeningPanel.cs" />
     <Compile Include="RevitExternal\StartProgram.cs" />
     <Compile Include="Properties\Annotations.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="UI\MainControl.xaml.cs">
       <DependentUpon>MainControl.xaml</DependentUpon>
     </Compile>
@@ -112,22 +114,22 @@
       <Link>.editorconfig</Link>
     </None>
     <None Include="Families\Задание_Круглая_Стена_БезОсновы.rfa">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Families\Задание_Перекрытие_БезОсновы.rfa">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Families\Задание_Стена_Прямоугольник_БезОсновы.rfa">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Families\Отверстие_Круглое_Стена.rfa">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Families\Отверстие_Прямоуг_Перекр.rfa">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Families\Отверстие_Прямоуг_Стена.rfa">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -141,15 +143,20 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="opening.jpg" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="Resources\createOp.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Unite.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\opening.jpg" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

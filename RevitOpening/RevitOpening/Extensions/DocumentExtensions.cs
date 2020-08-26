@@ -15,8 +15,8 @@ namespace RevitOpening.Extensions
                 .OfClass(typeof(FamilyInstance)))
             {
                 return collector
-                    .Where(e => e.Name == familyParameters.InstanceName)
                     .Cast<FamilyInstance>()
+                    .Where(e => e.Symbol.FamilyName == familyParameters.SymbolName)
                     .ToList();
             }
         }

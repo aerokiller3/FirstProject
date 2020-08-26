@@ -25,6 +25,13 @@ namespace RevitOpening.Models
 
         public OpeningData()
         {
+            Direction = new MyXYZ();
+            IntersectionCenter = new MyXYZ();
+            HostsGeometries=new List<ElementGeometry>();
+            PipesGeometries=new List<ElementGeometry>();
+            FamilyName = "";
+            Collisions=new Collisions();
+
         }
 
         public int Id { get; set; }
@@ -51,14 +58,14 @@ namespace RevitOpening.Models
         {
             const double tolerance = 0.000_000_1;
             return obj is OpeningData parameters
-                   && parameters.HostsGeometries.AlmostEqualTo(HostsGeometries)
-                   && parameters.PipesGeometries.AlmostEqualTo(PipesGeometries)
-                   && parameters.FamilyName.Equals(FamilyName)
+                   && (parameters.HostsGeometries?.AlmostEqualTo(HostsGeometries) ?? true)
+                   && (parameters.PipesGeometries?.AlmostEqualTo(PipesGeometries) ?? true)
+                   && (parameters.FamilyName?.Equals(FamilyName) ?? true)
                    && Math.Abs(parameters.Height - Height) < tolerance
                    && Math.Abs(parameters.Width - Width) < tolerance
                    && Math.Abs(parameters.Depth - Depth) < tolerance
-                   && parameters.Direction.Equals(Direction)
-                   && parameters.IntersectionCenter.Equals(IntersectionCenter);
+                   && (parameters.Direction?.Equals(Direction) ?? true)
+                   && (parameters.IntersectionCenter?.Equals(IntersectionCenter) ?? true);
         }
 
         public override int GetHashCode()

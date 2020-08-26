@@ -28,6 +28,9 @@ namespace RevitOpening.Logic
             var wallData = new ElementGeometry(wall);
             var pipeData = new ElementGeometry(pipe);
             var (intersectionCenter, direction) = CalculateCenterAndDirectionInWall(wallData, pipeData, wall);
+            if (intersectionCenter == null || direction == null)
+                return null;
+
             var taskWidth = CalculateWidthInWall(pipe.GetPipeWidth(), wall.Width, wallData, pipeData, offsetRatio);
             var taskHeight = CalculateHeightInWall(pipe.GetPipeHeight(), wall.Width, pipeData, offsetRatio);
             var isRoundTask = pipe.IsRoundPipe() && taskWidth <= maxDiameter.GetInFoot();
@@ -49,6 +52,8 @@ namespace RevitOpening.Logic
             var pipeData = new ElementGeometry(pipe);
             var floorData = new ElementGeometry(floor);
             var (intersectionCenter, direction) = CalculateCenterAndDirectionInFloor(pipeData, floor, pipe);
+            if (intersectionCenter == null || direction == null)
+                return null;
 
             var pipeWidth = pipe.GetPipeWidth();
             var pipeHeight = pipe.GetPipeHeight();
@@ -132,7 +137,9 @@ namespace RevitOpening.Logic
 
         private static double CalculateTaskSize(double wallWidth, double angle, double ductWidth, double offsetRatio)
         {
-            return (wallWidth / Math.Tan(angle) + ductWidth / Math.Sin(angle)) * offsetRatio;
+            var r = (wallWidth / angle==0 ? 1 :Math.Tan(angle)
+                + ductWidth / angle==0? 1: Math.Sin(angle)) * offsetRatio;
+            return r;
         }
 
         private static double SqrtOfSqrSum(double a, double b)
