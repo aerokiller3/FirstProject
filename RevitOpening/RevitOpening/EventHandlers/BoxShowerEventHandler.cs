@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Revit.Async.ExternalEvents;
 using RevitOpening.Models;
 
-namespace RevitOpening.RevitExternal
+namespace RevitOpening.EventHandlers
 {
-    public class BoxShowerEventHandler : SyncGenericExternalEventHandler<List<ElementId>,List<OpeningData>>
+    public class BoxShowerEventHandler : SyncGenericExternalEventHandler<List<ElementId>, List<OpeningData>>
     {
         public override string GetName()
         {
@@ -25,19 +22,21 @@ namespace RevitOpening.RevitExternal
             activeUi.Selection.SetElementIds(selectItems);
 
             var commandId = RevitCommandId.LookupPostableCommandId(PostableCommand.SelectionBox);
-            var appUI = app.GetType();
-            var field = appUI
+            var appUiType = app.GetType();
+            var revitCommandsField = appUiType
                 .GetField("sm_revitCommands", BindingFlags.NonPublic | BindingFlags.Static)
                 .GetValue(app);
 
-            var countCommands = (int)field.GetType().GetProperty("Count")?.GetValue(field);
+            var revitCommandsCount = (int)revitCommandsField.GetType()
+                .GetProperty("Count")?
+                .GetValue(revitCommandsField);
 
             using (var t = new Transaction(app.ActiveUIDocument.Document, "Test"))
             {
                 t.Start();
                 while (true)
                 {
-                    if (countCommands > 0 || !app.CanPostCommand(commandId))
+                    if (revitCommandsCount > 0 || !app.CanPostCommand(commandId))
                     {
                         Thread.Sleep(TimeSpan.FromSeconds(1));
                         return null;

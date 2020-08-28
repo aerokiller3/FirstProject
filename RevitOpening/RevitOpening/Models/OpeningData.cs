@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Autodesk.Revit.DB;
 using RevitOpening.Extensions;
 using RevitOpening.Logic;
@@ -10,7 +9,8 @@ namespace RevitOpening.Models
     public class OpeningData
     {
         public OpeningData(double width, double height, double depth, XYZ direction,
-            XYZ intersectionCenter, List<ElementGeometry> hostsGeometries, List<ElementGeometry> pipesGeometries, string familyName)
+            XYZ intersectionCenter, List<ElementGeometry> hostsGeometries, List<ElementGeometry> pipesGeometries,
+            string familyName, double offset, double diameter)
         {
             Width = width;
             Height = height;
@@ -20,6 +20,8 @@ namespace RevitOpening.Models
             HostsGeometries = hostsGeometries;
             PipesGeometries = pipesGeometries;
             FamilyName = familyName;
+            Offset = offset;
+            Diameter = diameter;
             Collisions = new Collisions();
         }
 
@@ -27,12 +29,15 @@ namespace RevitOpening.Models
         {
             Direction = new MyXYZ();
             IntersectionCenter = new MyXYZ();
-            HostsGeometries=new List<ElementGeometry>();
-            PipesGeometries=new List<ElementGeometry>();
+            HostsGeometries = new List<ElementGeometry>();
+            PipesGeometries = new List<ElementGeometry>();
             FamilyName = "";
-            Collisions=new Collisions();
-
+            Collisions = new Collisions();
         }
+
+        public double Offset { get; set; }
+
+        public double Diameter { get; set; }
 
         public int Id { get; set; }
 

@@ -20,7 +20,7 @@ namespace RevitOpening.RevitExternal
         {
             var currentDocument = commandData.Application.ActiveUIDocument.Document;
             var documents = commandData.Application.Application.Documents.Cast<Document>();
-            var createOpeningInTaskBoxes = new CreateOpeningInTaskBoxes(currentDocument, documents, 0, 0);
+            var createOpeningInTaskBoxes = new CreateOpeningInTaskBoxes(currentDocument);
             var select = commandData.Application.ActiveUIDocument.Selection;
             var selected = select.PickObjects(ObjectType.Element, new SelectionFilter(x => x.IsTask(),
                     (x, _) => true))

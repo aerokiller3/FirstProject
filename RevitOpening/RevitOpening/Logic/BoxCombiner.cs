@@ -122,7 +122,7 @@ namespace RevitOpening.Logic
                 center,
                 hostsGeometries,
                 pipesGeometries,
-                data1.BoxData.FamilyName);
+                data1.BoxData.FamilyName, data1.BoxData.Offset, data1.BoxData.Diameter);
         }
 
         private static OpeningData CalculateUnitedTaskInFloor(Element el1, Element el2, OpeningParentsData data1,
@@ -148,7 +148,7 @@ namespace RevitOpening.Logic
                 direction, center,
                 hostsGeometries,
                 pipesGeometries,
-                Families.FloorRectTaskFamily.SymbolName);
+                Families.FloorRectTaskFamily.SymbolName,data1.BoxData.Offset, data1.BoxData.Diameter);
         }
 
         private static OpeningData CalculateUnitedTaskInWallWithRounds(OpeningParentsData data1,
@@ -177,7 +177,7 @@ namespace RevitOpening.Logic
                 center,
                 hostsGeometries,
                 pipesGeometries,
-                Families.WallRectTaskFamily.SymbolName);
+                Families.WallRectTaskFamily.SymbolName, data1.BoxData.Offset, data1.BoxData.Diameter);
         }
 
         private static OpeningData CalculateUnitedTaskInWallWithRects(Element el1, Element el2,
@@ -195,11 +195,10 @@ namespace RevitOpening.Logic
             var (hostsGeometries, pipesGeometries) = UnionTwoData(data1, data2);
             return new OpeningData(
                 width, height, data1.BoxData.Depth,
-                data1.BoxData.Direction.XYZ,
-                center.XYZ,
-                hostsGeometries,
-                pipesGeometries,
-                Families.WallRectTaskFamily.SymbolName);
+                data1.BoxData.Direction.XYZ, center.XYZ,
+                hostsGeometries, pipesGeometries,
+                Families.WallRectTaskFamily.SymbolName,
+                data1.BoxData.Offset, data2.BoxData.Diameter);
         }
 
         private static MyXYZ FindTasksCenterInWall(Solid unitedSolid, Transform transform)

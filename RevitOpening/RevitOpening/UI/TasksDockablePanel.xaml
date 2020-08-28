@@ -18,7 +18,6 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <DataGrid Grid.Row="0"  AutoGenerateColumns="False"
                   ItemsSource="{Binding Path=TasksAndOpenings}"
@@ -44,10 +43,6 @@
                                     Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
-        <Button Grid.Row="1"
-                Content="Показать рамку выбора"
-                Command="{Binding Path=ShowBoxCommand}"
-                Style="{StaticResource Indent}"/>
     </Grid>
 
 </UserControl>

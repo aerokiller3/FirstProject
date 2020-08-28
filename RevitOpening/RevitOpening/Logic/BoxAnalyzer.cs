@@ -14,7 +14,7 @@ namespace RevitOpening.Logic
 {
     public static class BoxAnalyzer
     {
-        public static void ExecuteAnalysis(IEnumerable<Document> documents,Document currentDocument, double offset, double maxDiameter)
+        public static void ExecuteAnalysis(IEnumerable<Document> documents, double offset, double maxDiameter)
         {
             var walls = documents.GetAllElementsOfClass<Wall>();
             var floors = documents.GetAllElementsOfClass<CeilingAndFloor>();

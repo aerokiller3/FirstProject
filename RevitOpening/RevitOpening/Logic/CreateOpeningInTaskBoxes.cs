@@ -1,27 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
+﻿using System.Collections.Generic;
 using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
 using RevitOpening.Extensions;
-using RevitOpening.Models;
 
 namespace RevitOpening.Logic
 {
     public class CreateOpeningInTaskBoxes
     {
         private readonly Document _document;
-        private readonly IEnumerable<Document> _documents;
-        private readonly double _maxDiameter;
-        private readonly double _offset;
 
-        public CreateOpeningInTaskBoxes(Document document, IEnumerable<Document> documents, double maxDiameter, double offset)
+        public CreateOpeningInTaskBoxes(Document document)
         {
             _document = document;
-            _documents = documents;
-            _maxDiameter = maxDiameter;
-            _offset = offset;
         }
 
         public List<Element> SwapAllTasksToOpenings()
@@ -68,15 +57,12 @@ namespace RevitOpening.Logic
                 var data = task.GetParentsData();
                 if (CheckAgreed(task) &&
                     (data.BoxData.Collisions.Count == 0 || data.BoxData.Collisions.Contains(Collisions.TaskCouldNotBeProcessed)))
-                {
                     correctTasks.Add(task);
-                }
                 else
-                {
                     incorrectTasks.Add(task);
-                    //Изменить на спец. атрибут
-                    //task.LookupParameter("Несогласованно").Set(0);
-                }
+
+                //Изменить на спец. атрибут
+                //task.LookupParameter("Несогласованно").Set(0);
             }
 
 

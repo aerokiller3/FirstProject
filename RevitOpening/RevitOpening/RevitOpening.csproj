@@ -75,12 +75,13 @@
     <Compile Include="Extensions\IEnumerableExtensions.cs" />
     <Compile Include="Extensions\LineExtensions.cs" />
     <Compile Include="Extensions\MEPCurveExtensions.cs" />
+    <Compile Include="Logic\Transactions.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="RevitExternal\BoxShowerEventHandler.cs" />
+    <Compile Include="EventHandlers\BoxShowerEventHandler.cs" />
     <Compile Include="RevitExternal\ChangeSelectedTasksToOpenings.cs" />
     <Compile Include="RevitExternal\CombineTwoBoxes.cs" />
     <Compile Include="Logic\BoxCombiner.cs" />
@@ -94,12 +95,11 @@
     <Compile Include="Logic\Families.cs" />
     <Compile Include="Extensions\DoubleExtensions.cs" />
     <Compile Include="Logic\FamilyLoader.cs" />
-    <Compile Include="RevitExternal\Show3DBox.cs" />
     <Compile Include="UI\TasksDockablePanel.xaml.cs">
       <DependentUpon>TasksDockablePanel.xaml</DependentUpon>
     </Compile>
     <Compile Include="RevitExternal\SelectionFilter.cs" />
-    <Compile Include="RevitExternal\ShowOrHideDockablePanel.cs" />
+    <Compile Include="RevitExternal\UpdateDockablePanel.cs" />
     <Compile Include="UI\FilterStatusControl.xaml.cs">
       <DependentUpon>FilterStatusControl.xaml</DependentUpon>
     </Compile>
@@ -174,5 +174,6 @@
   <ItemGroup>
     <None Include="Resources\opening.jpg" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

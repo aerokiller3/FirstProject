@@ -44,7 +44,7 @@ namespace RevitOpening.Logic
 
             return new OpeningData(taskWidth, taskHeight, taskDepth, direction,
                 intersectionCenter, new List<ElementGeometry> {wallData},
-                new List<ElementGeometry> {pipeData}, familyParameters.SymbolName);
+                new List<ElementGeometry> {pipeData}, familyParameters.SymbolName,offsetRatio,maxDiameter);
         }
 
         private static OpeningData CalculateBoxInFloor(CeilingAndFloor floor, MEPCurve pipe, double offsetRatio)
@@ -63,7 +63,7 @@ namespace RevitOpening.Logic
 
             return new OpeningData(taskWidth, taskHeight, taskDepth, direction,
                 intersectionCenter, new List<ElementGeometry> {floorData},
-                new List<ElementGeometry> {pipeData}, Families.FloorRectTaskFamily.SymbolName);
+                new List<ElementGeometry> {pipeData}, Families.FloorRectTaskFamily.SymbolName, offsetRatio, 0);
         }
 
         private static (XYZ, XYZ) CalculateCenterAndDirectionInFloor(ElementGeometry pipeData, CeilingAndFloor floor,

@@ -18,6 +18,7 @@ using Autodesk.Revit.UI;
 using Revit.Async;
 using Revit.Async.Interfaces;
 using RevitOpening.Annotations;
+using RevitOpening.EventHandlers;
 using RevitOpening.Extensions;
 using RevitOpening.Models;
 using RevitOpening.RevitExternal;
@@ -28,7 +29,6 @@ namespace RevitOpening.ViewModels
 {
     public class TaskDockablePanelVM : INotifyPropertyChanged
     {
-        private List<Document> _documents;
         private IRevitTask CurrentRevitTask { get; set; }
         public List<OpeningData> TasksAndOpenings { get; set; }
         public TasksDockablePanel Window { get; set; }

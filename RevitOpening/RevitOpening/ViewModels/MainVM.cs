@@ -41,26 +41,25 @@ namespace RevitOpening.ViewModels
 
         public bool IsCombineAll
         {
-            get
-            {
-                if (ConfigurationManager.AppSettings[nameof(IsCombineAll)] == null)
-                    ConfigurationManager.AppSettings[nameof(IsCombineAll)] = false.ToString();
-
-                return bool.Parse(ConfigurationManager.AppSettings[nameof(IsCombineAll)]);
-            }
+            get => bool.Parse(GetParameterFromSettings(nameof(IsCombineAll), false));
             set => ConfigurationManager.AppSettings[nameof(IsCombineAll)] = value.ToString();
         }
 
         public bool IsAnalysisOnStart
         {
-            get
-            {
-                if (ConfigurationManager.AppSettings[nameof(IsAnalysisOnStart)] == null)
-                    ConfigurationManager.AppSettings[nameof(IsAnalysisOnStart)] = true.ToString();
+            get => bool.Parse(GetParameterFromSettings(nameof(IsAnalysisOnStart), true));
+            set => SetParameterToSettings(nameof(IsAnalysisOnStart), value);
+        }
 
-                return bool.Parse(ConfigurationManager.AppSettings[nameof(IsAnalysisOnStart)]);
-            }
-            set => ConfigurationManager.AppSettings[nameof(IsAnalysisOnStart)] = value.ToString();
+        private string GetParameterFromSettings(string parameterName, object defaultValue = null)
+        {
+            return ConfigurationManager.AppSettings[parameterName] ??
+                   (ConfigurationManager.AppSettings[parameterName] = defaultValue?.ToString());
+        }
+
+        private void SetParameterToSettings(string parameterName, object value)
+        {
+            ConfigurationManager.AppSettings[parameterName] = value.ToString();
         }
 
         public RelayCommand CombineIntersectsTasks
@@ -77,13 +76,7 @@ namespace RevitOpening.ViewModels
                                t.Commit();
                            }
 
-                           using (var t = new Transaction(_currentDocument, "Анализ заданий"))
-                           {
-                               t.Start();
-                               AnalyzeTasks();
-                               t.Commit();
-                           }
-
+                           Transactions.Analysis(_currentDocument,_documents,_offset,_diameter);
                            UpdateTasksAndOpenings();
                        }));
             }
@@ -116,13 +109,7 @@ namespace RevitOpening.ViewModels
                 return _updateTaskInfo ??
                        (_updateTaskInfo = new RelayCommand(obj =>
                        {
-                           using (var t = new Transaction(_currentDocument, "Анализ заданий"))
-                           {
-                               t.Start();
-                               AnalyzeTasks();
-                               t.Commit();
-                           }
-
+                           Transactions.Analysis(_currentDocument, _documents, _offset, _diameter);
                            UpdateTasksAndOpenings();
                        }));
             }
@@ -175,7 +162,7 @@ namespace RevitOpening.ViewModels
                            var maxDiameter = _diameter;
                            var offset = _offset;
                            var createOpeningInTaskBoxes =
-                               new CreateOpeningInTaskBoxes(_currentDocument, _documents, maxDiameter, offset);
+                               new CreateOpeningInTaskBoxes(_currentDocument);
                            var taskId = GetSelectedElementsFromDocument().ToList();
                            if (taskId.Count == 0)
                                return;
@@ -223,13 +210,7 @@ namespace RevitOpening.ViewModels
                 return _createAllTasks ??
                        (_createAllTasks = new RelayCommand(obj =>
                            {
-                               using (var t = new Transaction(_currentDocument, "Анализ заданий"))
-                               {
-                                   t.Start();
-                                   AnalyzeTasks();
-                                   t.Commit();
-                               }
-
+                               Transactions.Analysis(_currentDocument,_documents,_offset,_diameter);
                                UpdateTasksAndOpenings();
                                using (var t = new Transaction(_currentDocument, "Создание заданий"))
                                {
@@ -251,12 +232,7 @@ namespace RevitOpening.ViewModels
                                        t.Commit();
                                    }
 
-                               using (var t = new Transaction(_currentDocument, "Анализ заданий"))
-                               {
-                                   t.Start();
-                                   AnalyzeTasks();
-                                   t.Commit();
-                               }
+                               Transactions.Analysis(_currentDocument, _documents, _offset, _diameter);
 
                                UpdateTasksAndOpenings();
                            },
@@ -275,7 +251,7 @@ namespace RevitOpening.ViewModels
                            var maxDiameter = _diameter;
                            var offset = _offset;
                            var createOpenings =
-                               new CreateOpeningInTaskBoxes(_currentDocument, _documents, maxDiameter, offset);
+                               new CreateOpeningInTaskBoxes(_currentDocument);
                            var openings = new List<Element>();
                            using (var t = new Transaction(_currentDocument, "Change tasks to opening"))
                            {
@@ -325,23 +301,9 @@ namespace RevitOpening.ViewModels
             _documents = commandData.Application.Application.Documents
                 .Cast<Document>();
             if (bool.Parse(ConfigurationManager.AppSettings[nameof(IsAnalysisOnStart)]))
-            {
-                using (var t = new Transaction(_currentDocument,"Анализ заданий"))
-                {
-                    t.Start();
-                    AnalyzeTasks();
-                    t.Commit();
-                }
-            }
+                Transactions.Analysis(_currentDocument,_documents,_offset,_diameter);
 
             UpdateTasksAndOpenings();
-        }
-
-        private void AnalyzeTasks()
-        {
-            var offset = _offset;
-            var maxDiameter = _diameter;
-            BoxAnalyzer.ExecuteAnalysis(_documents, _currentDocument, offset, maxDiameter);
         }
 
         private ElementId[] GetSelectedElementsFromDocument()
@@ -360,7 +322,7 @@ namespace RevitOpening.ViewModels
             }
             catch (ArgumentNullException)
             {
-                AnalyzeTasks();
+                Transactions.Analysis(_currentDocument, _documents,_offset,_diameter);
                 UpdateTasks();
                 UpdateOpenings();
             }

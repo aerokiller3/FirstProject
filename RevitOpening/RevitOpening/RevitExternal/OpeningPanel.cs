@@ -53,7 +53,7 @@ namespace RevitOpening.RevitExternal
                 Resources.CombineBoxes);
             AddButtonOnPanel(panel, currentDirectory, "ChangeSelectedTasksToOpenings", "Создать отверстие",
                 Resources.CreateOpenings);
-            AddButtonOnPanel(panel, currentDirectory, "ShowOrHideDockablePanel", "Показать/обновить списпок",
+            AddButtonOnPanel(panel, currentDirectory, "UpdateDockablePanel", "Показать/обновить списпок",
                 Resources.StartProgram);
 
             return Result.Succeeded;
