@@ -39,6 +39,10 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="Revit.Async, Version=1.3.1.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\Revit.Async.dll</HintPath>
+    </Reference>
     <Reference Include="RevitAPI">
       <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\Revit 2019\RevitAPI.dll</HintPath>
       <Private>False</Private>
@@ -63,6 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\BoundingBoxExtensions.cs" />
+    <Compile Include="Extensions\DataGridExtensions.cs" />
     <Compile Include="Extensions\DocumentExtensions.cs" />
     <Compile Include="Extensions\DocumentsExtensions.cs" />
     <Compile Include="Extensions\ElementExtensions.cs" />
@@ -75,6 +80,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="RevitExternal\BoxShowerEventHandler.cs" />
     <Compile Include="RevitExternal\ChangeSelectedTasksToOpenings.cs" />
     <Compile Include="RevitExternal\CombineTwoBoxes.cs" />
     <Compile Include="Logic\BoxCombiner.cs" />
@@ -88,7 +94,12 @@
     <Compile Include="Logic\Families.cs" />
     <Compile Include="Extensions\DoubleExtensions.cs" />
     <Compile Include="Logic\FamilyLoader.cs" />
+    <Compile Include="RevitExternal\Show3DBox.cs" />
+    <Compile Include="UI\TasksDockablePanel.xaml.cs">
+      <DependentUpon>TasksDockablePanel.xaml</DependentUpon>
+    </Compile>
     <Compile Include="RevitExternal\SelectionFilter.cs" />
+    <Compile Include="RevitExternal\ShowOrHideDockablePanel.cs" />
     <Compile Include="UI\FilterStatusControl.xaml.cs">
       <DependentUpon>FilterStatusControl.xaml</DependentUpon>
     </Compile>
@@ -108,6 +119,7 @@
     <Compile Include="ViewModels\FilterStatusVM.cs" />
     <Compile Include="ViewModels\MainVM.cs" />
     <Compile Include="ViewModels\RelayCommand.cs" />
+    <Compile Include="ViewModels\TaskDockablePanelVM.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.editorconfig">
@@ -133,6 +145,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="UI\TasksDockablePanel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UI\FilterStatusControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

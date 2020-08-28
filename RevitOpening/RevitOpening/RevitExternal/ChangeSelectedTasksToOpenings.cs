@@ -27,7 +27,7 @@ namespace RevitOpening.RevitExternal
                 .Select(x => currentDocument.GetElement(x))
                 .ToArray();
             var openings = new List<Element>();
-            using (var t = new Transaction(currentDocument, "Change Tasks To Openings"))
+            using (var t = new Transaction(currentDocument, "Замена задания на отверстие"))
             {
                 t.Start();
                 var statuses = selected.Select(el => el.LookupParameter("Несогласованно")

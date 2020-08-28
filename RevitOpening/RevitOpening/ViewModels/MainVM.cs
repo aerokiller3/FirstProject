@@ -308,34 +308,14 @@ namespace RevitOpening.ViewModels
         public void OnCurrentCellChanged(object sender, EventArgs e)
         {
             var grid = sender as DataGrid;
-            var selectItems = GetSelectedItemsFromGrid(grid).ToList();
+            var selectItems = grid.GetSelectedItemsFromGrid<OpeningData>()
+                .Select(x=>new ElementId(x.Id))
+                .ToList();
             if (selectItems.Count != 1)
                 return;
 
             _commandData.Application.ActiveUIDocument.Selection.SetElementIds(selectItems);
-            var commandId = RevitCommandId.LookupPostableCommandId(PostableCommand.SelectionBox);
-            var appUI = _commandData.Application.GetType();
-            var field = appUI
-                .GetField("sm_revitCommands", BindingFlags.NonPublic | BindingFlags.Static)
-                .GetValue(_commandData.Application);
-            var countCommands = (int)field.GetType().GetProperty("Count")?.GetValue(field);
-
-            using (var t = new Transaction(_currentDocument, "Test"))
-            {
-                t.Start();
-                while (true)
-                {
-                    if (countCommands > 0 || !_commandData.Application.CanPostCommand(commandId))
-                        return;
-
-                    _commandData.Application.PostCommand(commandId);
-                    break;
-                }
-
-                t.Commit();
-            }
-
-            //_commandData.Application.ActiveUIDocument.ShowElements(selectItems);
+            _commandData.Application.ActiveUIDocument.ShowElements(selectItems);
         }
 
         public void Init(ExternalCommandData commandData)
@@ -362,13 +342,6 @@ namespace RevitOpening.ViewModels
             var offset = _offset;
             var maxDiameter = _diameter;
             BoxAnalyzer.ExecuteAnalysis(_documents, _currentDocument, offset, maxDiameter);
-        }
-
-        private IEnumerable<ElementId> GetSelectedItemsFromGrid(DataGrid grid)
-        {
-            return grid.SelectedItems
-                .Cast<OpeningData>()
-                .Select(el => new ElementId(el.Id));
         }
 
         private ElementId[] GetSelectedElementsFromDocument()

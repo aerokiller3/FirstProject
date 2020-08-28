@@ -63,9 +63,9 @@ namespace RevitOpening.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap createOp {
+        internal static System.Drawing.Bitmap CombineBoxes {
             get {
-                object obj = ResourceManager.GetObject("createOp", resourceCulture);
+                object obj = ResourceManager.GetObject("CombineBoxes", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace RevitOpening.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap opening {
+        internal static System.Drawing.Bitmap CreateOpenings {
             get {
-                object obj = ResourceManager.GetObject("opening", resourceCulture);
+                object obj = ResourceManager.GetObject("CreateOpenings", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -83,9 +83,9 @@ namespace RevitOpening.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Unite {
+        internal static System.Drawing.Bitmap StartProgram {
             get {
-                object obj = ResourceManager.GetObject("Unite", resourceCulture);
+                object obj = ResourceManager.GetObject("StartProgram", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

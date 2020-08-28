@@ -81,5 +81,10 @@ namespace RevitOpening.Models
                 return hashCode;
             }
         }
+
+        public override string ToString()
+        {
+            return Id.ToString();
+        }
     }
 }
