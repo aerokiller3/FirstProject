@@ -1,6 +1,6 @@
-﻿using System;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI.Selection;
+using System;
 
 namespace RevitOpening.RevitExternal
 {

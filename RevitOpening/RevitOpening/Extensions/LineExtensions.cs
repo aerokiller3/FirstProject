@@ -1,5 +1,5 @@
-﻿using System;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
+using System;
 
 namespace RevitOpening.Extensions
 {
@@ -14,7 +14,7 @@ namespace RevitOpening.Extensions
                 Arc.Create(plane, radius, 0, Math.PI),
                 Arc.Create(plane, radius, Math.PI, 2 * Math.PI)
             });
-            return GeometryCreationUtilities.CreateExtrusionGeometry(new[] {profile}, line.Direction, line.Length);
+            return GeometryCreationUtilities.CreateExtrusionGeometry(new[] { profile }, line.Direction, line.Length);
         }
 
         public static Line Fix(this Line line)

@@ -1,10 +1,9 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
 using RevitOpening.Extensions;
 using RevitOpening.Models;
+using System;
+using System.Linq;
 
 namespace RevitOpening.Logic
 {
@@ -41,7 +40,6 @@ namespace RevitOpening.Logic
             newBox.LookupParameter(familyParameters.DepthName).Set(parentsData.BoxData.Depth);
             parentsData.BoxData.Id = newBox.Id.IntegerValue;
             newBox.SetParentsData(parentsData);
-
             return newBox;
         }
     }

@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using RevitOpening.Logic;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RevitOpening.Extensions
 {
@@ -9,9 +9,17 @@ namespace RevitOpening.Extensions
     {
         public static Element GetElement(this IEnumerable<Document> documents, string uniqueId)
         {
-            var els=documents
+            var els = documents
                 .Select(document => document
                     .GetElement(uniqueId));
+            return els.FirstOrDefault(curEl => curEl != null);
+        }
+
+        public static Element GetElement(this IEnumerable<Document> documents, int id)
+        {
+            var els = documents
+                .Select(document => document
+                    .GetElement(new ElementId(id)));
             return els.FirstOrDefault(curEl => curEl != null);
         }
 

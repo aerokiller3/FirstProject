@@ -1,13 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Electrical;
 using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.DB.Plumbing;
 using RevitOpening.Extensions;
 using RevitOpening.Models;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RevitOpening.Logic
 {
@@ -62,8 +60,9 @@ namespace RevitOpening.Logic
                 if (openingParameters == null)
                     continue;
 
-                var parentsData = new OpeningParentsData(new List<string> {ductsInWall.Key.UniqueId},
-                    new List<string> {curve.UniqueId}, openingParameters);
+                openingParameters.Level = _documents.GetElement(ductsInWall.Key.LevelId.IntegerValue).Name;
+                var parentsData = new OpeningParentsData(new List<string> { ductsInWall.Key.UniqueId },
+                    new List<string> { curve.UniqueId }, openingParameters);
 
                 if ((_tasksCenters?.Contains(openingParameters.IntersectionCenter) ?? false)
                     || (_openingsCenters?.Contains(openingParameters.IntersectionCenter) ?? false))

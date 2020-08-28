@@ -1,6 +1,6 @@
-﻿using System;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using Newtonsoft.Json;
+using System;
 
 namespace RevitOpening.Models
 {

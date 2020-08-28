@@ -1,10 +1,7 @@
-﻿using System;
-using System.Threading.Tasks;
-using System.Windows.Controls;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
-using RevitOpening.Models;
+﻿using Autodesk.Revit.UI;
 using RevitOpening.ViewModels;
+using System;
+using System.Windows.Controls;
 
 namespace RevitOpening.UI
 {

@@ -1,18 +1,14 @@
-﻿using System;
+﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
+using RevitOpening.Properties;
+using RevitOpening.UI;
+using RevitOpening.ViewModels;
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
-using System.Windows.Interop;
 using System.Windows.Media.Imaging;
-using Autodesk.Revit.Attributes;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Events;
-using RevitOpening.Properties;
-using RevitOpening.RevitExternal;
-using RevitOpening.UI;
-using RevitOpening.ViewModels;
 using static System.Windows.Interop.Imaging;
 
 namespace RevitOpening.RevitExternal
@@ -20,32 +16,13 @@ namespace RevitOpening.RevitExternal
     public class OpeningPanel : IExternalApplication
     {
         public const string DockablePanelGuid = "{C2D5D9FF-FCD4-4387-B6CE-B5D4DEDF2637}";
-        private TasksDockablePanel tasksDockableWindow;
+        private TasksDockablePanel _tasksDockableWindow;
 
         public Result OnStartup(UIControlledApplication application)
         {
-            const string altecSystems = "Altec Systems";
-            const string moduleName = "Отверстия";
-            RibbonPanel panel;
-            try
-            {
-                application.CreateRibbonTab(altecSystems);
-            }
-            catch
-            {
-                // ignored
-            }
-
-            try
-            {
-                panel = application.CreateRibbonPanel(altecSystems, moduleName);
-            }
-            catch
-            {
-                panel = application.GetRibbonPanels(altecSystems).First(x => x.Name == moduleName);
-            }
-
+            var panel = CreateRibbonPanel(application);
             var currentDirectory = Assembly.GetExecutingAssembly().Location;
+
             RegisterDockableWindow(application);
             AddButtonOnPanel(panel, currentDirectory, "StartProgram", "Открыть модуль",
                 Resources.StartProgram);
@@ -53,18 +30,40 @@ namespace RevitOpening.RevitExternal
                 Resources.CombineBoxes);
             AddButtonOnPanel(panel, currentDirectory, "ChangeSelectedTasksToOpenings", "Создать отверстие",
                 Resources.CreateOpenings);
-            AddButtonOnPanel(panel, currentDirectory, "UpdateDockablePanel", "Показать/обновить списпок",
-                Resources.StartProgram);
+            AddButtonOnPanel(panel, currentDirectory, "UpdateDockablePanel", "Обновить списпок",
+                Resources.List);
 
             return Result.Succeeded;
+        }
+
+        private RibbonPanel CreateRibbonPanel(UIControlledApplication application)
+        {
+            const string altecSystems = "Altec Systems";
+            const string moduleName = "Отверстия";
+            try
+            {
+                application.CreateRibbonTab(altecSystems);
+            }
+            catch
+            {
+            }
+
+            try
+            {
+                return application.CreateRibbonPanel(altecSystems, moduleName);
+            }
+            catch
+            {
+                return application.GetRibbonPanels(altecSystems).First(x => x.Name == moduleName);
+            }
         }
 
         private void RegisterDockableWindow(UIControlledApplication uiApplication)
         {
             var data = new DockablePaneProviderData();
 
-            tasksDockableWindow = new TasksDockablePanel();
-            data.FrameworkElement = tasksDockableWindow;
+            _tasksDockableWindow = new TasksDockablePanel();
+            data.FrameworkElement = _tasksDockableWindow;
             data.InitialState = new DockablePaneState
             {
                 DockPosition = DockPosition.Tabbed,
@@ -72,23 +71,20 @@ namespace RevitOpening.RevitExternal
             };
 
             var paneId = new DockablePaneId(new Guid(DockablePanelGuid));
-            uiApplication.RegisterDockablePane(paneId, "Список заданий на отверстия", tasksDockableWindow);
 
-            uiApplication.ViewActivated += Application_ViewActivated;
-            uiApplication.ViewActivating += Application_ViewActivated;
-            uiApplication.DockableFrameFocusChanged += Application_ViewActivated;
-            uiApplication.DockableFrameVisibilityChanged += Application_ViewActivated;
+            uiApplication.RegisterDockablePane(paneId, "Список заданий на отверстия", _tasksDockableWindow);
+            uiApplication.DockableFrameVisibilityChanged += UpdateDockablePanel;
         }
 
-        private void Application_ViewActivated(object sender, EventArgs e)
+        private void UpdateDockablePanel(object sender, EventArgs e)
         {
             var app = sender as UIApplication;
-            (tasksDockableWindow.DataContext as TaskDockablePanelVM)
+            (_tasksDockableWindow.DataContext as TaskDockablePanelVM)
                 .UpdateList(app.Application.Documents.Cast<Document>());
         }
 
 
-        private void AddButtonOnPanel(RibbonPanel panel, string directory,string buttonName, string buttonText,
+        private void AddButtonOnPanel(RibbonPanel panel, string directory, string buttonName, string buttonText,
             Bitmap image, string availabilityClass = null)
         {
             var startButtonData = new PushButtonData(buttonName,

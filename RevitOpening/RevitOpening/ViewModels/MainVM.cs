@@ -1,20 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Configuration;
-using System.Globalization;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Windows;
-using System.Windows.Controls;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using RevitOpening.Annotations;
 using RevitOpening.Extensions;
 using RevitOpening.Logic;
 using RevitOpening.Models;
 using RevitOpening.UI;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
+using System.Globalization;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace RevitOpening.ViewModels
 {
@@ -69,14 +68,8 @@ namespace RevitOpening.ViewModels
                 return _combineIntersectsTasks ??
                        (_combineIntersectsTasks = new RelayCommand(obj =>
                        {
-                           using (var t = new Transaction(_currentDocument, "Объединение заданий"))
-                           {
-                               t.Start();
-                               BoxCombiner.CombineAllBoxes(_documents, _currentDocument);
-                               t.Commit();
-                           }
-
-                           Transactions.Analysis(_currentDocument,_documents,_offset,_diameter);
+                           Transactions.CombineIntersectsTasks(_currentDocument, _documents);
+                           Transactions.UpdateTasksInfo(_currentDocument, _documents, _offset, _diameter);
                            UpdateTasksAndOpenings();
                        }));
             }
@@ -88,7 +81,7 @@ namespace RevitOpening.ViewModels
             set
             {
                 _offsetStr = value;
-                double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture,out _offset);
+                double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out _offset);
             }
         }
 
@@ -109,7 +102,7 @@ namespace RevitOpening.ViewModels
                 return _updateTaskInfo ??
                        (_updateTaskInfo = new RelayCommand(obj =>
                        {
-                           Transactions.Analysis(_currentDocument, _documents, _offset, _diameter);
+                           Transactions.UpdateTasksInfo(_currentDocument, _documents, _offset, _diameter);
                            UpdateTasksAndOpenings();
                        }));
             }
@@ -132,9 +125,9 @@ namespace RevitOpening.ViewModels
                                Title = "Выбор фильтра",
                                Content = control
                            };
-                           ((FilterStatusVM) control.DataContext).HostWindow = dialogWindow;
+                           ((FilterStatusVM)control.DataContext).HostWindow = dialogWindow;
                            dialogWindow.ShowDialog();
-                           var type = ((FilterStatusVM) control.DataContext).SelectStatus;
+                           var type = ((FilterStatusVM)control.DataContext).SelectStatus;
                            if (string.IsNullOrEmpty(type))
                            {
                                UpdateTasksAndOpenings();
@@ -159,11 +152,7 @@ namespace RevitOpening.ViewModels
                 return _changeSelectedTasksToOpenings ??
                        (_changeSelectedTasksToOpenings = new RelayCommand(obj =>
                        {
-                           var maxDiameter = _diameter;
-                           var offset = _offset;
-                           var createOpeningInTaskBoxes =
-                               new CreateOpeningInTaskBoxes(_currentDocument);
-                           var taskId = GetSelectedElementsFromDocument().ToList();
+                           var taskId = GetSelectedElementsFromDocument();
                            if (taskId.Count == 0)
                                return;
 
@@ -177,26 +166,9 @@ namespace RevitOpening.ViewModels
                            }
 
                            var openings = new List<Element>();
-                           using (var t = new Transaction(_currentDocument, "Change selected tasks to opening"))
-                           {
-                               t.Start();
-                               openings.AddRange(
-                                   createOpeningInTaskBoxes.SwapTasksToOpenings(tasks.Cast<FamilyInstance>()));
-                               t.Commit();
-                           }
 
-                           using (var t = new Transaction(_currentDocument, "Drawing"))
-                           {
-                               t.Start();
-                               foreach (var el in openings)
-                               {
-                                   var v = el.LookupParameter("Отверстие_Дисциплина").AsString();
-                                   el.LookupParameter("Отверстие_Дисциплина").Set(v + "1");
-                                   el.LookupParameter("Отверстие_Дисциплина").Set(v);
-                               }
-
-                               t.Commit();
-                           }
+                           Transactions.CreateOpeningInSelectedTask(_currentDocument, openings, tasks);
+                           Transactions.Drawing(_currentDocument, openings);
 
                            UpdateTasksAndOpenings();
                        }));
@@ -210,34 +182,17 @@ namespace RevitOpening.ViewModels
                 return _createAllTasks ??
                        (_createAllTasks = new RelayCommand(obj =>
                            {
-                               Transactions.Analysis(_currentDocument,_documents,_offset,_diameter);
+                               Transactions.UpdateTasksInfo(_currentDocument, _documents, _offset, _diameter);
                                UpdateTasksAndOpenings();
-                               using (var t = new Transaction(_currentDocument, "Создание заданий"))
-                               {
-                                   t.Start();
-                                   var offset = _offset;
-                                   var diameter = _diameter;
-                                   var createTask = new CreateTaskBoxes(Tasks, Openings, _currentDocument,
-                                       _documents,diameter,offset);
-                                   createTask.Execute();
-                                   t.Commit();
-                               }
-
-
+                               Transactions.CreateAllTasks(_currentDocument, _documents, _offset,
+                                   _diameter, Tasks, Openings);
                                if (IsCombineAll)
-                                   using (var t = new Transaction(_currentDocument, "Объединение заданий"))
-                                   {
-                                       t.Start();
-                                       BoxCombiner.CombineAllBoxes(_documents, _currentDocument);
-                                       t.Commit();
-                                   }
-
-                               Transactions.Analysis(_currentDocument, _documents, _offset, _diameter);
-
+                                   Transactions.CombineIntersectsTasks(_currentDocument, _documents);
+                               Transactions.UpdateTasksInfo(_currentDocument, _documents, _offset, _diameter);
                                UpdateTasksAndOpenings();
                            },
                            obj => double.TryParse(Offset, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
-                                  && double.TryParse(Diameter,NumberStyles.Any, CultureInfo.InvariantCulture,out _)));
+                                  && double.TryParse(Diameter, NumberStyles.Any, CultureInfo.InvariantCulture, out _)));
             }
         }
 
@@ -248,30 +203,9 @@ namespace RevitOpening.ViewModels
                 return _changeTasksToOpenings ??
                        (_changeTasksToOpenings = new RelayCommand(obj =>
                        {
-                           var maxDiameter = _diameter;
-                           var offset = _offset;
-                           var createOpenings =
-                               new CreateOpeningInTaskBoxes(_currentDocument);
                            var openings = new List<Element>();
-                           using (var t = new Transaction(_currentDocument, "Change tasks to opening"))
-                           {
-                               t.Start();
-                               openings.AddRange(createOpenings.SwapAllTasksToOpenings());
-                               t.Commit();
-                           }
-
-                           using (var t = new Transaction(_currentDocument, "Drawing"))
-                           {
-                               t.Start();
-                               foreach (var el in openings)
-                               {
-                                   var v = el.LookupParameter("Отверстие_Дисциплина").AsString();
-                                   el.LookupParameter("Отверстие_Дисциплина").Set(v + "1");
-                                   el.LookupParameter("Отверстие_Дисциплина").Set(v);
-                               }
-
-                               t.Commit();
-                           }
+                           Transactions.SwapAllTasksToOpenings(_currentDocument, openings);
+                           Transactions.Drawing(_currentDocument, openings);
 
                            UpdateTasksAndOpenings();
                        }));
@@ -285,7 +219,7 @@ namespace RevitOpening.ViewModels
         {
             var grid = sender as DataGrid;
             var selectItems = grid.GetSelectedItemsFromGrid<OpeningData>()
-                .Select(x=>new ElementId(x.Id))
+                .Select(x => new ElementId(x.Id))
                 .ToList();
             if (selectItems.Count != 1)
                 return;
@@ -301,16 +235,16 @@ namespace RevitOpening.ViewModels
             _documents = commandData.Application.Application.Documents
                 .Cast<Document>();
             if (bool.Parse(ConfigurationManager.AppSettings[nameof(IsAnalysisOnStart)]))
-                Transactions.Analysis(_currentDocument,_documents,_offset,_diameter);
+                Transactions.UpdateTasksInfo(_currentDocument, _documents, _offset, _diameter);
 
             UpdateTasksAndOpenings();
         }
 
-        private ElementId[] GetSelectedElementsFromDocument()
+        private List<ElementId> GetSelectedElementsFromDocument()
         {
             return _commandData.Application.ActiveUIDocument.Selection
                 .GetElementIds()
-                .ToArray();
+                .ToList();
         }
 
         private void UpdateTasksAndOpenings()
@@ -322,7 +256,7 @@ namespace RevitOpening.ViewModels
             }
             catch (ArgumentNullException)
             {
-                Transactions.Analysis(_currentDocument, _documents,_offset,_diameter);
+                Transactions.UpdateTasksInfo(_currentDocument, _documents, _offset, _diameter);
                 UpdateTasks();
                 UpdateOpenings();
             }

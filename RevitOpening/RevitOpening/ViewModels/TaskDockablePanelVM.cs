@@ -1,29 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Input;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
+﻿using Autodesk.Revit.DB;
 using Revit.Async;
 using Revit.Async.Interfaces;
 using RevitOpening.Annotations;
 using RevitOpening.EventHandlers;
 using RevitOpening.Extensions;
 using RevitOpening.Models;
-using RevitOpening.RevitExternal;
 using RevitOpening.UI;
-using Application = Autodesk.Revit.ApplicationServices.Application;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace RevitOpening.ViewModels
 {

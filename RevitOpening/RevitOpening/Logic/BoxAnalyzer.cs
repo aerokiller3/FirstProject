@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
-using System.Windows.Documents;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Electrical;
 using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.DB.Plumbing;
 using RevitOpening.Extensions;
 using RevitOpening.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RevitOpening.Logic
 {
@@ -144,7 +142,7 @@ namespace RevitOpening.Logic
                 width = height = oldTask.LookupParameter(familyParameters.DiameterName).AsDouble();
             }
             else
-                throw new Exception("Неизвестный тип задания");
+                throw new ArgumentException("Неизвестный тип задания");
 
             return locPoint.Equals(boxData.IntersectionCenter) &&
                    Math.Abs(width - boxData.Width) < tolerance &&

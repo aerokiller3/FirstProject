@@ -1,14 +1,11 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+﻿using RevitOpening.Logic;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using RevitOpening.Annotations;
-using RevitOpening.Logic;
 
 namespace RevitOpening.ViewModels
 {
-    public class FilterStatusVM : INotifyPropertyChanged
+    public class FilterStatusVM
     {
         private RelayCommand _filter;
 
@@ -25,7 +22,7 @@ namespace RevitOpening.ViewModels
             Collisions.TaskCouldNotBeProcessed,
         };
 
-        public string SelectStatus { get; private set; }
+        public string SelectStatus { get; set; }
 
         public RelayCommand Filter
         {
@@ -39,14 +36,6 @@ namespace RevitOpening.ViewModels
                            HostWindow.Close();
                        }));
             }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

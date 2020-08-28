@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using Autodesk.Revit.Attributes;
+﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Selection;
 using RevitOpening.Extensions;
 using RevitOpening.Logic;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows;
 
 namespace RevitOpening.RevitExternal
 {
@@ -19,45 +15,22 @@ namespace RevitOpening.RevitExternal
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             var currentDocument = commandData.Application.ActiveUIDocument.Document;
-            var documents = commandData.Application.Application.Documents.Cast<Document>();
-            var createOpeningInTaskBoxes = new CreateOpeningInTaskBoxes(currentDocument);
-            var select = commandData.Application.ActiveUIDocument.Selection;
-            var selected = select.PickObjects(ObjectType.Element, new SelectionFilter(x => x.IsTask(),
-                    (x, _) => true))
-                .Select(x => currentDocument.GetElement(x))
-                .ToArray();
+            var selected = commandData.Application.ActiveUIDocument.Selection.GetSelectedTasks(currentDocument);
+
             var openings = new List<Element>();
-            using (var t = new Transaction(currentDocument, "Замена задания на отверстие"))
+            var statuses = selected.Select(el => el.LookupParameter("Несогласованно")
+                .AsInteger());
+
+            if (statuses.Any(s => s == 1))
             {
-                t.Start();
-                var statuses = selected.Select(el => el.LookupParameter("Несогласованно")
-                    .AsInteger());
-
-                if (statuses.Any(s => s == 1))
-                {
-                    var box = MessageBox.Show("Одно или более заданий не согласованы!\nПродолжить выполнение?",
-                        "Вырезание отверстий",
-                        MessageBoxButton.YesNo);
-                    if (box == MessageBoxResult.No)
-                        return Result.Cancelled;
-                }
-
-                openings.AddRange(createOpeningInTaskBoxes.SwapTasksToOpenings(selected.Cast<FamilyInstance>()));
-                t.Commit();
+                var box = MessageBox.Show("Одно или более заданий не согласованы!\nПродолжить выполнение?",
+                    "Вырезание отверстий", MessageBoxButton.YesNo);
+                if (box == MessageBoxResult.No)
+                    return Result.Cancelled;
             }
 
-            using (var t = new Transaction(currentDocument, "Drawing"))
-            {
-                t.Start();
-                foreach (var el in openings)
-                {
-                    var v = el.LookupParameter("Отверстие_Дисциплина").AsString();
-                    el.LookupParameter("Отверстие_Дисциплина").Set(v + "1");
-                    el.LookupParameter("Отверстие_Дисциплина").Set(v);
-                }
-
-                t.Commit();
-            }
+            Transactions.CreateOpeningInSelectedTask(currentDocument, openings, selected);
+            Transactions.Drawing(currentDocument, openings);
 
             return Result.Succeeded;
         }

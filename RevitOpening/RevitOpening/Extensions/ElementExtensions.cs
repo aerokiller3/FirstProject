@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
+﻿using Autodesk.Revit.DB;
 using Newtonsoft.Json;
 using RevitOpening.Logic;
 using RevitOpening.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows;
 
 namespace RevitOpening.Extensions
 {
@@ -20,7 +20,10 @@ namespace RevitOpening.Extensions
             var hosts = new List<Element>();
             hosts.AddRange(intersectsFloors);
             hosts.AddRange(intersectsWalls);
-            var parentsData = new OpeningParentsData(hosts.Select(h => h.UniqueId).ToList(), mepCurves.Select(c => c.UniqueId).ToList(), null);
+            var parentsData = new OpeningParentsData(
+                hosts.Select(h => h.UniqueId).ToList(),
+                mepCurves.Select(c => c.UniqueId).ToList(),
+                null);
             if (hosts.Count == 0 || mepCurves.Count == 0)
                 return null;
 
@@ -45,7 +48,7 @@ namespace RevitOpening.Extensions
             {
                 data = task.GetParentsData();
             }
-            catch
+            catch (ArgumentNullException)
             {
                 data = task.InitData(walls, floors, offset, maxDiameter, mepCurves);
             }
@@ -55,16 +58,18 @@ namespace RevitOpening.Extensions
 
         public static bool IsTask(this Element element)
         {
-            return Families.AllFamiliesNames.Contains(((FamilyInstance) element).Symbol.FamilyName);
+            return Families.AllFamiliesNames.Contains(((FamilyInstance)element).Symbol.FamilyName);
         }
 
         public static OpeningParentsData GetParentsData(this Element element)
         {
             var json = AltecJsonSchema.GetJson(element);
-            if (json == null)
-                throw new ArgumentNullException("Обновите информацию о заданиях перед использованием");
+            if (json != null)
+                return JsonConvert.DeserializeObject<OpeningParentsData>(json);
 
-            return JsonConvert.DeserializeObject<OpeningParentsData>(json);
+            const string text = "Обновите информацию о заданиях перед использованием";
+            MessageBox.Show(text);
+            throw new ArgumentNullException(text);
         }
 
         public static void SetParentsData(this Element element, OpeningParentsData parentsData)
@@ -90,7 +95,7 @@ namespace RevitOpening.Extensions
         {
             tolerance = tolerance ?? XYZ.Zero;
 
-            var tasks = new [] {task, otherTask};
+            var tasks = new[] { task, otherTask };
             var solids = tasks
                 .Where(el => el != null)
                 .Select(el => el.GetSolid());

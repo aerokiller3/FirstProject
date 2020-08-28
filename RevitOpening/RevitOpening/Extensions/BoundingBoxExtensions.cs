@@ -21,9 +21,9 @@ namespace RevitOpening.Extensions
             var edge3 = Line.CreateBound(pt3, pt0);
             //create loop, still in BBox coords
             var height = maxZ - minZ;
-            var baseLoop = CurveLoop.Create(new Curve[] {edge0, edge1, edge2, edge3});
+            var baseLoop = CurveLoop.Create(new Curve[] { edge0, edge1, edge2, edge3 });
             var preTransformBox =
-                GeometryCreationUtilities.CreateExtrusionGeometry(new[] {baseLoop}, XYZ.BasisZ, height);
+                GeometryCreationUtilities.CreateExtrusionGeometry(new[] { baseLoop }, XYZ.BasisZ, height);
             var transformBox = SolidUtils.CreateTransformed(preTransformBox, bbox.Transform);
             return transformBox;
         }

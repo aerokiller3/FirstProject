@@ -1,7 +1,7 @@
-﻿using System;
+﻿using RevitOpening.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using RevitOpening.Models;
 
 namespace RevitOpening.Logic
 {
@@ -58,7 +58,7 @@ namespace RevitOpening.Logic
                 familyData = WallRoundOpeningFamily;
             else if (taskFamily == WallRectTaskFamily)
                 familyData = WallRectOpeningFamily;
-            else if (taskFamily== FloorRectTaskFamily)
+            else if (taskFamily == FloorRectTaskFamily)
                 familyData = FloorRectOpeningFamily;
             else
                 throw new Exception("Неизвестный экземпляр семейства");

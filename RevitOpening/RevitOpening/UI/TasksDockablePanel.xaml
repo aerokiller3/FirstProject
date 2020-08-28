@@ -41,6 +41,10 @@
                                     Binding="{Binding Path=Collisions}"
                                     IsReadOnly="True"
                                     Width="*"/>
+                <DataGridTextColumn Header="Уровень"
+                                    Binding="{Binding Path=Level}"
+                                    IsReadOnly="True"
+                                    Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

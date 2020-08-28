@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using RevitOpening.Extensions;
 using RevitOpening.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RevitOpening.Logic
 {
@@ -37,7 +37,7 @@ namespace RevitOpening.Logic
         {
             var tasks = currentDocument.GetTasks(familyData);
             var intersections = FindTaskIntersections(tasks).ToList();
-            for (var i=0;i<intersections.Count;i++)
+            for (var i = 0; i < intersections.Count; i++)
                 if (CombineTwoBoxes(documents, currentDocument, intersections[i].Item1, intersections[i].Item2) == null)
                 {
                     intersections.RemoveAt(i);
@@ -118,11 +118,9 @@ namespace RevitOpening.Logic
             var (hostsGeometries, pipesGeometries) = UnionTwoData(data1, data2);
             return new OpeningData(
                 data1.BoxData.Width, data1.BoxData.Height, depth,
-                data1.BoxData.Direction.XYZ,
-                center,
-                hostsGeometries,
-                pipesGeometries,
-                data1.BoxData.FamilyName, data1.BoxData.Offset, data1.BoxData.Diameter);
+                data1.BoxData.Direction.XYZ, center, hostsGeometries,
+                pipesGeometries, data1.BoxData.FamilyName, data1.BoxData.Offset,
+                data1.BoxData.Diameter, data1.BoxData.Level);
         }
 
         private static OpeningData CalculateUnitedTaskInFloor(Element el1, Element el2, OpeningParentsData data1,
@@ -144,11 +142,9 @@ namespace RevitOpening.Logic
             var height = maxUnited.X - minUnited.X;
             var (hostsGeometries, pipesGeometries) = UnionTwoData(data1, data2);
             return new OpeningData(
-                width, height, data1.BoxData.Depth,
-                direction, center,
-                hostsGeometries,
-                pipesGeometries,
-                Families.FloorRectTaskFamily.SymbolName,data1.BoxData.Offset, data1.BoxData.Diameter);
+                width, height, data1.BoxData.Depth, direction,
+                center, hostsGeometries, pipesGeometries, Families.FloorRectTaskFamily.SymbolName,
+                data1.BoxData.Offset, data1.BoxData.Diameter, data1.BoxData.Level);
         }
 
         private static OpeningData CalculateUnitedTaskInWallWithRounds(OpeningParentsData data1,
@@ -172,12 +168,9 @@ namespace RevitOpening.Logic
             center = backT.OfPoint(center);
             var (hostsGeometries, pipesGeometries) = UnionTwoData(data1, data2);
             return new OpeningData(
-                width, height, data1.BoxData.Depth,
-                data1.BoxData.Direction.XYZ,
-                center,
-                hostsGeometries,
-                pipesGeometries,
-                Families.WallRectTaskFamily.SymbolName, data1.BoxData.Offset, data1.BoxData.Diameter);
+                width, height, data1.BoxData.Depth, data1.BoxData.Direction.XYZ,
+                center, hostsGeometries, pipesGeometries, Families.WallRectTaskFamily.SymbolName,
+                data1.BoxData.Offset, data1.BoxData.Diameter, data1.BoxData.Level);
         }
 
         private static OpeningData CalculateUnitedTaskInWallWithRects(Element el1, Element el2,
@@ -194,11 +187,9 @@ namespace RevitOpening.Logic
             var height = maxUnited.Z - minUnited.Z;
             var (hostsGeometries, pipesGeometries) = UnionTwoData(data1, data2);
             return new OpeningData(
-                width, height, data1.BoxData.Depth,
-                data1.BoxData.Direction.XYZ, center.XYZ,
-                hostsGeometries, pipesGeometries,
-                Families.WallRectTaskFamily.SymbolName,
-                data1.BoxData.Offset, data2.BoxData.Diameter);
+                width, height, data1.BoxData.Depth, data1.BoxData.Direction.XYZ, center.XYZ,
+                hostsGeometries, pipesGeometries, Families.WallRectTaskFamily.SymbolName,
+                data1.BoxData.Offset, data2.BoxData.Diameter, data1.BoxData.Level);
         }
 
         private static MyXYZ FindTasksCenterInWall(Solid unitedSolid, Transform transform)

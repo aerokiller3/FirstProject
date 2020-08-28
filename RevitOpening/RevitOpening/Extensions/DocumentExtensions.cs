@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Autodesk.Revit.DB;
+using RevitOpening.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Autodesk.Revit.DB;
-using RevitOpening.Models;
 
 namespace RevitOpening.Extensions
 {
@@ -31,7 +31,7 @@ namespace RevitOpening.Extensions
                 .Cast<FamilySymbol>()
                 .FirstOrDefault(x => x.FamilyName == familyName);
             if (familySymbol == null)
-                throw new Exception("Невозможно найти семейство");
+                throw new Exception($"Невозможно найти семейство: {familyName}");
 
             collector.Dispose();
             return familySymbol;

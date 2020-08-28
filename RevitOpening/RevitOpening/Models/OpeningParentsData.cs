@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using RevitOpening.Extensions;
+﻿using RevitOpening.Extensions;
+using System.Collections.Generic;
 
 namespace RevitOpening.Models
 {
@@ -7,9 +7,9 @@ namespace RevitOpening.Models
     {
         public OpeningParentsData()
         {
-            HostsIds=new List<string>();
-            PipesIds=new List<string>();
-            BoxData=new OpeningData();
+            HostsIds = new List<string>();
+            PipesIds = new List<string>();
+            BoxData = new OpeningData();
         }
 
         public OpeningParentsData(List<string> hostsIds, List<string> pipesIds, OpeningData boxData)

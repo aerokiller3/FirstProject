@@ -1,5 +1,5 @@
-﻿using System.Linq;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
+using System.Linq;
 
 namespace RevitOpening.Models
 {

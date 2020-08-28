@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using RevitOpening.Extensions;
+using System.Collections.Generic;
 
 namespace RevitOpening.Logic
 {

@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using RevitOpening.Extensions;
 using RevitOpening.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RevitOpening.Logic
 {
@@ -43,8 +43,9 @@ namespace RevitOpening.Logic
             //
 
             return new OpeningData(taskWidth, taskHeight, taskDepth, direction,
-                intersectionCenter, new List<ElementGeometry> {wallData},
-                new List<ElementGeometry> {pipeData}, familyParameters.SymbolName,offsetRatio,maxDiameter);
+                intersectionCenter, new List<ElementGeometry> { wallData },
+                new List<ElementGeometry> { pipeData }, familyParameters.SymbolName,
+                offsetRatio, maxDiameter, null);
         }
 
         private static OpeningData CalculateBoxInFloor(CeilingAndFloor floor, MEPCurve pipe, double offsetRatio)
@@ -62,8 +63,9 @@ namespace RevitOpening.Logic
             var taskDepth = floorData.SolidInfo.Max.Z - floorData.SolidInfo.Min.Z;
 
             return new OpeningData(taskWidth, taskHeight, taskDepth, direction,
-                intersectionCenter, new List<ElementGeometry> {floorData},
-                new List<ElementGeometry> {pipeData}, Families.FloorRectTaskFamily.SymbolName, offsetRatio, 0);
+                intersectionCenter, new List<ElementGeometry> { floorData },
+                new List<ElementGeometry> { pipeData }, Families.FloorRectTaskFamily.SymbolName,
+                offsetRatio, 0, null);
         }
 
         private static (XYZ, XYZ) CalculateCenterAndDirectionInFloor(ElementGeometry pipeData, CeilingAndFloor floor,
@@ -89,7 +91,7 @@ namespace RevitOpening.Logic
             Wall wall)
         {
             var geomSolid = wall.get_Geometry(new Options()).FirstOrDefault() as Solid;
-            var line = (Line) wallData.Curve;
+            var line = (Line)wallData.Curve;
             var byLineWallOrientation = line.Direction.CrossProduct(XYZ.BasisZ.Negate());
             var bias = wall.Width * byLineWallOrientation / 2;
             var curves = geomSolid?
@@ -137,9 +139,8 @@ namespace RevitOpening.Logic
 
         private static double CalculateTaskSize(double wallWidth, double angle, double ductWidth, double offsetRatio)
         {
-            var r = (wallWidth / angle==0 ? 1 :Math.Tan(angle)
-                + ductWidth / angle==0? 1: Math.Sin(angle)) * offsetRatio;
-            return r;
+            return (wallWidth / (angle == 0 ? 1 : Math.Tan(angle))
+                    + ductWidth / (angle == 0 ? 1 : Math.Sin(angle))) * offsetRatio;
         }
 
         private static double SqrtOfSqrSum(double a, double b)
