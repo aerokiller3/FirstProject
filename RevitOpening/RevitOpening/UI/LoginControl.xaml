@@ -1,0 +1,62 @@
+﻿<UserControl x:Class="RevitOpening.UI.LoginControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:viewModels="clr-namespace:RevitOpening.ViewModels"
+             mc:Ignorable="d" 
+             MinWidth="300" MaxWidth="300"
+             MinHeight="200" MaxHeight="200">
+    <UserControl.DataContext>
+        <viewModels:LoginVM/>
+    </UserControl.DataContext>
+    <UserControl.Resources>
+        <Style x:Key="Indent">
+            <Setter Property="Window.Margin" Value="5"/>
+            <Setter Property="Window.Padding" Value="5"/>
+        </Style>
+    </UserControl.Resources>
+    <Grid Style="{StaticResource Indent}">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Style="{StaticResource Indent}"
+              Width="Auto"
+              Height="Auto">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Grid.Row="0" Text="Логин"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"
+                       Style="{StaticResource Indent}"/>
+            <TextBlock Grid.Column="0" Grid.Row="1" Text="Пароль"
+                       VerticalAlignment="Center"
+                       HorizontalAlignment="Center"
+                       Style="{StaticResource Indent}"/>
+            <TextBox Grid.Column="1" Grid.Row="0"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center"
+                     MaxWidth="100" MinWidth="100"
+                     Text="{Binding Login}"/>
+            <TextBox Grid.Column="1" Grid.Row="1"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center"
+                     MaxWidth="100" MinWidth="100"
+                     Text="{Binding Password}"/>
+        </Grid>
+        <Button Grid.Row="1" Content="Вход"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                Width="auto" Height="auto"
+                Style="{StaticResource Indent}"
+                Command="{Binding SignInCommand}"
+                CommandParameter="{Binding}"/>
+    </Grid>
+</UserControl>

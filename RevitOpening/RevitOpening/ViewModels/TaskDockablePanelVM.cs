@@ -20,7 +20,7 @@ namespace RevitOpening.ViewModels
         public List<OpeningData> TasksAndOpenings { get; set; }
         public TasksDockablePanel Window { get; set; }
 
-        public void UpdateList(IEnumerable<Document> documents)
+        public void UpdateTaskDockablePanel(IEnumerable<Document> documents)
         {
             var tasks = documents.GetAllTasks()
                 .Select(t => t.GetParentsData().BoxData)
@@ -56,7 +56,7 @@ namespace RevitOpening.ViewModels
                 CurrentRevitTask.Raise<BoxShowerEventHandler, List<ElementId>,
                     List<OpeningData>>(selectItems);
             }
-            catch (Exception)
+            catch
             {
             }
         }

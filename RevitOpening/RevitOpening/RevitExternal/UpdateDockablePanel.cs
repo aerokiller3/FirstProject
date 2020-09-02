@@ -20,7 +20,7 @@ namespace RevitOpening.RevitExternal
 
             var tasksDockablePanel = new TasksDockablePanel();
             (tasksDockablePanel.DataContext as TaskDockablePanelVM)
-                .UpdateList(commandData.Application.Application.Documents.Cast<Document>());
+                .UpdateTaskDockablePanel(commandData.Application.Application.Documents.Cast<Document>());
 
             return Result.Succeeded;
         }

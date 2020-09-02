@@ -80,7 +80,7 @@ namespace RevitOpening.RevitExternal
         {
             var app = sender as UIApplication;
             (_tasksDockableWindow.DataContext as TaskDockablePanelVM)
-                .UpdateList(app.Application.Documents.Cast<Document>());
+                .UpdateTaskDockablePanel(app.Application.Documents.Cast<Document>());
         }
 
 

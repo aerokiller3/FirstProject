@@ -12,6 +12,7 @@ using System.Configuration;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -37,6 +38,19 @@ namespace RevitOpening.ViewModels
         public List<OpeningData> TasksAndOpenings { get; set; }
         public List<OpeningData> Tasks { get; set; }
         public List<OpeningData> Openings { get; set; }
+
+
+        private void SignIn()
+        {
+            var window = new Window
+            {
+                Content = new LoginControl(),
+                MinHeight = 250, MaxHeight = 250,
+                MinWidth = 300, MaxWidth = 250,
+            };
+            (window.Content as UserControl).DataContext = new LoginVM(window);
+            window.ShowDialog();
+        }
 
         public bool IsCombineAll
         {
@@ -230,6 +244,7 @@ namespace RevitOpening.ViewModels
 
         public void Init(ExternalCommandData commandData)
         {
+            SignIn();
             _commandData = commandData;
             _currentDocument = commandData.Application.ActiveUIDocument.Document;
             _documents = commandData.Application.Application.Documents
