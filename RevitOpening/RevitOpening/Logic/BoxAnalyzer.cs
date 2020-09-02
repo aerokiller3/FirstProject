@@ -77,7 +77,7 @@ namespace RevitOpening.Logic
             var intAgreedValue = CalculateAgreedValue(isNotProcessed, currentCollisions);
 
             //Менять спец. атрибут
-            task.LookupParameter("Несогласованно").Set(intAgreedValue);
+            //task.LookupParameter("Несогласованно").Set(intAgreedValue);
             task.SetParentsData(data);
         }
 
