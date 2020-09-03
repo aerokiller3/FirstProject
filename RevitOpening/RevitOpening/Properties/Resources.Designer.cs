@@ -63,9 +63,9 @@ namespace RevitOpening.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap CombineBoxes {
+        internal static System.Drawing.Bitmap CreateOpening {
             get {
-                object obj = ResourceManager.GetObject("CombineBoxes", resourceCulture);
+                object obj = ResourceManager.GetObject("CreateOpening", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace RevitOpening.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap CreateOpenings {
+        internal static System.Drawing.Bitmap Reload {
             get {
-                object obj = ResourceManager.GetObject("CreateOpenings", resourceCulture);
+                object obj = ResourceManager.GetObject("Reload", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -83,9 +83,9 @@ namespace RevitOpening.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap List {
+        internal static System.Drawing.Bitmap StartModule {
             get {
-                object obj = ResourceManager.GetObject("List", resourceCulture);
+                object obj = ResourceManager.GetObject("StartModule", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -93,9 +93,9 @@ namespace RevitOpening.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap StartProgram {
+        internal static System.Drawing.Bitmap Unite {
             get {
-                object obj = ResourceManager.GetObject("StartProgram", resourceCulture);
+                object obj = ResourceManager.GetObject("Unite", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

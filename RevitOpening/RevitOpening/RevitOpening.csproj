@@ -144,6 +144,7 @@
     <None Include="Families\Отверстие_Прямоуг_Стена.rfa">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Resources\Unite.png" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="UI\TasksDockablePanel.xaml">
@@ -167,16 +168,13 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\createOp.png" />
+    <None Include="Resources\StartModule.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Unite.png" />
+    <None Include="Resources\CreateOpening.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\opening.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\List.png" />
+    <None Include="Resources\Reload.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

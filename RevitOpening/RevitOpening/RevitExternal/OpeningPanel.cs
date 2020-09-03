@@ -25,13 +25,13 @@ namespace RevitOpening.RevitExternal
 
             RegisterDockableWindow(application);
             AddButtonOnPanel(panel, currentDirectory, "StartProgram", "Открыть модуль",
-                Resources.StartProgram);
+                Resources.StartModule);
             AddButtonOnPanel(panel, currentDirectory, "CombineTwoBoxes", "Объединить два задания",
-                Resources.CombineBoxes);
+                Resources.Unite);
             AddButtonOnPanel(panel, currentDirectory, "ChangeSelectedTasksToOpenings", "Создать отверстие",
-                Resources.CreateOpenings);
-            AddButtonOnPanel(panel, currentDirectory, "UpdateDockablePanel", "Обновить списпок",
-                Resources.List);
+                Resources.CreateOpening);
+            AddButtonOnPanel(panel, currentDirectory, "UpdateDockablePanel", "Обновить список",
+                Resources.Reload);
 
             return Result.Succeeded;
         }
