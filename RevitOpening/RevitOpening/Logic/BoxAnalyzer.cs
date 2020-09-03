@@ -16,12 +16,23 @@ namespace RevitOpening.Logic
         {
             var walls = documents.GetAllElementsOfClass<Wall>();
             var floors = documents.GetAllElementsOfClass<CeilingAndFloor>();
+
             var tasks = documents.GetAllTasks();
+            var openings = documents.GetAllOpenings();
+
             var mepCurves = new List<MEPCurve>();
             mepCurves.AddRange(documents.GetAllElementsOfClass<Pipe>());
             mepCurves.AddRange(documents.GetAllElementsOfClass<Duct>());
             mepCurves.AddRange(documents.GetAllElementsOfClass<CableTrayConduitBase>());
-            foreach (var task in tasks)
+            AnalyzeElements(walls, floors, mepCurves, tasks, offset, maxDiameter, documents);
+            AnalyzeElements(walls, floors, mepCurves, openings, offset, maxDiameter, documents);
+        }
+
+        private static void AnalyzeElements(List<Wall> walls, List<CeilingAndFloor> floors,
+            List<MEPCurve> mepCurves, List<FamilyInstance> elementsToAnalyze, double offset, double maxDiameter,
+            IEnumerable<Document> documents)
+        {
+            foreach (var task in elementsToAnalyze)
             {
                 var data = task.GetOrInitData(walls, floors, offset, maxDiameter, mepCurves);
                 if (data == null)
@@ -40,7 +51,7 @@ namespace RevitOpening.Logic
                     continue;
                 }
 
-                task.AnalyzeElement(data, walls, floors, tasks, documents, offset, maxDiameter);
+                task.AnalyzeElement(data, walls, floors, elementsToAnalyze, documents, offset, maxDiameter);
             }
         }
 
@@ -149,6 +160,7 @@ namespace RevitOpening.Logic
                    Math.Abs(height - boxData.Height) < tolerance;
         }
 
+        //?
         private static bool MatchOldAndNewTask(List<MEPCurve> pipes, List<Element> hosts, OpeningParentsData parentsData, double offset, double maxDiameter)
         {
             if (pipes.Count != 1 || hosts.Count != 1)

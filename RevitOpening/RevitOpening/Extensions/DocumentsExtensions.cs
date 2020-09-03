@@ -23,9 +23,9 @@ namespace RevitOpening.Extensions
             return els.FirstOrDefault(curEl => curEl != null);
         }
 
-        public static List<Element> GetAllOpenings(this IEnumerable<Document> documents)
+        public static List<FamilyInstance> GetAllOpenings(this IEnumerable<Document> documents)
         {
-            var elements = new List<Element>();
+            var elements = new List<FamilyInstance>();
             foreach (var document in documents)
             {
                 elements.AddRange(document.GetTasks(Families.FloorRectOpeningFamily));

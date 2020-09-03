@@ -67,9 +67,7 @@ namespace RevitOpening.Extensions
             if (json != null)
                 return JsonConvert.DeserializeObject<OpeningParentsData>(json);
 
-            const string text = "Обновите информацию о заданиях перед использованием";
-            MessageBox.Show(text);
-            throw new ArgumentNullException(text);
+            throw new ArgumentNullException("Обновить информацию о заданиях перед использованием");
         }
 
         public static void SetParentsData(this Element element, OpeningParentsData parentsData)

@@ -15,13 +15,13 @@ namespace RevitOpening.RevitExternal
         {
             var pane = commandData.Application.ActiveUIDocument.Application.GetDockablePane(
                 new DockablePaneId(new Guid(OpeningPanel.DockablePanelGuid)));
-            pane.Hide();
-            pane.Show();
+            //pane.Hide();
 
             var tasksDockablePanel = new TasksDockablePanel();
             (tasksDockablePanel.DataContext as TaskDockablePanelVM)
-                .UpdateList(commandData.Application.Application.Documents.Cast<Document>());
-
+                .UpdateList(commandData.Application.Application.Documents.Cast<Document>(),
+                    commandData.Application.ActiveUIDocument.Document);
+            pane.Show();
             return Result.Succeeded;
         }
     }

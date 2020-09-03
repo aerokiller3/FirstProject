@@ -16,6 +16,16 @@ namespace RevitOpening.RevitExternal
             var currentDocument = commandData.Application.ActiveUIDocument.Document;
             var documents = commandData.Application.Application.Documents.Cast<Document>();
             var selected = commandData.Application.ActiveUIDocument.Selection.GetSelectedTasks(currentDocument);
+
+            if (selected == null)
+                return Result.Cancelled;
+
+            if (selected.Count != 2)
+            {
+                MessageBox.Show("Необходимо выбрать два задания");
+                return Result.Failed;
+            }
+
             Transactions.CombineSelectedTasks(currentDocument, documents, selected[0], selected[1], out var newTask);
 
             if (newTask == null)

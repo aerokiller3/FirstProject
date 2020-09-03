@@ -26,22 +26,16 @@ namespace RevitOpening.ViewModels
         private RelayCommand _updateTaskInfo;
         private RelayCommand _createAllTasks;
 
-        private double _offset = 1.5;
-        private double _diameter = 200;
-        private string _offsetStr = "1.5";
-        private string _diameterStr = "200";
+        private const string offsetStr = "1.5";
+        private const string diameterStr = "200";
         private ExternalCommandData _commandData;
         private Document _currentDocument;
         private IEnumerable<Document> _documents;
 
-        public List<OpeningData> TasksAndOpenings { get; set; }
-        public List<OpeningData> Tasks { get; set; }
-        public List<OpeningData> Openings { get; set; }
-
         public bool IsCombineAll
         {
             get => bool.Parse(GetParameterFromSettings(nameof(IsCombineAll), false));
-            set => ConfigurationManager.AppSettings[nameof(IsCombineAll)] = value.ToString();
+            set => SetParameterToSettings(nameof(IsCombineAll), value);
         }
 
         public bool IsAnalysisOnStart
@@ -49,6 +43,42 @@ namespace RevitOpening.ViewModels
             get => bool.Parse(GetParameterFromSettings(nameof(IsAnalysisOnStart), true));
             set => SetParameterToSettings(nameof(IsAnalysisOnStart), value);
         }
+
+        public double Offset
+        {
+            get => double.Parse(GetParameterFromSettings(nameof(Offset),offsetStr),
+                NumberStyles.Any, CultureInfo.InvariantCulture);
+        }
+
+        public double Diameter
+        {
+            get => double.Parse(GetParameterFromSettings(nameof(Diameter),diameterStr),
+                NumberStyles.Any, CultureInfo.InvariantCulture);
+        }
+
+        public string OffsetStr
+        {
+            get => GetParameterFromSettings(nameof(Offset), offsetStr);
+            set
+            {
+                if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
+                    SetParameterToSettings(nameof(Offset), value);
+            }
+        }
+
+        public string DiameterStr
+        {
+            get => GetParameterFromSettings(nameof(Diameter), diameterStr);
+            set
+            {
+                if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
+                    SetParameterToSettings(nameof(Diameter), value);
+            }
+        }
+
+        public List<OpeningData> TasksAndOpenings { get; set; }
+        public List<OpeningData> Tasks { get; set; }
+        public List<OpeningData> Openings { get; set; }
 
         private string GetParameterFromSettings(string parameterName, object defaultValue = null)
         {
@@ -69,29 +99,9 @@ namespace RevitOpening.ViewModels
                        (_combineIntersectsTasks = new RelayCommand(obj =>
                        {
                            Transactions.CombineIntersectsTasks(_currentDocument, _documents);
-                           Transactions.UpdateTasksInfo(_currentDocument, _documents, _offset, _diameter);
+                           Transactions.UpdateTasksInfo(_currentDocument, _documents, Offset, Diameter);
                            UpdateTasksAndOpenings();
                        }));
-            }
-        }
-
-        public string Offset
-        {
-            get => _offsetStr;
-            set
-            {
-                _offsetStr = value;
-                double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out _offset);
-            }
-        }
-
-        public string Diameter
-        {
-            get => _diameterStr;
-            set
-            {
-                _diameterStr = value;
-                double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out _diameter);
             }
         }
 
@@ -102,7 +112,7 @@ namespace RevitOpening.ViewModels
                 return _updateTaskInfo ??
                        (_updateTaskInfo = new RelayCommand(obj =>
                        {
-                           Transactions.UpdateTasksInfo(_currentDocument, _documents, _offset, _diameter);
+                           Transactions.UpdateTasksInfo(_currentDocument, _documents, Offset, Diameter);
                            UpdateTasksAndOpenings();
                        }));
             }
@@ -182,17 +192,17 @@ namespace RevitOpening.ViewModels
                 return _createAllTasks ??
                        (_createAllTasks = new RelayCommand(obj =>
                            {
-                               Transactions.UpdateTasksInfo(_currentDocument, _documents, _offset, _diameter);
+                               Transactions.UpdateTasksInfo(_currentDocument, _documents, Offset, Diameter);
                                UpdateTasksAndOpenings();
-                               Transactions.CreateAllTasks(_currentDocument, _documents, _offset,
-                                   _diameter, Tasks, Openings);
+                               Transactions.CreateAllTasks(_currentDocument, _documents, Offset,
+                                   Diameter, Tasks, Openings);
                                if (IsCombineAll)
                                    Transactions.CombineIntersectsTasks(_currentDocument, _documents);
-                               Transactions.UpdateTasksInfo(_currentDocument, _documents, _offset, _diameter);
+                               Transactions.UpdateTasksInfo(_currentDocument, _documents, Offset, Diameter);
                                UpdateTasksAndOpenings();
                            },
-                           obj => double.TryParse(Offset, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
-                                  && double.TryParse(Diameter, NumberStyles.Any, CultureInfo.InvariantCulture, out _)));
+                           obj => double.TryParse(OffsetStr, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
+                                  && double.TryParse(DiameterStr, NumberStyles.Any, CultureInfo.InvariantCulture, out _)));
             }
         }
 
@@ -235,7 +245,7 @@ namespace RevitOpening.ViewModels
             _documents = commandData.Application.Application.Documents
                 .Cast<Document>();
             if (bool.Parse(ConfigurationManager.AppSettings[nameof(IsAnalysisOnStart)]))
-                Transactions.UpdateTasksInfo(_currentDocument, _documents, _offset, _diameter);
+                Transactions.UpdateTasksInfo(_currentDocument, _documents, Offset, Diameter);
 
             UpdateTasksAndOpenings();
         }
@@ -256,7 +266,7 @@ namespace RevitOpening.ViewModels
             }
             catch (ArgumentNullException)
             {
-                Transactions.UpdateTasksInfo(_currentDocument, _documents, _offset, _diameter);
+                Transactions.UpdateTasksInfo(_currentDocument, _documents, Offset, Diameter);
                 UpdateTasks();
                 UpdateOpenings();
             }

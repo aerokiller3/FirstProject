@@ -16,6 +16,8 @@ namespace RevitOpening.RevitExternal
         {
             var currentDocument = commandData.Application.ActiveUIDocument.Document;
             var selected = commandData.Application.ActiveUIDocument.Selection.GetSelectedTasks(currentDocument);
+            if (selected == null)
+                return Result.Cancelled;
 
             var openings = new List<Element>();
             var statuses = selected.Select(el => el.LookupParameter("Несогласованно")

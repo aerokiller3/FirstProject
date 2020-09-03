@@ -32,11 +32,13 @@
                 <DataGridTextColumn Header="Ид элемента"
                                     Binding="{Binding Path=Id}"
                                     IsReadOnly="True"
-                                    Width="Auto"/>
+                                    Width="Auto"
+                                    TextOptions.TextFormattingMode="Display"/>
                 <DataGridTextColumn Header="Тип"
                                     Binding="{Binding Path=FamilyName}"
                                     IsReadOnly="True"
-                                    Width="*"/>
+                                    Width="*"
+                                    />
                 <DataGridTextColumn Header="Статус"
                                     Binding="{Binding Path=Collisions}"
                                     IsReadOnly="True"
@@ -77,7 +79,7 @@
                            Style="{StaticResource Indent}"/>
                 <TextBox Grid.Column="1" Grid.Row="0" x:Name="Offset"
                          Style="{StaticResource Indent}"
-                         Text="{Binding Path=Offset, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                         Text="{Binding Path=OffsetStr, UpdateSourceTrigger=PropertyChanged, Delay=300}"
                          TextAlignment="Right"
                          MaxWidth="100"
                          MinWidth="100"
@@ -85,7 +87,7 @@
                 <TextBox Grid.Column="1" Grid.Row="1" x:Name="Diameter"
                          TextAlignment="Right"
                          Style="{StaticResource Indent}"
-                         Text="{Binding Path=Diameter, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                         Text="{Binding Path=DiameterStr, UpdateSourceTrigger=PropertyChanged, Delay=300}"
                          MaxWidth="100"
                          MinWidth="100"
                          HorizontalAlignment="Right"/>

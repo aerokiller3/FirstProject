@@ -43,8 +43,8 @@ namespace RevitOpening.Logic
             //
 
             return new OpeningData(taskWidth, taskHeight, taskDepth, direction,
-                intersectionCenter, new List<ElementGeometry> { wallData },
-                new List<ElementGeometry> { pipeData }, familyParameters.SymbolName,
+                intersectionCenter, new List<ElementGeometry> {wallData},
+                new List<ElementGeometry> {pipeData}, familyParameters.SymbolName,
                 offsetRatio, maxDiameter, null);
         }
 

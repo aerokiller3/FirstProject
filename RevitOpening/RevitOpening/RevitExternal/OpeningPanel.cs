@@ -79,8 +79,9 @@ namespace RevitOpening.RevitExternal
         private void UpdateDockablePanel(object sender, EventArgs e)
         {
             var app = sender as UIApplication;
+            var currentDocument = app.ActiveUIDocument.Document;
             (_tasksDockableWindow.DataContext as TaskDockablePanelVM)
-                .UpdateList(app.Application.Documents.Cast<Document>());
+                .UpdateList(app.Application.Documents.Cast<Document>(), currentDocument);
         }
 
 

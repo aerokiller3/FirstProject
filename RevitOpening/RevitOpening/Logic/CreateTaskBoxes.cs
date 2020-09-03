@@ -61,8 +61,8 @@ namespace RevitOpening.Logic
                     continue;
 
                 openingParameters.Level = _documents.GetElement(ductsInWall.Key.LevelId.IntegerValue).Name;
-                var parentsData = new OpeningParentsData(new List<string> { ductsInWall.Key.UniqueId },
-                    new List<string> { curve.UniqueId }, openingParameters);
+                var parentsData = new OpeningParentsData(new List<string> {ductsInWall.Key.UniqueId},
+                    new List<string> {curve.UniqueId}, openingParameters);
 
                 if ((_tasksCenters?.Contains(openingParameters.IntersectionCenter) ?? false)
                     || (_openingsCenters?.Contains(openingParameters.IntersectionCenter) ?? false))
@@ -71,9 +71,7 @@ namespace RevitOpening.Logic
                 var createElement = BoxCreator.CreateTaskBox(parentsData, _currentDocument);
                 _currentDocument.Regenerate();
                 var filter = new ElementIntersectsElementFilter(createElement);
-                if (_tasks.Where(t => filter.PassesFilter(t))
-                    .Any(t => t.GetParentsData().BoxData.Collisions
-                        .Contains(Collisions.TaskCouldNotBeProcessed)))
+                if (_tasks.Any(t => filter.PassesFilter(t))) 
                     _currentDocument.Delete(createElement.Id);
             }
         }
