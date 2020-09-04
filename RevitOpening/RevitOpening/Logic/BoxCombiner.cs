@@ -35,7 +35,9 @@ namespace RevitOpening.Logic
         private static bool CombineOneTypeBoxes(IEnumerable<Document> documents, Document currentDocument,
             FamilyParameters familyData)
         {
-            var tasks = currentDocument.GetTasks(familyData);
+            var tasks = currentDocument
+                .GetTasksByName(familyData)
+                .ToList();
             var intersections = FindTaskIntersections(tasks).ToList();
             for (var i = 0; i < intersections.Count; i++)
                 if (CombineTwoBoxes(documents, currentDocument, intersections[i].Item1, intersections[i].Item2) == null)

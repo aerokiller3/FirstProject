@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:viewModels="clr-namespace:RevitOpening.ViewModels"
+      xmlns:ui="clr-namespace:RevitOpening.UI"
       Height="500" Width="200"
       Background="LightGray">
     <UserControl.DataContext>
@@ -19,34 +20,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <DataGrid Grid.Row="0"  AutoGenerateColumns="False"
-                  ItemsSource="{Binding Path=TasksAndOpenings}"
-                  Style="{StaticResource Indent}"
-                  SelectionUnit="FullRow"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  SelectionMode="Single"
-                  SelectedCellsChanged="TasksGrid_OnCurrentCellChanged"
-                  x:Name="TasksGrid">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Ид элемента"
-                                    Binding="{Binding Path=Id}"
-                                    IsReadOnly="True"
-                                    Width="Auto"/>
-                <DataGridTextColumn Header="Тип"
-                                    Binding="{Binding Path=FamilyName}"
-                                    IsReadOnly="True"
-                                    Width="*"/>
-                <DataGridTextColumn Header="Статус"
-                                    Binding="{Binding Path=Collisions}"
-                                    IsReadOnly="True"
-                                    Width="*"/>
-                <DataGridTextColumn Header="Уровень"
-                                    Binding="{Binding Path=Level}"
-                                    IsReadOnly="True"
-                                    Width="*"/>
-            </DataGrid.Columns>
-        </DataGrid>
+        <ui:TasksDataGrid Grid.Row="0"/>
     </Grid>
 
 </UserControl>

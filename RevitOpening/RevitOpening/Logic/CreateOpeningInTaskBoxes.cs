@@ -17,9 +17,9 @@ namespace RevitOpening.Logic
         {
             FamilyLoader.LoadAllFamiliesToProject(_document);
 
-            var wallRectTasks = _document.GetTasks(Families.WallRectTaskFamily);
-            var wallRoundTasks = _document.GetTasks(Families.WallRoundTaskFamily);
-            var floorRectTasks = _document.GetTasks(Families.FloorRectTaskFamily);
+            var wallRectTasks = _document.GetTasksByName(Families.WallRectTaskFamily);
+            var wallRoundTasks = _document.GetTasksByName(Families.WallRoundTaskFamily);
+            var floorRectTasks = _document.GetTasksByName(Families.FloorRectTaskFamily);
 
             var (correctWallRectTasks, incorrectWallRectTasks) = GetCheckedBoxes(wallRectTasks);
             var (correctWallRoundTasks, incorrectWallRoundTasks) = GetCheckedBoxes(wallRoundTasks);

@@ -31,6 +31,15 @@ namespace RevitOpening.RevitExternal
                     return Result.Cancelled;
             }
 
+            var elementsData = selected.Select(el => el.GetParentsData());
+
+            if (elementsData.Any(d => d.BoxData.HostsGeometries.Count == 0 || d.BoxData.PipesGeometries.Count == 0))
+            {
+                MessageBox.Show("Одно или более отверстий невозможно вырезать автоматически");
+                return Result.Failed;
+            }
+
+
             Transactions.CreateOpeningInSelectedTask(currentDocument, openings, selected);
             Transactions.Drawing(currentDocument, openings);
 

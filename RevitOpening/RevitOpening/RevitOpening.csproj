@@ -96,6 +96,10 @@
     <Compile Include="Logic\Families.cs" />
     <Compile Include="Extensions\DoubleExtensions.cs" />
     <Compile Include="Logic\FamilyLoader.cs" />
+    <Compile Include="ViewModels\IDataGridUpdater.cs" />
+    <Compile Include="UI\TasksDataGrid.xaml.cs">
+      <DependentUpon>TasksDataGrid.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\TasksDockablePanel.xaml.cs">
       <DependentUpon>TasksDockablePanel.xaml</DependentUpon>
     </Compile>
@@ -147,6 +151,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="UI\TasksDataGrid.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UI\TasksDockablePanel.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

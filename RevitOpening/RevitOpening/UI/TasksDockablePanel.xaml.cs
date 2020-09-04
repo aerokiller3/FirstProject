@@ -14,12 +14,6 @@ namespace RevitOpening.UI
             vm.Window = this;
         }
 
-        private void TasksGrid_OnCurrentCellChanged(object sender, EventArgs e)
-        {
-            var taskDockablePanelVm = DataContext as TaskDockablePanelVM;
-            taskDockablePanelVm?.OnCurrentCellChanged(sender, e);
-        }
-
         public void SetupDockablePane(DockablePaneProviderData data)
         {
             data.FrameworkElement = this;

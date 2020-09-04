@@ -17,25 +17,35 @@ namespace RevitOpening.Extensions
             var filter = new ElementIntersectsElementFilter(task);
             var intersectsWalls = walls.Where(filter.PassesFilter).ToList();
             var intersectsFloors = floors.Where(filter.PassesFilter).ToList();
+            var intersectsMEPCurves = mepCurves.Where(filter.PassesFilter).ToList();
             var hosts = new List<Element>();
             hosts.AddRange(intersectsFloors);
             hosts.AddRange(intersectsWalls);
+
             var parentsData = new OpeningParentsData(
                 hosts.Select(h => h.UniqueId).ToList(),
-                mepCurves.Select(c => c.UniqueId).ToList(),
+                intersectsMEPCurves.Select(c => c.UniqueId).ToList(),
                 null);
+
             if (hosts.Count == 0 || mepCurves.Count == 0)
-                return null;
+            {
+                task.SetParentsData(parentsData);
+                return parentsData;
+            }
 
             var openingParameters =
                 BoxCalculator.CalculateBoxInElement(hosts.FirstOrDefault(), mepCurves.FirstOrDefault(), offset, maxDiameter);
+
             if (openingParameters == null)
-                return null;
+            {
+                task.SetParentsData(parentsData);
+                return parentsData;
+            }
 
             parentsData.BoxData = openingParameters;
             parentsData.BoxData.Id = task.Id.IntegerValue;
-            task.SetParentsData(parentsData);
 
+            task.SetParentsData(parentsData);
             return parentsData;
         }
 
@@ -47,6 +57,8 @@ namespace RevitOpening.Extensions
             try
             {
                 data = task.GetParentsData();
+                if (data.BoxData.HostsGeometries.Count == 0 || data.BoxData.PipesGeometries.Count == 0)
+                    data = task.InitData(walls, floors, offset, maxDiameter, mepCurves);
             }
             catch (ArgumentNullException)
             {

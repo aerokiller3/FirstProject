@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:viewModels="clr-namespace:RevitOpening.ViewModels"
+             xmlns:ui="clr-namespace:RevitOpening.UI"
              mc:Ignorable="d" 
              MinHeight="400" MinWidth="900">
     <UserControl.DataContext>
@@ -20,35 +21,7 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <DataGrid Grid.Column="1"  AutoGenerateColumns="False"
-                  ItemsSource="{Binding Path=TasksAndOpenings}"
-                  Style="{StaticResource Indent}"
-                  SelectionUnit="FullRow"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  SelectedCellsChanged="TasksGrid_OnCurrentCellChanged"
-                  x:Name="TasksGrid">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Ид элемента"
-                                    Binding="{Binding Path=Id}"
-                                    IsReadOnly="True"
-                                    Width="Auto"
-                                    TextOptions.TextFormattingMode="Display"/>
-                <DataGridTextColumn Header="Тип"
-                                    Binding="{Binding Path=FamilyName}"
-                                    IsReadOnly="True"
-                                    Width="*"
-                                    />
-                <DataGridTextColumn Header="Статус"
-                                    Binding="{Binding Path=Collisions}"
-                                    IsReadOnly="True"
-                                    Width="*"/>
-                <DataGridTextColumn Header="Уровень"
-                                    Binding="{Binding Path=Level}"
-                                    IsReadOnly="True"
-                                    Width="*"/>
-            </DataGrid.Columns>
-        </DataGrid>
+        <ui:TasksDataGrid Grid.Column="1"/>
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>

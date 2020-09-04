@@ -8,7 +8,7 @@ namespace RevitOpening.Extensions
 {
     public static class DocumentExtensions
     {
-        public static List<FamilyInstance> GetTasks(this Document document, FamilyParameters familyParameters)
+        public static List<FamilyInstance> GetTasksByName(this Document document, FamilyParameters familyParameters)
         {
             using (var collector = new FilteredElementCollector(document)
                 .OfCategory(BuiltInCategory.OST_Windows)

@@ -13,11 +13,5 @@ namespace RevitOpening.UI
         {
             InitializeComponent();
         }
-
-        private void TasksGrid_OnCurrentCellChanged(object sender, EventArgs e)
-        {
-            var mainVM = DataContext as MainVM;
-            mainVM?.OnCurrentCellChanged(sender, e);
-        }
     }
 }

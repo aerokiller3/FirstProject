@@ -28,9 +28,9 @@ namespace RevitOpening.Extensions
             var elements = new List<FamilyInstance>();
             foreach (var document in documents)
             {
-                elements.AddRange(document.GetTasks(Families.FloorRectOpeningFamily));
-                elements.AddRange(document.GetTasks(Families.WallRectOpeningFamily));
-                elements.AddRange(document.GetTasks(Families.WallRoundOpeningFamily));
+                elements.AddRange(document.GetTasksByName(Families.FloorRectOpeningFamily));
+                elements.AddRange(document.GetTasksByName(Families.WallRectOpeningFamily));
+                elements.AddRange(document.GetTasksByName(Families.WallRoundOpeningFamily));
             }
 
             return elements;
@@ -41,9 +41,9 @@ namespace RevitOpening.Extensions
             var elements = new List<FamilyInstance>();
             foreach (var document in documents)
             {
-                elements.AddRange(document.GetTasks(Families.FloorRectTaskFamily));
-                elements.AddRange(document.GetTasks(Families.WallRectTaskFamily));
-                elements.AddRange(document.GetTasks(Families.WallRoundTaskFamily));
+                elements.AddRange(document.GetTasksByName(Families.FloorRectTaskFamily));
+                elements.AddRange(document.GetTasksByName(Families.WallRectTaskFamily));
+                elements.AddRange(document.GetTasksByName(Families.WallRoundTaskFamily));
             }
 
             return elements;
