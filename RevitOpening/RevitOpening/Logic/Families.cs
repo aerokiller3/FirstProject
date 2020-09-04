@@ -1,10 +1,10 @@
-﻿using RevitOpening.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace RevitOpening.Logic
+﻿namespace RevitOpening.Logic
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Models;
+
     public static class Families
     {
         public static readonly FamilyParameters WallRoundOpeningFamily;
@@ -41,13 +41,13 @@ namespace RevitOpening.Logic
             {
                 WallRoundOpeningFamily, FloorRectOpeningFamily,
                 WallRectOpeningFamily, WallRectTaskFamily,
-                WallRoundTaskFamily, FloorRectTaskFamily
+                WallRoundTaskFamily, FloorRectTaskFamily,
             };
             AllFamiliesNames = new HashSet<string>
             {
                 WallRoundOpeningFamily.SymbolName, FloorRectOpeningFamily.SymbolName,
                 WallRectOpeningFamily.SymbolName, WallRectTaskFamily.SymbolName,
-                WallRoundTaskFamily.SymbolName, FloorRectTaskFamily.SymbolName
+                WallRoundTaskFamily.SymbolName, FloorRectTaskFamily.SymbolName,
             };
         }
 

@@ -1,11 +1,11 @@
-﻿using Autodesk.Revit.DB;
-using RevitOpening.Extensions;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-
-namespace RevitOpening.Logic
+﻿namespace RevitOpening.Logic
 {
+    using System.IO;
+    using System.Linq;
+    using System.Reflection;
+    using Autodesk.Revit.DB;
+    using Extensions;
+
     public static class FamilyLoader
     {
         public static void LoadAllFamiliesToProject(Document document)
@@ -31,9 +31,9 @@ namespace RevitOpening.Logic
         private static bool IsFamilyInProject(string familyName, Document document)
         {
             return new FilteredElementCollector(document)
-                .OfClass(typeof(Family))
-                .Cast<Family>()
-                .FirstOrDefault(f => f.Name == familyName) != null;
+                  .OfClass(typeof(Family))
+                  .Cast<Family>()
+                  .FirstOrDefault(f => f.Name == familyName) != null;
         }
 
         private static string GetCurrentDirectory()

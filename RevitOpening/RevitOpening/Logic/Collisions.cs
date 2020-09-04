@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Text;
-
-namespace RevitOpening.Logic
+﻿namespace RevitOpening.Logic
 {
+    using System.Collections.Generic;
+    using System.Text;
+
     public class Collisions
     {
         public const string TaskIntersectManyWalls = "Задание пересекает больше одной стены";
@@ -10,9 +10,10 @@ namespace RevitOpening.Logic
         public const string FloorTaskIntersectWall = "Задание для перекрытия пересекает стену";
         public const string TaskIntersectTask = "Задание пересекается с другим заданием";
         public const string PipeNotPerpendicularHost = "Труба не перпендекулярна стене";
-        public const string TaskCouldNotBeProcessed = "Валидность задания не может быть обработано автоматически";
+        public const string TaskCouldNotBeProcessed = "Задание нельзя обработать автоматически";
+
         public const string TaskNotActual = "Расположение трубы или стены имзенилось с момента построения задания\n" +
-                                            "или информация о заданиях давно не обновлялась";
+            "или информация о заданиях давно не обновлялась";
 
         public HashSet<string> ListOfCollisions = new HashSet<string>();
 

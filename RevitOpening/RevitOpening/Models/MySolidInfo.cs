@@ -1,17 +1,17 @@
-﻿using Autodesk.Revit.DB;
-using System.Linq;
-
-namespace RevitOpening.Models
+﻿namespace RevitOpening.Models
 {
+    using System.Linq;
+    using Autodesk.Revit.DB;
+
     public class MySolidInfo
     {
         public MySolidInfo(Element element)
         {
             var solid = element.get_Geometry(new Options())
-                .FirstOrDefault() as Solid;
+                               .FirstOrDefault() as Solid;
             var geometry = element
-                .get_Geometry(new Options())
-                .GetBoundingBox();
+                          .get_Geometry(new Options())
+                          .GetBoundingBox();
             Min = new MyXYZ(geometry.Min);
             Max = new MyXYZ(geometry.Max);
             FacesCount = solid.Faces.Size;
@@ -33,10 +33,10 @@ namespace RevitOpening.Models
         public override bool Equals(object obj)
         {
             return obj is MySolidInfo info
-                   && info.Min.Equals(Min)
-                   && info.Max.Equals(Max)
-                   && info.FacesCount.Equals(FacesCount)
-                   && info.EdgesCount.Equals(EdgesCount);
+                && info.Min.Equals(Min)
+                && info.Max.Equals(Max)
+                && info.FacesCount.Equals(FacesCount)
+                && info.EdgesCount.Equals(EdgesCount);
         }
 
         public override int GetHashCode()

@@ -1,22 +1,15 @@
-﻿using Autodesk.Revit.DB;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace RevitOpening.Extensions
+﻿namespace RevitOpening.Extensions
 {
-    public static class IEnumerableExtensions
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Autodesk.Revit.DB;
+
+    internal static class EnumerableExtensions
     {
         public static bool IsOnlyTasks(this IEnumerable<Element> tasks)
         {
             return tasks.All(t => t.IsTask());
-        }
-
-        public static bool AlmostEqualTo<T>(this IEnumerable<T> thisList,
-            IEnumerable<T> otherList)
-        {
-            return thisList.Count() == otherList.Count()
-                   && thisList.All(otherList.Contains);
         }
 
         public static XYZ GetMaxPointsCoordinates(this IEnumerable<XYZ> tPoints)
@@ -50,18 +43,17 @@ namespace RevitOpening.Extensions
         }
 
         public static Dictionary<Element, List<MEPCurve>> FindIntersectionsWith(this IEnumerable<Element> elements,
-            IEnumerable<MEPCurve> curves)
+            ICollection<MEPCurve> curves)
         {
             var intersections = new Dictionary<Element, List<MEPCurve>>();
             foreach (var intersectionElement in elements)
-            {
-                var intersection = new ElementIntersectsElementFilter(intersectionElement);
-                var currentIntersections = curves
-                    .Where(el => intersection.PassesFilter(el))
-                    .ToList();
-                if (currentIntersections.Count > 0)
-                    intersections[intersectionElement] = currentIntersections;
-            }
+                using (var intersection = new ElementIntersectsElementFilter(intersectionElement))
+                {
+                    var currentIntersections = curves.Where(intersection.PassesFilter)
+                                                     .ToList();
+                    if (currentIntersections.Count > 0)
+                        intersections[intersectionElement] = currentIntersections;
+                }
 
             return intersections;
         }

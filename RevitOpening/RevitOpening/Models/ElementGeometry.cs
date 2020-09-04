@@ -1,9 +1,9 @@
-﻿using Autodesk.Revit.DB;
-using Newtonsoft.Json;
-using System;
-
-namespace RevitOpening.Models
+﻿namespace RevitOpening.Models
 {
+    using System;
+    using Autodesk.Revit.DB;
+    using Newtonsoft.Json;
+
     public class ElementGeometry
     {
         public ElementGeometry(Element element)
@@ -30,8 +30,7 @@ namespace RevitOpening.Models
 
         public double ZLen { get; set; }
 
-        [JsonIgnore]
-        public Curve Curve { get; set; }
+        [JsonIgnore] public Curve Curve { get; set; }
 
         public MySolidInfo SolidInfo { get; set; }
 
@@ -43,12 +42,12 @@ namespace RevitOpening.Models
         {
             const double tolerance = 0.000_000_1;
             return obj is ElementGeometry geometry
-                   && Math.Abs(geometry.XLen - XLen) < tolerance
-                   && Math.Abs(geometry.YLen - YLen) < tolerance
-                   && Math.Abs(geometry.ZLen - ZLen) < tolerance
-                   && (geometry.Start?.Equals(Start) ?? true)
-                   && (geometry.End?.Equals(End) ?? true)
-                   && (geometry.SolidInfo?.Equals(SolidInfo) ?? true);
+                && Math.Abs(geometry.XLen - XLen) < tolerance
+                && Math.Abs(geometry.YLen - YLen) < tolerance
+                && Math.Abs(geometry.ZLen - ZLen) < tolerance
+                && (geometry.Start?.Equals(Start) ?? true)
+                && (geometry.End?.Equals(End) ?? true)
+                && (geometry.SolidInfo?.Equals(SolidInfo) ?? true);
         }
 
         public override int GetHashCode()

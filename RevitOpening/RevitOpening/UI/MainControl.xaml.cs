@@ -1,6 +1,4 @@
-﻿using RevitOpening.ViewModels;
-using System;
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 
 namespace RevitOpening.UI
 {

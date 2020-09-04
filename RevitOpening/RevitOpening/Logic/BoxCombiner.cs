@@ -1,25 +1,23 @@
-﻿using Autodesk.Revit.DB;
-using RevitOpening.Extensions;
-using RevitOpening.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace RevitOpening.Logic
+﻿namespace RevitOpening.Logic
 {
-    public static class BoxCombiner
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Autodesk.Revit.DB;
+    using Extensions;
+    using Models;
+    using Settings = Extensions.Settings;
+
+    internal static class BoxCombiner
     {
         //?
-        public static bool ValidateTasksForCombine(IEnumerable<Document> documents, OpeningParentsData data1,
-            OpeningParentsData data2)
+        public static bool ValidateTasksForCombine(OpeningParentsData data1, OpeningParentsData data2)
         {
             return (data1.PipesIds.AlmostEqualTo(data2.PipesIds) || data1.HostsIds.AlmostEqualTo(data2.HostsIds))
-                   && data1.BoxData.FamilyName == data2.BoxData.FamilyName
-                   && (documents.GetElement(data1.HostsIds.FirstOrDefault()) is Wall
-                       || documents.GetElement(data1.HostsIds.FirstOrDefault()) is CeilingAndFloor);
+                && data1.BoxData.FamilyName == data2.BoxData.FamilyName;
         }
 
-        public static void CombineAllBoxes(IEnumerable<Document> documents, Document currentDocument)
+        public static void CombineAllBoxes(ICollection<Document> documents, Document currentDocument)
         {
             var isElementsUnited = true;
             while (isElementsUnited)
@@ -32,12 +30,12 @@ namespace RevitOpening.Logic
             }
         }
 
-        private static bool CombineOneTypeBoxes(IEnumerable<Document> documents, Document currentDocument,
+        private static bool CombineOneTypeBoxes(ICollection<Document> documents, Document currentDocument,
             FamilyParameters familyData)
         {
             var tasks = currentDocument
-                .GetTasksByName(familyData)
-                .ToList();
+                       .GetTasksByName(familyData)
+                       .ToList();
             var intersections = FindTaskIntersections(tasks).ToList();
             for (var i = 0; i < intersections.Count; i++)
                 if (CombineTwoBoxes(documents, currentDocument, intersections[i].Item1, intersections[i].Item2) == null)
@@ -49,16 +47,13 @@ namespace RevitOpening.Logic
             return intersections.Count > 0;
         }
 
-        public static FamilyInstance CombineTwoBoxes(IEnumerable<Document> documents, Document currentDocument,
+        public static FamilyInstance CombineTwoBoxes(ICollection<Document> documents, Document currentDocument,
             Element el1, Element el2)
         {
             var data1 = el1.GetParentsData();
             var data2 = el2.GetParentsData();
-            if (!ValidateTasksForCombine(documents, data1, data2))
-            {
+            if (!ValidateTasksForCombine(data1, data2))
                 return null;
-                //throw new Exception("Недопустимый вариант объединения");
-            }
 
             OpeningData newOpening = null;
             if (data1.PipesIds.AlmostEqualTo(data2.PipesIds))
@@ -70,9 +65,11 @@ namespace RevitOpening.Logic
             else if (documents.GetElement(data1.HostsIds.FirstOrDefault()) is CeilingAndFloor)
                 newOpening = CalculateUnitedTaskInFloor(el1, el2, data1, data2);
 
+            if (newOpening == null)
+                return null;
+
             var newData = new OpeningParentsData(data1.HostsIds.Union(data2.HostsIds).ToList(),
-                data1.PipesIds.Union(data2.PipesIds).ToList(),
-                newOpening);
+                data1.PipesIds.Union(data2.PipesIds).ToList(), newOpening);
             newData.BoxData.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
 
             var createdElement = BoxCreator.CreateTaskBox(newData, currentDocument);
@@ -82,7 +79,7 @@ namespace RevitOpening.Logic
             return createdElement;
         }
 
-        private static IEnumerable<(Element, Element)> FindTaskIntersections(List<FamilyInstance> elements)
+        private static IEnumerable<(Element, Element)> FindTaskIntersections(IList<FamilyInstance> elements)
         {
             for (var i = 0; i < elements.Count; i++)
             {
@@ -117,7 +114,7 @@ namespace RevitOpening.Logic
             var center = normalDirection.IsAlmostEqualTo(source)
                 ? data1.BoxData.IntersectionCenter.XYZ
                 : data2.BoxData.IntersectionCenter.XYZ;
-            var (hostsGeometries, pipesGeometries) = UnionTwoData(data1, data2);
+            (var hostsGeometries, var pipesGeometries) = UnionTwoData(data1, data2);
             return new OpeningData(
                 data1.BoxData.Width, data1.BoxData.Height, depth,
                 data1.BoxData.Direction.XYZ, center, hostsGeometries,
@@ -132,9 +129,12 @@ namespace RevitOpening.Logic
             var transform = Transform.CreateRotation(XYZ.BasisZ, -angle);
             var unitedSolid = el1.GetUnitedSolid(el2, transform);
             var transformedSolid = SolidUtils.CreateTransformed(unitedSolid, transform);
-            var direction = unitedSolid.Faces.Cast<PlanarFace>()
-                .FirstOrDefault(f => Math.Abs(f.FaceNormal.Z + 1) < Math.Pow(10, -7))
-                .YVector;
+            var planarFace = unitedSolid.Faces.Cast<PlanarFace>()
+                                        .FirstOrDefault(f => Math.Abs(f.FaceNormal.Z + 1) < Math.Pow(10, -7));
+            if (planarFace == null)
+                return null;
+
+            var direction = planarFace.YVector;
             var minUnited = transformedSolid.GetBoundingBox().Min;
             var maxUnited = transformedSolid.GetBoundingBox().Max;
 
@@ -142,7 +142,7 @@ namespace RevitOpening.Logic
             center = new XYZ(center.X, center.Y, data1.BoxData.IntersectionCenter.Z);
             var width = maxUnited.Y - minUnited.Y;
             var height = maxUnited.X - minUnited.X;
-            var (hostsGeometries, pipesGeometries) = UnionTwoData(data1, data2);
+            (var hostsGeometries, var pipesGeometries) = UnionTwoData(data1, data2);
             return new OpeningData(
                 width, height, data1.BoxData.Depth, direction,
                 center, hostsGeometries, pipesGeometries, Families.FloorRectTaskFamily.SymbolName,
@@ -158,9 +158,9 @@ namespace RevitOpening.Logic
             var center1 = transform.OfPoint(data1.BoxData.IntersectionCenter.XYZ);
             var center2 = transform.OfPoint(data2.BoxData.IntersectionCenter.XYZ);
             var width = Math.Abs(transform.OfPoint(center1).Y - transform.OfPoint(center2).Y)
-                        + Math.Max(data1.BoxData.Width, data2.BoxData.Width);
+                + Math.Max(data1.BoxData.Width, data2.BoxData.Width);
             var height = Math.Abs(transform.OfPoint(center1).Z - transform.OfPoint(center2).Z)
-                         + Math.Max(data1.BoxData.Height, data2.BoxData.Height);
+                + Math.Max(data1.BoxData.Height, data2.BoxData.Height);
 
             var center = (center1 + center2) / 2;
             //
@@ -168,7 +168,7 @@ namespace RevitOpening.Logic
             center -= new XYZ(0, 0, height / 2);
             //
             center = backT.OfPoint(center);
-            var (hostsGeometries, pipesGeometries) = UnionTwoData(data1, data2);
+            (var hostsGeometries, var pipesGeometries) = UnionTwoData(data1, data2);
             return new OpeningData(
                 width, height, data1.BoxData.Depth, data1.BoxData.Direction.XYZ,
                 center, hostsGeometries, pipesGeometries, Families.WallRectTaskFamily.SymbolName,
@@ -185,9 +185,12 @@ namespace RevitOpening.Logic
             var minUnited = bSolid.GetBoundingBox().Min;
             var maxUnited = bSolid.GetBoundingBox().Max;
             var center = FindTasksCenterInWall(unitedSolid, transform);
+            if (center == null)
+                return null;
+
             var width = maxUnited.Y - minUnited.Y;
             var height = maxUnited.Z - minUnited.Z;
-            var (hostsGeometries, pipesGeometries) = UnionTwoData(data1, data2);
+            (var hostsGeometries, var pipesGeometries) = UnionTwoData(data1, data2);
             return new OpeningData(
                 width, height, data1.BoxData.Depth, data1.BoxData.Direction.XYZ, center.XYZ,
                 hostsGeometries, pipesGeometries, Families.WallRectTaskFamily.SymbolName,
@@ -198,16 +201,22 @@ namespace RevitOpening.Logic
         {
             const double tolerance = 0.000_000_1;
             var edges = unitedSolid?.Faces?.Cast<Face>()?
-                .FirstOrDefault(face => Math.Abs(transform.OfPoint(
-                    face?.ComputeNormal(UV.BasisU)).X + 1) < tolerance)
-                ?.EdgeLoops?.Cast<EdgeArray>()?
-                .FirstOrDefault()?
-                .Cast<Edge>()?
-                .ToArray();
+                                    .FirstOrDefault(face => Math.Abs(transform.OfPoint(
+                                         face?.ComputeNormal(UV.BasisU)).X + 1) < tolerance)
+                                   ?.EdgeLoops?.Cast<EdgeArray>()?
+                                    .FirstOrDefault()?
+                                    .Cast<Edge>()
+                                    .ToArray();
             var minEdge = edges?.First().AsCurve() as Line;
+            if (minEdge == null)
+                return null;
+
             foreach (var edge in edges)
             {
                 var line = edge.AsCurve() as Line;
+                if (line == null)
+                    return null;
+
                 var minZ = minEdge.GetEndPoint(0).Z > minEdge.GetEndPoint(1).Z
                     ? minEdge.GetEndPoint(1).Z
                     : minEdge.GetEndPoint(0).Z;
@@ -222,11 +231,11 @@ namespace RevitOpening.Logic
             OpeningParentsData data2)
         {
             var hostsGeometries = data1.BoxData.HostsGeometries
-                .Union(data2.BoxData.HostsGeometries)
-                .ToList();
+                                       .Union(data2.BoxData.HostsGeometries)
+                                       .ToList();
             var pipesGeometries = data1.BoxData.PipesGeometries
-                .Union(data2.BoxData.PipesGeometries)
-                .ToList();
+                                       .Union(data2.BoxData.PipesGeometries)
+                                       .ToList();
             return (hostsGeometries, pipesGeometries);
         }
     }

@@ -1,8 +1,8 @@
-﻿using System;
-using System.Windows.Input;
-
-namespace RevitOpening.ViewModels
+﻿namespace RevitOpening.ViewModels
 {
+    using System;
+    using System.Windows.Input;
+
     public class RelayCommand : ICommand
     {
         private readonly Func<object, bool> _canExecute;
@@ -22,7 +22,7 @@ namespace RevitOpening.ViewModels
 
         public bool CanExecute(object parameter)
         {
-            return _canExecute == null || _canExecute(parameter);
+            return _canExecute?.Invoke(parameter) != false;
         }
 
         public void Execute(object parameter)

@@ -1,9 +1,9 @@
-﻿using Autodesk.Revit.DB;
-using Newtonsoft.Json;
-using System;
-
-namespace RevitOpening.Models
+﻿namespace RevitOpening.Models
 {
+    using System;
+    using Autodesk.Revit.DB;
+    using Newtonsoft.Json;
+
     public class MyXYZ
     {
         public MyXYZ()
@@ -42,9 +42,9 @@ namespace RevitOpening.Models
         {
             const double tolerance = 0.000_000_1;
             return obj is MyXYZ point
-                   && Math.Abs(point.X - X) < tolerance
-                   && Math.Abs(point.Y - Y) < tolerance
-                   && Math.Abs(point.Z - Z) < tolerance;
+                && Math.Abs(point.X - X) < tolerance
+                && Math.Abs(point.Y - Y) < tolerance
+                && Math.Abs(point.Z - Z) < tolerance;
         }
 
         public override int GetHashCode()

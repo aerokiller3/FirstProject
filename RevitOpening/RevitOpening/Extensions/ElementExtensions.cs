@@ -1,56 +1,53 @@
-﻿using Autodesk.Revit.DB;
-using Newtonsoft.Json;
-using RevitOpening.Logic;
-using RevitOpening.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
-
-namespace RevitOpening.Extensions
+﻿namespace RevitOpening.Extensions
 {
-    public static class ElementExtensions
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Autodesk.Revit.DB;
+    using Logic;
+    using Models;
+    using Newtonsoft.Json;
+
+    internal static class ElementExtensions
     {
-        public static OpeningParentsData InitData(this FamilyInstance task, List<Wall> walls, List<CeilingAndFloor> floors,
-            double offset, double maxDiameter, List<MEPCurve> mepCurves)
+        public static OpeningParentsData InitData(this Element task, IEnumerable<Wall> walls,
+            IEnumerable<CeilingAndFloor> floors,
+            double offset, double maxDiameter, IEnumerable<MEPCurve> mepCurves)
         {
             var filter = new ElementIntersectsElementFilter(task);
-            var intersectsWalls = walls.Where(filter.PassesFilter).ToList();
-            var intersectsFloors = floors.Where(filter.PassesFilter).ToList();
-            var intersectsMEPCurves = mepCurves.Where(filter.PassesFilter).ToList();
+            var intersectsWalls = walls.Where(filter.PassesFilter);
+            var intersectsFloors = floors.Where(filter.PassesFilter);
+            var intersectsMepCurves = mepCurves.Where(filter.PassesFilter)
+                                               .ToList();
+
             var hosts = new List<Element>();
             hosts.AddRange(intersectsFloors);
             hosts.AddRange(intersectsWalls);
 
             var parentsData = new OpeningParentsData(
                 hosts.Select(h => h.UniqueId).ToList(),
-                intersectsMEPCurves.Select(c => c.UniqueId).ToList(),
+                intersectsMepCurves.Select(c => c.UniqueId).ToList(),
                 null);
 
-            if (hosts.Count == 0 || mepCurves.Count == 0)
-            {
-                task.SetParentsData(parentsData);
-                return parentsData;
-            }
+            if (hosts.Count == 0 || intersectsMepCurves.Count == 0)
+                goto SetData;
 
-            var openingParameters =
-                BoxCalculator.CalculateBoxInElement(hosts.FirstOrDefault(), mepCurves.FirstOrDefault(), offset, maxDiameter);
+            var openingParameters = BoxCalculator.CalculateBoxInElement(hosts.FirstOrDefault(),
+                intersectsMepCurves.FirstOrDefault(), offset, maxDiameter);
 
             if (openingParameters == null)
-            {
-                task.SetParentsData(parentsData);
-                return parentsData;
-            }
+                goto SetData;
 
             parentsData.BoxData = openingParameters;
             parentsData.BoxData.Id = task.Id.IntegerValue;
-
+            SetData:
+            filter.Dispose();
             task.SetParentsData(parentsData);
             return parentsData;
         }
 
 
-        public static OpeningParentsData GetOrInitData(this FamilyInstance task, List<Wall> walls,
+        public static OpeningParentsData GetOrInitData(this Element task, List<Wall> walls,
             List<CeilingAndFloor> floors, double offset, double maxDiameter, List<MEPCurve> mepCurves)
         {
             OpeningParentsData data;
@@ -60,17 +57,32 @@ namespace RevitOpening.Extensions
                 if (data.BoxData.HostsGeometries.Count == 0 || data.BoxData.PipesGeometries.Count == 0)
                     data = task.InitData(walls, floors, offset, maxDiameter, mepCurves);
             }
-            catch (ArgumentNullException)
+            catch
             {
                 data = task.InitData(walls, floors, offset, maxDiameter, mepCurves);
             }
+
+            if (data.BoxData != null)
+                return data;
+
+            data.BoxData = new OpeningData
+            {
+                Id = task.Id.IntegerValue,
+                FamilyName = ((FamilyInstance)task).Symbol.FamilyName,
+                Collisions = new Collisions(),
+            };
+            data.BoxData.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
+            task.SetParentsData(data);
 
             return data;
         }
 
         public static bool IsTask(this Element element)
         {
-            return Families.AllFamiliesNames.Contains(((FamilyInstance)element).Symbol.FamilyName);
+            var elSymbolName = (((FamilyInstance) element).Symbol.FamilyName);
+            return Families.FloorRectTaskFamily.SymbolName == elSymbolName
+                || Families.WallRectTaskFamily.SymbolName == elSymbolName
+                || Families.WallRoundTaskFamily.SymbolName == elSymbolName;
         }
 
         public static OpeningParentsData GetParentsData(this Element element)
@@ -96,30 +108,31 @@ namespace RevitOpening.Extensions
                 solid = task.get_BoundingBox(null).CreateSolid();
             else
                 solid = task.get_Geometry(new Options())
-                    .GetAllSolids()
-                    .FirstOrDefault(s => Math.Abs(s.Volume) > 0.0000001);
+                            .GetAllSolids()
+                            .FirstOrDefault(s => Math.Abs(s.Volume) > 0.0000001);
             return solid;
         }
 
-        public static Solid GetUnitedSolid(this Element task, Element otherTask, Transform transform, XYZ tolerance = null)
+        public static Solid GetUnitedSolid(this Element task, Element otherTask, Transform transform,
+            XYZ tolerance = null)
         {
             tolerance = tolerance ?? XYZ.Zero;
 
-            var tasks = new[] { task, otherTask };
+            var tasks = new[] {task, otherTask};
             var solids = tasks
-                .Where(el => el != null)
-                .Select(el => el.GetSolid());
+                        .Where(el => el != null)
+                        .Select(el => el.GetSolid());
 
             var backTransform = transform.Inverse;
             var transformPoints = solids
-                .SelectMany(x => x.Edges.Cast<Edge>())
-                .Select(y => y.AsCurve().GetEndPoint(0))
-                .Select(transform.OfPoint);
+                                 .SelectMany(x => x.Edges.Cast<Edge>())
+                                 .Select(y => y.AsCurve().GetEndPoint(0))
+                                 .Select(transform.OfPoint);
 
             var bbox = new BoundingBoxXYZ
             {
                 Min = transformPoints.GetMinPointsCoordinates() - tolerance,
-                Max = transformPoints.GetMaxPointsCoordinates() + tolerance
+                Max = transformPoints.GetMaxPointsCoordinates() + tolerance,
             };
             var solid = bbox.CreateSolid();
             var backSolid = SolidUtils.CreateTransformed(solid, backTransform);
