@@ -1,13 +1,13 @@
-﻿using Autodesk.Revit.Attributes;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
-using RevitOpening.UI;
-using RevitOpening.ViewModels;
-using System;
-using System.Linq;
-
-namespace RevitOpening.RevitExternal
+﻿namespace RevitOpening.RevitExternal
 {
+    using System;
+    using System.Linq;
+    using Autodesk.Revit.Attributes;
+    using Autodesk.Revit.DB;
+    using Autodesk.Revit.UI;
+    using UI;
+    using ViewModels;
+
     [Transaction(TransactionMode.Manual)]
     public class UpdateDockablePanel : IExternalCommand
     {
@@ -15,12 +15,12 @@ namespace RevitOpening.RevitExternal
         {
             var pane = commandData.Application.ActiveUIDocument.Application.GetDockablePane(
                 new DockablePaneId(new Guid(OpeningPanel.DockablePanelGuid)));
-            //pane.Hide();
-
+            var app = commandData.Application;
+            var documents = app.Application.Documents.Cast<Document>()
+                               .ToList();
+            var currentDocument = app.ActiveUIDocument.Document;
             var tasksDockablePanel = new TasksDockablePanel();
-            (tasksDockablePanel.DataContext as TaskDockablePanelVM)
-                .UpdateList(commandData.Application.Application.Documents.Cast<Document>(),
-                    commandData.Application.ActiveUIDocument.Document);
+            ((TaskDockablePanelVM) tasksDockablePanel.DataContext).UpdateList(documents, currentDocument);
             pane.Show();
             return Result.Succeeded;
         }

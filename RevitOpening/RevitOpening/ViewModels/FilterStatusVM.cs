@@ -5,7 +5,7 @@ using System.Windows.Controls;
 
 namespace RevitOpening.ViewModels
 {
-    public class FilterStatusVM
+    internal class FilterStatusVM
     {
         private RelayCommand _filter;
 
@@ -29,12 +29,12 @@ namespace RevitOpening.ViewModels
             get
             {
                 return _filter ??
-                       (_filter = new RelayCommand(obj =>
-                       {
-                           var comboBox = obj as ComboBox;
-                           SelectStatus = comboBox.SelectionBoxItem as string;
-                           HostWindow.Close();
-                       }));
+                    (_filter = new RelayCommand(obj =>
+                    {
+                        var comboBox = (ComboBox) obj;
+                        SelectStatus = (string) comboBox.SelectionBoxItem;
+                        HostWindow.Close();
+                    }));
             }
         }
     }

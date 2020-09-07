@@ -67,6 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\BoundingBoxExtensions.cs" />
+    <Compile Include="Extensions\CollectionExtensions.cs" />
     <Compile Include="Extensions\DataGridExtensions.cs" />
     <Compile Include="Extensions\DocumentExtensions.cs" />
     <Compile Include="Extensions\DocumentsExtensions.cs" />
@@ -76,6 +77,8 @@
     <Compile Include="Extensions\LineExtensions.cs" />
     <Compile Include="Extensions\MEPCurveExtensions.cs" />
     <Compile Include="Extensions\SelectionExtensions.cs" />
+    <Compile Include="Extensions\Settings.cs" />
+    <Compile Include="Logic\TasksToOpeningsChanger.cs" />
     <Compile Include="Logic\Transactions.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -89,7 +92,6 @@
     <Compile Include="Logic\BoxCreator.cs" />
     <Compile Include="Logic\AltecJsonSchema.cs" />
     <Compile Include="Logic\BoxAnalyzer.cs" />
-    <Compile Include="Logic\CreateOpeningInTaskBoxes.cs" />
     <Compile Include="Logic\CreateTaskBoxes.cs" />
     <Compile Include="Logic\Collisions.cs" />
     <Compile Include="Models\ElementGeometry.cs" />

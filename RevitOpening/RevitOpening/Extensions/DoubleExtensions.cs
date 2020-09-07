@@ -1,6 +1,6 @@
 ﻿namespace RevitOpening.Extensions
 {
-    public static class DoubleExtensions
+    internal static class DoubleExtensions
     {
         public static double GetInFoot(this double number)
         {

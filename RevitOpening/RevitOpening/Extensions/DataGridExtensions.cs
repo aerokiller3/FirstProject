@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Controls;
-
-namespace RevitOpening.Extensions
+﻿namespace RevitOpening.Extensions
 {
-    public static class DataGridExtensions
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Windows.Controls;
+
+    internal static class DataGridExtensions
     {
         public static IEnumerable<T> GetSelectedItemsFromGrid<T>(this DataGrid grid)
         {

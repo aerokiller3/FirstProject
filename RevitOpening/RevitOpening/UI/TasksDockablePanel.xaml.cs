@@ -1,6 +1,5 @@
 ﻿using Autodesk.Revit.UI;
 using RevitOpening.ViewModels;
-using System;
 using System.Windows.Controls;
 
 namespace RevitOpening.UI
@@ -10,8 +9,6 @@ namespace RevitOpening.UI
         public TasksDockablePanel()
         {
             InitializeComponent();
-            var vm = DataContext as TaskDockablePanelVM;
-            vm.Window = this;
         }
 
         public void SetupDockablePane(DockablePaneProviderData data)

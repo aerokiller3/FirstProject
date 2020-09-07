@@ -1,9 +1,9 @@
-﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.DB.ExtensibleStorage;
-using System;
-
-namespace RevitOpening.Logic
+﻿namespace RevitOpening.Logic
 {
+    using System;
+    using Autodesk.Revit.DB;
+    using Autodesk.Revit.DB.ExtensibleStorage;
+
     public static class AltecJsonSchema
     {
         private const string VendorId = "E864A704-827E-4D2A-804C-5F0D3359CF35";
@@ -15,14 +15,13 @@ namespace RevitOpening.Logic
             Schema = CheckOrInit();
         }
 
-        public static bool SetJson(Element element, string json)
+        public static void SetJson(Element element, string json)
         {
             var entity = element.GetEntity(Schema);
             if (!entity.IsValid())
                 entity = new Entity(Schema);
             entity.Set("json", json);
             element.SetEntity(entity);
-            return true;
         }
 
         public static string GetJson(Element element)

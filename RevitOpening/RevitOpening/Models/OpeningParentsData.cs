@@ -1,8 +1,8 @@
-﻿using RevitOpening.Extensions;
-using System.Collections.Generic;
-
-namespace RevitOpening.Models
+﻿namespace RevitOpening.Models
 {
+    using System.Collections.Generic;
+    using Extensions;
+
     public class OpeningParentsData
     {
         public OpeningParentsData()
@@ -28,9 +28,9 @@ namespace RevitOpening.Models
         public override bool Equals(object obj)
         {
             return obj is OpeningParentsData data
-                   && (HostsIds?.AlmostEqualTo(data.HostsIds) ?? true)
-                   && (PipesIds?.AlmostEqualTo(data.PipesIds) ?? true)
-                   && (BoxData?.Equals(data.BoxData) ?? true);
+                && (HostsIds?.AlmostEqualTo(data.HostsIds) ?? true)
+                && (PipesIds?.AlmostEqualTo(data.PipesIds) ?? true)
+                && (BoxData?.Equals(data.BoxData) ?? true);
         }
 
         public override int GetHashCode()

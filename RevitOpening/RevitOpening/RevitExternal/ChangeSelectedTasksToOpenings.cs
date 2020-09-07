@@ -1,27 +1,33 @@
-﻿using Autodesk.Revit.Attributes;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
-using RevitOpening.Extensions;
-using RevitOpening.Logic;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
-
-namespace RevitOpening.RevitExternal
+﻿namespace RevitOpening.RevitExternal
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Windows;
+    using Autodesk.Revit.Attributes;
+    using Autodesk.Revit.DB;
+    using Autodesk.Revit.UI;
+    using Extensions;
+    using Logic;
+    using Settings = Extensions.Settings;
+
     [Transaction(TransactionMode.Manual)]
     public class ChangeSelectedTasksToOpenings : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             var currentDocument = commandData.Application.ActiveUIDocument.Document;
-            var selected = commandData.Application.ActiveUIDocument.Selection.GetSelectedTasks(currentDocument);
+            var documents = commandData.Application.Application.Documents.Cast<Document>()
+                                       .ToList();
+            var selected = commandData.Application.ActiveUIDocument.Selection
+                                      .GetSelectedTasks(currentDocument);
             if (selected == null)
                 return Result.Cancelled;
 
+            var selectedList = selected.ToList();
             var openings = new List<Element>();
-            var statuses = selected.Select(el => el.LookupParameter("Несогласованно")
-                                                   .AsInteger());
+            var statuses = selectedList.Select(el => el.LookupParameter("Несогласованно")
+                                                       .AsInteger());
 
             if (statuses.Any(s => s == 1))
             {
@@ -31,16 +37,24 @@ namespace RevitOpening.RevitExternal
                     return Result.Cancelled;
             }
 
-            var elementsData = selected.Select(el => el.GetParentsData());
-
-            if (elementsData.Any(d => d.BoxData.HostsGeometries.Count == 0 || d.BoxData.PipesGeometries.Count == 0))
+            try
             {
-                MessageBox.Show("Одно или более отверстий невозможно вырезать автоматически");
+                if (selectedList.Count == 1)
+                    Transactions.UpdateTaskInfo(currentDocument, documents, selectedList[0], Settings.Offset, Settings.Diameter);
+                var elementsData = selectedList.Select(el => el.GetParentsData());
+                if (elementsData.Any(d => d.BoxData.HostsGeometries.Count == 0 || d.BoxData.PipesGeometries.Count == 0))
+                {
+                    MessageBox.Show("Одно или более отверстий невозможно вырезать автоматически");
+                    return Result.Failed;
+                }
+            }
+            catch
+            {
+                MessageBox.Show("Обновите информацию об отверстиях");
                 return Result.Failed;
             }
 
-
-            Transactions.CreateOpeningInSelectedTask(currentDocument, openings, selected);
+            Transactions.CreateOpeningInSelectedTask(currentDocument, openings, selectedList);
             Transactions.Drawing(currentDocument, openings);
 
             return Result.Succeeded;
