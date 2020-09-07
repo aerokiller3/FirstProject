@@ -18,7 +18,7 @@
         {
             var app = commandData.Application;
             var documents = app.Application.Documents.Cast<Document>()
-                               .ToList();
+                               .ToList();   
             var currentDocument = app.ActiveUIDocument.Document;
 
             Transactions.UpdateTasksInfo(currentDocument, documents, Extensions.Settings.Offset, Extensions.Settings.Diameter);

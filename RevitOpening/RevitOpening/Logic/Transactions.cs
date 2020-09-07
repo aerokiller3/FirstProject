@@ -24,7 +24,7 @@
             double offset, double diameter)
         {
             DoTransaction(document, "Обновление информации о заданиях",
-                () => { BoxAnalyzer.ExecuteAnalysis(documents, offset, diameter); });
+                () => { BoxAnalyzer.ExecuteAnalysis(documents,document, offset, diameter); });
         }
 
         public static void Drawing(Document document, List<Element> openings)
@@ -87,9 +87,9 @@
                 var floors = documents.GetAllElementsOfClass<CeilingAndFloor>();
                 var tasks = documents.GetAllTasks();
                 var mepCurves = documents.GetAllElementsOfClass<MEPCurve>();
-                var data = newTask.GetOrInitData(walls, floors, offset, diameter, mepCurves);
+                var data = newTask.GetOrInitData(walls, floors, offset, diameter, mepCurves, document);
                 BoxAnalyzer.AnalyzeElement(newTask, data, walls, floors, tasks, documents, offset,
-                    diameter, mepCurves);
+                    diameter, mepCurves, document);
             });
         }
     }

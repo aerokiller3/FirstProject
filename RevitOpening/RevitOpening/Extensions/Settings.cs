@@ -14,21 +14,13 @@ namespace RevitOpening.Extensions
         private const string offsetStr = "1.5";
         private const string diameterStr = "200";
 
-        public static double Offset
-        {
-            get =>
-                double.Parse(GetParameterFromSettings(nameof(Offset), offsetStr),
-                    NumberStyles.Any, CultureInfo.InvariantCulture);
-            set => throw new NotImplementedException();
-        }
+        public static double Offset =>
+            double.Parse(GetParameterFromSettings(nameof(Offset), offsetStr),
+                NumberStyles.Any, CultureInfo.InvariantCulture);
 
-        public static double Diameter
-        {
-            get =>
-                double.Parse(GetParameterFromSettings(nameof(Diameter), diameterStr),
-                    NumberStyles.Any, CultureInfo.InvariantCulture);
-            set => throw new NotImplementedException();
-        }
+        public static double Diameter =>
+            double.Parse(GetParameterFromSettings(nameof(Diameter), diameterStr),
+                NumberStyles.Any, CultureInfo.InvariantCulture);
 
         public static bool IsCombineAll
         {

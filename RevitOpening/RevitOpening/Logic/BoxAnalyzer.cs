@@ -12,7 +12,7 @@
 
     internal static class BoxAnalyzer
     {
-        public static void ExecuteAnalysis(List<Document> documents, double offset, double maxDiameter)
+        public static void ExecuteAnalysis(List<Document> documents, Document currentDocument, double offset, double maxDiameter)
         {
             var walls = documents.GetAllElementsOfClass<Wall>();
             var floors = documents.GetAllElementsOfClass<CeilingAndFloor>();
@@ -24,65 +24,61 @@
             mepCurves.AddRange(documents.GetAllElementsOfClass<Pipe>());
             mepCurves.AddRange(documents.GetAllElementsOfClass<Duct>());
             mepCurves.AddRange(documents.GetAllElementsOfClass<CableTrayConduitBase>());
-            AnalyzeElements(walls, floors, mepCurves, tasks, offset, maxDiameter, documents);
-            AnalyzeElements(walls, floors, mepCurves, openings, offset, maxDiameter, documents);
+            AnalyzeElements(walls, floors, mepCurves, tasks, offset, maxDiameter, documents, currentDocument);
+            AnalyzeElements(walls, floors, mepCurves, openings, offset, maxDiameter, documents, currentDocument);
         }
 
         private static void AnalyzeElements(List<Wall> walls, List<CeilingAndFloor> floors,
             List<MEPCurve> mepCurves, List<FamilyInstance> elementsToAnalyze, double offset,
-            double maxDiameter, ICollection<Document> documents)
+            double maxDiameter, ICollection<Document> documents, Document currentDocument)
         {
             foreach (var task in elementsToAnalyze)
             {
-                var data = task.GetOrInitData(walls, floors, offset, maxDiameter, mepCurves);
-                AnalyzeElement(task, data, walls, floors, elementsToAnalyze, documents, offset, maxDiameter, mepCurves);
+                var data = task.GetOrInitData(walls, floors, offset, maxDiameter, mepCurves, currentDocument);
+                AnalyzeElement(task, data, walls, floors, elementsToAnalyze, documents, offset,
+                    maxDiameter, mepCurves, currentDocument);
             }
         }
 
         public static void AnalyzeElement(Element task, OpeningParentsData data, List<Wall> walls,
             ICollection<CeilingAndFloor> floors, ICollection<FamilyInstance> tasks, ICollection<Document> documents,
-            double offset, double maxDiameter, List<MEPCurve> mepCurves)
+            double offset, double maxDiameter, List<MEPCurve> mepCurves, Document currentDocument)
         {
-            var currentCollisions = new Collisions();
-            var isNotProcessed = false;
-            if (data.BoxData.Collisions.Contains(Collisions.TaskCouldNotBeProcessed))
+            data.BoxData.Collisions = new Collisions();
+
+
+            using (var filter = new ElementIntersectsElementFilter(task))
             {
-                isNotProcessed = true;
-                currentCollisions.Add(Collisions.TaskCouldNotBeProcessed);
-            }
-            else
-            {
-                using (var filter = new ElementIntersectsElementFilter(task))
+                if (!data.IsActualTask(task, documents, offset, maxDiameter, filter, walls, floors, mepCurves,
+                    currentDocument, out var newData))
                 {
-                    if (data.IsTaskIntersectManyWall(walls, filter))
-                        currentCollisions.Add(Collisions.TaskIntersectManyWalls);
-                    if (data.IsWallTaskIntersectFloor(floors, filter))
-                        currentCollisions.Add(Collisions.WallTaskIntersectFloor);
-                    if (data.IsFloorTaskIntersectWall(walls, filter))
-                        currentCollisions.Add(Collisions.FloorTaskIntersectWall);
-                    if (data.IsHostNotPerpendicularPipe(documents))
-                        currentCollisions.Add(Collisions.PipeNotPerpendicularHost);
-                    if (data.IsTaskIntersectTask(task, tasks))
-                        currentCollisions.Add(Collisions.TaskIntersectTask);
-                    if (!data.IsActualTask(task, documents, offset, maxDiameter, filter, walls, floors, mepCurves))
-                        currentCollisions.Add(Collisions.TaskNotActual);
+                    data = newData;
                 }
+                if (data.IsTaskIntersectManyWall(walls, filter))
+                    data.BoxData.Collisions.Add(Collisions.TaskIntersectManyWalls);
+                if (data.IsWallTaskIntersectFloor(floors, filter))
+                    data.BoxData.Collisions.Add(Collisions.WallTaskIntersectFloor);
+                if (data.IsFloorTaskIntersectWall(walls, filter))
+                    data.BoxData.Collisions.Add(Collisions.FloorTaskIntersectWall);
+                if (data.IsHostNotPerpendicularPipe(documents))
+                    data.BoxData.Collisions.Add(Collisions.PipeNotPerpendicularHost);
+                if (data.IsTaskIntersectTask(task, tasks))
+                    data.BoxData.Collisions.Add(Collisions.TaskIntersectTask);
             }
 
-            data.BoxData.Collisions = currentCollisions;
+            if (data.BoxData.Collisions.Count > 0)
+                data.BoxData.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
 
-            var intAgreedValue = CalculateAgreedValue(isNotProcessed, currentCollisions);
+
+            //var intAgreedValue = CalculateAgreedValue(currentCollisions);
             //Менять спец. атрибут
             //task.LookupParameter("Несогласованно").Set(intAgreedValue);
 
             task.SetParentsData(data);
         }
 
-        private static int CalculateAgreedValue(bool isNotProcessed, Collisions currentCollisions)
+        private static int CalculateAgreedValue(Collisions currentCollisions)
         {
-            if (isNotProcessed)
-                return currentCollisions.Count == 1 ? 0 : 1;
-
             return currentCollisions.Count == 0 ? 0 : 1;
         }
 
@@ -101,7 +97,8 @@
         private static bool IsActualTask(this OpeningParentsData parentsData, Element element,
             ICollection<Document> documents, double offset, double maxDiameter,
             ElementIntersectsElementFilter filter, ICollection<Wall> walls,
-            ICollection<CeilingAndFloor> floors, ICollection<MEPCurve> mepCurves)
+            ICollection<CeilingAndFloor> floors, ICollection<MEPCurve> mepCurves,
+            Document currentDocument, out OpeningParentsData newData)
         {
             var pipes = mepCurves
                        .Where(filter.PassesFilter)
@@ -116,9 +113,24 @@
             var isOldPipes = parentsData.BoxData.PipesGeometries.AlmostEqualTo(pipesGeometries);
             var isOldHosts = parentsData.BoxData.HostsGeometries.AlmostEqualTo(hostGeometries);
             var isOldBox = CheckBoxParameters((FamilyInstance) element, parentsData.BoxData);
+            newData = null;
             var isImmutable = isOldBox && isOldPipes && isOldHosts;
             if (!isImmutable)
-                isImmutable = MatchOldAndNewTask(pipes, hosts, parentsData, offset, maxDiameter);
+            {
+                newData = new OpeningParentsData
+                {
+                    HostsIds = hosts
+                              .Select(h => h.UniqueId)
+                              .ToList(),
+                    PipesIds = hosts
+                              .Select(p => p.UniqueId)
+                              .ToList(),
+                    BoxData = CalculateNewBox(pipes, hosts, parentsData, offset, maxDiameter)
+                };
+                newData.BoxData.Level = currentDocument
+                                       .GetElement(hosts.FirstOrDefault()?.LevelId).Name;
+            }
+
             return isImmutable;
         }
 
@@ -152,19 +164,21 @@
                 Math.Abs(height - boxData.Height) < tolerance;
         }
 
-        private static bool MatchOldAndNewTask(ICollection<MEPCurve> pipes, ICollection<Element> hosts,
+        private static OpeningData CalculateNewBox(ICollection<MEPCurve> pipes, ICollection<Element> hosts,
             OpeningParentsData parentsData, double offset, double maxDiameter)
         {
             if (pipes.Count != 1 || hosts.Count != 1)
             {
                 parentsData.BoxData.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
-                return true;
+                return parentsData.BoxData;
             }
 
             var parameters =
                 BoxCalculator.CalculateBoxInElement(hosts.FirstOrDefault(), pipes.FirstOrDefault(),
                     offset, maxDiameter);
-            return parameters != null && parentsData.BoxData.Equals(parameters);
+            parameters.Level = parentsData.BoxData.Level;
+            parameters.Id = parentsData.BoxData.Id;
+            return parameters;
         }
 
         private static bool IsFloorTaskIntersectWall(this OpeningParentsData data, IEnumerable<Wall> walls,

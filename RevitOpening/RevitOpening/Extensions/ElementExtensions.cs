@@ -11,70 +11,59 @@
     internal static class ElementExtensions
     {
         public static OpeningParentsData InitData(this Element task, IEnumerable<Wall> walls,
-            IEnumerable<CeilingAndFloor> floors,
-            double offset, double maxDiameter, IEnumerable<MEPCurve> mepCurves)
+            IEnumerable<CeilingAndFloor> floors, double offset, double maxDiameter,
+            IEnumerable<MEPCurve> mepCurves, Document currentDocument)
         {
             var filter = new ElementIntersectsElementFilter(task);
-            var intersectsWalls = walls.Where(filter.PassesFilter);
-            var intersectsFloors = floors.Where(filter.PassesFilter);
-            var intersectsMepCurves = mepCurves.Where(filter.PassesFilter)
-                                               .ToList();
+            var intersectsWalls = walls
+               .Where(filter.PassesFilter);
+            var intersectsFloors = floors
+               .Where(filter.PassesFilter);
+            var intersectsMepCurves = mepCurves
+                                     .Where(filter.PassesFilter)
+                                     .ToList();
 
             var hosts = new List<Element>();
             hosts.AddRange(intersectsFloors);
             hosts.AddRange(intersectsWalls);
 
             var parentsData = new OpeningParentsData(
-                hosts.Select(h => h.UniqueId).ToList(),
-                intersectsMepCurves.Select(c => c.UniqueId).ToList(),
+                hosts
+                   .Select(h => h.UniqueId)
+                   .ToList(),
+                intersectsMepCurves
+                   .Select(c => c.UniqueId)
+                   .ToList(),
                 null);
 
-            if (hosts.Count == 0 || intersectsMepCurves.Count == 0)
+            if (intersectsMepCurves.Count != 1 || hosts.Count != 1)
+            {
+                parentsData.BoxData = new OpeningData();
+                parentsData.BoxData.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
                 goto SetData;
+            }
 
-            var openingParameters = BoxCalculator.CalculateBoxInElement(hosts.FirstOrDefault(),
+            parentsData.BoxData = BoxCalculator.CalculateBoxInElement(hosts.FirstOrDefault(),
                 intersectsMepCurves.FirstOrDefault(), offset, maxDiameter);
-
-            if (openingParameters == null)
-                goto SetData;
-
-            parentsData.BoxData = openingParameters;
-            parentsData.BoxData.Id = task.Id.IntegerValue;
             SetData:
-            filter.Dispose();
+            parentsData.BoxData.Id = task.Id.IntegerValue;
+            parentsData.BoxData.FamilyName = ((FamilyInstance) task).Symbol.FamilyName;
+            parentsData.BoxData.Level = currentDocument
+                                       .GetElement(currentDocument
+                                                  .GetElement(parentsData.HostsIds
+                                                                         .FirstOrDefault()).LevelId).Name;
             task.SetParentsData(parentsData);
+            filter.Dispose();
             return parentsData;
         }
 
 
         public static OpeningParentsData GetOrInitData(this Element task, List<Wall> walls,
-            List<CeilingAndFloor> floors, double offset, double maxDiameter, List<MEPCurve> mepCurves)
+            List<CeilingAndFloor> floors, double offset, double maxDiameter, List<MEPCurve> mepCurves,
+            Document currentDocument)
         {
-            OpeningParentsData data;
-            try
-            {
-                data = task.GetParentsData();
-                if (data.BoxData.HostsGeometries.Count == 0 || data.BoxData.PipesGeometries.Count == 0)
-                    data = task.InitData(walls, floors, offset, maxDiameter, mepCurves);
-            }
-            catch
-            {
-                data = task.InitData(walls, floors, offset, maxDiameter, mepCurves);
-            }
-
-            if (data.BoxData != null)
-                return data;
-
-            data.BoxData = new OpeningData
-            {
-                Id = task.Id.IntegerValue,
-                FamilyName = ((FamilyInstance)task).Symbol.FamilyName,
-                Collisions = new Collisions(),
-            };
-            data.BoxData.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
-            task.SetParentsData(data);
-
-            return data;
+            return task.GetParentsData() ?? task.InitData(walls, floors, offset, maxDiameter,
+                mepCurves, currentDocument);
         }
 
         public static bool IsTask(this Element element)
@@ -88,10 +77,7 @@
         public static OpeningParentsData GetParentsData(this Element element)
         {
             var json = AltecJsonSchema.GetJson(element);
-            if (json != null)
-                return JsonConvert.DeserializeObject<OpeningParentsData>(json);
-
-            throw new ArgumentNullException("Обновить информацию о заданиях перед использованием");
+            return json != null ? JsonConvert.DeserializeObject<OpeningParentsData>(json) : null;
         }
 
         public static void SetParentsData(this Element element, OpeningParentsData parentsData)
