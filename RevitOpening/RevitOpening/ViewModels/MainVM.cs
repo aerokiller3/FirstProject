@@ -17,7 +17,7 @@ using System.Windows.Controls;
 
 namespace RevitOpening.ViewModels
 {
-    public class MainVM : INotifyPropertyChanged
+    public class MainVM : INotifyPropertyChanged, IDataGridUpdater
     {
         private RelayCommand _changeSelectedTasksToOpenings;
         private RelayCommand _changeTasksToOpenings;

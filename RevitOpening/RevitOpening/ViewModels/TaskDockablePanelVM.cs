@@ -13,11 +13,12 @@ using System.Configuration;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows.Controls;
 using RevitOpening.Logic;
 
 namespace RevitOpening.ViewModels
 {
-    public class TaskDockablePanelVM : INotifyPropertyChanged
+    public class TaskDockablePanelVM : INotifyPropertyChanged, IDataGridUpdater
     {
         private IRevitTask CurrentRevitTask { get; set; }
         public List<OpeningData> TasksAndOpenings { get; set; }
@@ -101,7 +102,7 @@ namespace RevitOpening.ViewModels
         {
             CurrentRevitTask = new RevitTask();
             CurrentRevitTask.Register(new BoxShowerEventHandler());
-            var selectItems = (Window.TasksGrid)
+            var selectItems = (sender as DataGrid)
                 .GetSelectedItemsFromGrid<OpeningData>()
                 .Select(x => new ElementId(x.Id))
                 .ToList();

@@ -21,7 +21,7 @@ namespace RevitOpening.RevitExternal
 
             var openings = new List<Element>();
             var statuses = selected.Select(el => el.LookupParameter("Несогласованно")
-                .AsInteger());
+                                                   .AsInteger());
 
             if (statuses.Any(s => s == 1))
             {
@@ -30,6 +30,15 @@ namespace RevitOpening.RevitExternal
                 if (box == MessageBoxResult.No)
                     return Result.Cancelled;
             }
+
+            var elementsData = selected.Select(el => el.GetParentsData());
+
+            if (elementsData.Any(d => d.BoxData.HostsGeometries.Count == 0 || d.BoxData.PipesGeometries.Count == 0))
+            {
+                MessageBox.Show("Одно или более отверстий невозможно вырезать автоматически");
+                return Result.Failed;
+            }
+
 
             Transactions.CreateOpeningInSelectedTask(currentDocument, openings, selected);
             Transactions.Drawing(currentDocument, openings);

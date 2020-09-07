@@ -43,8 +43,8 @@ namespace RevitOpening.Logic
             //
 
             return new OpeningData(taskWidth, taskHeight, taskDepth, direction,
-                intersectionCenter, new List<ElementGeometry> {wallData},
-                new List<ElementGeometry> {pipeData}, familyParameters.SymbolName,
+                intersectionCenter, new List<ElementGeometry> { wallData },
+                new List<ElementGeometry> { pipeData }, familyParameters.SymbolName,
                 offsetRatio, maxDiameter, null);
         }
 
@@ -82,7 +82,7 @@ namespace RevitOpening.Logic
 
             var intersectCurve = curves.GetCurveSegment(0);
             var intersectVector = (intersectCurve.GetEndPoint(1) - intersectCurve.GetEndPoint(0)) / 2;
-            var bias = new XYZ(0, 0, -intersectVector.Z / 2);
+            var bias = new XYZ(0, 0, -intersectVector.Z);
             var intersectionCenter = (intersectCurve.GetEndPoint(0) + intersectCurve.GetEndPoint(1)) / 2 - bias;
             return (intersectionCenter, direction);
         }

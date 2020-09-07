@@ -35,16 +35,13 @@ namespace RevitOpening.Logic
             foreach (var task in elementsToAnalyze)
             {
                 var data = task.GetOrInitData(walls, floors, offset, maxDiameter, mepCurves);
-                if (data == null)
+                if (data.BoxData == null)
                 {
-                    data = new OpeningParentsData
+                    data.BoxData = new OpeningData
                     {
-                        BoxData = new OpeningData
-                        {
-                            Id = task.Id.IntegerValue,
-                            FamilyName = task.Symbol.FamilyName,
-                            Collisions = new Collisions()
-                        }
+                        Id = task.Id.IntegerValue,
+                        FamilyName = task.Symbol.FamilyName,
+                        Collisions = new Collisions()
                     };
                     data.BoxData.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
                     task.SetParentsData(data);
