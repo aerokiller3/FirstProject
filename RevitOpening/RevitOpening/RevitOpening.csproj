@@ -73,12 +73,13 @@
     <Compile Include="Extensions\DocumentsExtensions.cs" />
     <Compile Include="Extensions\ElementExtensions.cs" />
     <Compile Include="Extensions\GeometryElementExtensions.cs" />
+    <Compile Include="Extensions\ICollectionExtensions.cs" />
     <Compile Include="Extensions\IEnumerableExtensions.cs" />
     <Compile Include="Extensions\LineExtensions.cs" />
     <Compile Include="Extensions\MEPCurveExtensions.cs" />
     <Compile Include="Extensions\SelectionExtensions.cs" />
     <Compile Include="Extensions\Settings.cs" />
-    <Compile Include="Logic\TasksToOpeningsChanger.cs" />
+    <Compile Include="Logic\BoxCalculator.cs" />
     <Compile Include="Logic\Transactions.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -92,12 +93,14 @@
     <Compile Include="Logic\BoxCreator.cs" />
     <Compile Include="Logic\AltecJsonSchema.cs" />
     <Compile Include="Logic\BoxAnalyzer.cs" />
+    <Compile Include="Logic\TasksToOpeningsChanger.cs" />
     <Compile Include="Logic\CreateTaskBoxes.cs" />
     <Compile Include="Logic\Collisions.cs" />
     <Compile Include="Models\ElementGeometry.cs" />
     <Compile Include="Logic\Families.cs" />
     <Compile Include="Extensions\DoubleExtensions.cs" />
     <Compile Include="Logic\FamilyLoader.cs" />
+    <Compile Include="ViewModels\IDataGridUpdater.cs" />
     <Compile Include="UI\TasksDataGrid.xaml.cs">
       <DependentUpon>TasksDataGrid.xaml</DependentUpon>
     </Compile>
@@ -121,7 +124,6 @@
     <Compile Include="Models\OpeningData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Models\FamilyParameters.cs" />
-    <Compile Include="Logic\BoxCalculator.cs" />
     <Compile Include="ViewModels\FilterStatusVM.cs" />
     <Compile Include="ViewModels\IDataGridUpdater.cs" />
     <Compile Include="ViewModels\MainVM.cs" />
