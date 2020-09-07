@@ -1,11 +1,11 @@
-﻿using Autodesk.Revit.DB;
-using RevitOpening.Extensions;
-using RevitOpening.Logic;
-using System;
-using System.Collections.Generic;
-
-namespace RevitOpening.Models
+﻿namespace RevitOpening.Models
 {
+    using System;
+    using System.Collections.Generic;
+    using Autodesk.Revit.DB;
+    using Extensions;
+    using Logic;
+
     public class OpeningData
     {
         public OpeningData(double width, double height, double depth, XYZ direction,
@@ -66,14 +66,14 @@ namespace RevitOpening.Models
         {
             const double tolerance = 0.000_000_1;
             return obj is OpeningData parameters
-                   && (parameters.HostsGeometries?.AlmostEqualTo(HostsGeometries) ?? true)
-                   && (parameters.PipesGeometries?.AlmostEqualTo(PipesGeometries) ?? true)
-                   && (parameters.FamilyName?.Equals(FamilyName) ?? true)
-                   && Math.Abs(parameters.Height - Height) < tolerance
-                   && Math.Abs(parameters.Width - Width) < tolerance
-                   && Math.Abs(parameters.Depth - Depth) < tolerance
-                   && (parameters.Direction?.Equals(Direction) ?? true)
-                   && (parameters.IntersectionCenter?.Equals(IntersectionCenter) ?? true);
+                && (parameters.HostsGeometries?.AlmostEqualTo(HostsGeometries) ?? true)
+                && (parameters.PipesGeometries?.AlmostEqualTo(PipesGeometries) ?? true)
+                && (parameters.FamilyName?.Equals(FamilyName) ?? true)
+                && Math.Abs(parameters.Height - Height) < tolerance
+                && Math.Abs(parameters.Width - Width) < tolerance
+                && Math.Abs(parameters.Depth - Depth) < tolerance
+                && (parameters.Direction?.Equals(Direction) ?? true)
+                && (parameters.IntersectionCenter?.Equals(IntersectionCenter) ?? true);
         }
 
         public override int GetHashCode()

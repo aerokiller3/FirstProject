@@ -1,18 +1,18 @@
-﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.DB.Electrical;
-using Autodesk.Revit.DB.Mechanical;
-using Autodesk.Revit.DB.Plumbing;
-using RevitOpening.Extensions;
-using RevitOpening.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace RevitOpening.Logic
+﻿namespace RevitOpening.Logic
 {
-    public static class BoxAnalyzer
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Autodesk.Revit.DB;
+    using Autodesk.Revit.DB.Electrical;
+    using Autodesk.Revit.DB.Mechanical;
+    using Autodesk.Revit.DB.Plumbing;
+    using Extensions;
+    using Models;
+
+    internal static class BoxAnalyzer
     {
-        public static void ExecuteAnalysis(IEnumerable<Document> documents, double offset, double maxDiameter)
+        public static void ExecuteAnalysis(List<Document> documents, double offset, double maxDiameter)
         {
             var walls = documents.GetAllElementsOfClass<Wall>();
             var floors = documents.GetAllElementsOfClass<CeilingAndFloor>();
@@ -29,34 +29,19 @@ namespace RevitOpening.Logic
         }
 
         private static void AnalyzeElements(List<Wall> walls, List<CeilingAndFloor> floors,
-            List<MEPCurve> mepCurves, List<FamilyInstance> elementsToAnalyze, double offset, double maxDiameter,
-            IEnumerable<Document> documents)
+            List<MEPCurve> mepCurves, List<FamilyInstance> elementsToAnalyze, double offset,
+            double maxDiameter, ICollection<Document> documents)
         {
             foreach (var task in elementsToAnalyze)
             {
                 var data = task.GetOrInitData(walls, floors, offset, maxDiameter, mepCurves);
-                if (data == null)
-                {
-                    data = new OpeningParentsData
-                    {
-                        BoxData = new OpeningData
-                        {
-                            Id = task.Id.IntegerValue,
-                            FamilyName = task.Symbol.FamilyName,
-                            Collisions = new Collisions()
-                        }
-                    };
-                    data.BoxData.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
-                    task.SetParentsData(data);
-                    continue;
-                }
-
-                task.AnalyzeElement(data, walls, floors, elementsToAnalyze, documents, offset, maxDiameter);
+                AnalyzeElement(task, data, walls, floors, elementsToAnalyze, documents, offset, maxDiameter);
             }
         }
 
-        public static void AnalyzeElement(this FamilyInstance task, OpeningParentsData data, List<Wall> walls, List<CeilingAndFloor> floors,
-            List<FamilyInstance> tasks, IEnumerable<Document> documents, double offset, double maxDiameter)
+        public static void AnalyzeElement(Element task, OpeningParentsData data, List<Wall> walls,
+            IEnumerable<CeilingAndFloor> floors, IEnumerable<FamilyInstance> tasks, ICollection<Document> documents,
+            double offset, double maxDiameter)
         {
             var currentCollisions = new Collisions();
             var isNotProcessed = false;
@@ -85,10 +70,11 @@ namespace RevitOpening.Logic
             }
 
             data.BoxData.Collisions = currentCollisions;
-            var intAgreedValue = CalculateAgreedValue(isNotProcessed, currentCollisions);
 
+            var intAgreedValue = CalculateAgreedValue(isNotProcessed, currentCollisions);
             //Менять спец. атрибут
             //task.LookupParameter("Несогласованно").Set(intAgreedValue);
+
             task.SetParentsData(data);
         }
 
@@ -100,35 +86,34 @@ namespace RevitOpening.Logic
             return currentCollisions.Count == 0 ? 0 : 1;
         }
 
-        private static bool IsTaskIntersectTask(this OpeningParentsData data, FamilyInstance box, List<FamilyInstance> tasks)
+        private static bool IsTaskIntersectTask(this OpeningParentsData data, Element box,
+            IEnumerable<FamilyInstance> tasks)
         {
             var tolerance = new XYZ(0.001, 0.001, 0.001);
             var angle = XYZ.BasisY.Negate().AngleTo(data.BoxData.Direction.XYZ);
             var transform = Transform.CreateRotation(XYZ.BasisZ, -angle);
             var unitedSolid = box.GetUnitedSolid(null, transform, tolerance);
             var filter = new ElementIntersectsSolidFilter(unitedSolid);
-            return tasks
-                .Where(element => element.Id != box.Id)
-                .Any(element => filter.PassesFilter(element));
+            return tasks.Where(element => element.Id != box.Id)
+                        .Any(filter.PassesFilter);
         }
 
-        private static bool IsActualTask(this OpeningParentsData parentsData, FamilyInstance element,
-            IEnumerable<Document> documents, double offset, double maxDiameter)
+        private static bool IsActualTask(this OpeningParentsData parentsData, Element element,
+            ICollection<Document> documents, double offset, double maxDiameter)
         {
-            var pipes = parentsData.PipesIds
-                .Select(documents.GetElement)
-                .ToList();
-            var hosts = parentsData.HostsIds
-                .Select(documents.GetElement)
-                .ToList();
-            var isOldPipes = parentsData.BoxData.PipesGeometries
-                .AlmostEqualTo(new List<ElementGeometry>(pipes.Select(p => new ElementGeometry(p))));
-            var isOldHosts = parentsData.BoxData.HostsGeometries
-                .AlmostEqualTo(new List<ElementGeometry>(hosts.Select(h => new ElementGeometry(h))));
-            var isOldBox = CheckBoxParameters(element, parentsData.BoxData);
+            var pipes = parentsData.PipesIds.Select(documents.GetElement)
+                                   .ToList();
+            var hosts = parentsData.HostsIds.Select(documents.GetElement)
+                                   .ToList();
+            var pipesGeometries = new List<ElementGeometry>(pipes.Select(p => new ElementGeometry(p)));
+            var hostGeometries = new List<ElementGeometry>(hosts.Select(h => new ElementGeometry(h)));
+            var isOldPipes = parentsData.BoxData.PipesGeometries.AlmostEqualTo(pipesGeometries);
+            var isOldHosts = parentsData.BoxData.HostsGeometries.AlmostEqualTo(hostGeometries);
+            var isOldBox = CheckBoxParameters((FamilyInstance) element, parentsData.BoxData);
             var isImmutable = isOldBox && isOldPipes && isOldHosts;
             if (!isImmutable)
-                isImmutable = MatchOldAndNewTask(pipes.OfType<MEPCurve>() as List<MEPCurve> ?? new List<MEPCurve>(), hosts, parentsData, offset, maxDiameter);
+                isImmutable = MatchOldAndNewTask(pipes.OfType<MEPCurve>() as List<MEPCurve> ?? new List<MEPCurve>(),
+                    hosts, parentsData, offset, maxDiameter);
             return isImmutable;
         }
 
@@ -136,7 +121,7 @@ namespace RevitOpening.Logic
         {
             const double tolerance = 0.000_000_1;
             var familyParameters = Families.GetDataFromSymbolName(oldTask.Symbol.FamilyName);
-            var locPoint = new MyXYZ(((LocationPoint)oldTask.Location).Point);
+            var locPoint = new MyXYZ(((LocationPoint) oldTask.Location).Point);
             double width, height;
             if (familyParameters == Families.FloorRectTaskFamily)
             {
@@ -153,15 +138,18 @@ namespace RevitOpening.Logic
                 width = height = oldTask.LookupParameter(familyParameters.DiameterName).AsDouble();
             }
             else
+            {
                 throw new ArgumentException("Неизвестный тип задания");
+            }
 
             return locPoint.Equals(boxData.IntersectionCenter) &&
-                   Math.Abs(width - boxData.Width) < tolerance &&
-                   Math.Abs(height - boxData.Height) < tolerance;
+                Math.Abs(width - boxData.Width) < tolerance &&
+                Math.Abs(height - boxData.Height) < tolerance;
         }
 
         //?
-        private static bool MatchOldAndNewTask(List<MEPCurve> pipes, List<Element> hosts, OpeningParentsData parentsData, double offset, double maxDiameter)
+        private static bool MatchOldAndNewTask(ICollection<MEPCurve> pipes, ICollection<Element> hosts,
+            OpeningParentsData parentsData, double offset, double maxDiameter)
         {
             if (pipes.Count != 1 || hosts.Count != 1)
             {
@@ -169,7 +157,9 @@ namespace RevitOpening.Logic
                 return true;
             }
 
-            var parameters = BoxCalculator.CalculateBoxInElement(hosts.FirstOrDefault(), pipes.FirstOrDefault(), offset, maxDiameter);
+            var parameters =
+                BoxCalculator.CalculateBoxInElement(hosts.FirstOrDefault(), pipes.FirstOrDefault(), offset,
+                    maxDiameter);
             return parameters != null && parentsData.BoxData.Equals(parameters);
         }
 
@@ -183,7 +173,7 @@ namespace RevitOpening.Logic
             ElementIntersectsElementFilter filter)
         {
             return data.BoxData.FamilyName != Families.FloorRectTaskFamily.SymbolName &&
-                   floors.Any(filter.PassesFilter);
+                floors.Any(filter.PassesFilter);
         }
 
         private static bool IsTaskIntersectManyWall(this OpeningParentsData data, IEnumerable<Wall> walls,
@@ -193,9 +183,9 @@ namespace RevitOpening.Logic
                 return false;
 
             var wallsIntersect = walls
-                .Where(filter
-                    .PassesFilter)
-                .ToList();
+                                .Where(filter
+                                    .PassesFilter)
+                                .ToList();
             return wallsIntersect.Count != data.HostsIds.Count;
         }
 

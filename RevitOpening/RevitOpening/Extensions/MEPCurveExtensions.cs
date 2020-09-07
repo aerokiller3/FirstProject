@@ -1,8 +1,8 @@
-﻿using Autodesk.Revit.DB;
-
-namespace RevitOpening.Extensions
+﻿namespace RevitOpening.Extensions
 {
-    public static class MEPCurveExtensions
+    using Autodesk.Revit.DB;
+
+    internal static class MEPCurveExtensions
     {
         public static bool IsRoundPipe(this MEPCurve pipe)
         {

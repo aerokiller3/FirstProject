@@ -1,10 +1,10 @@
-﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.UI.Selection;
-using System;
-
-namespace RevitOpening.RevitExternal
+﻿namespace RevitOpening.RevitExternal
 {
-    public class SelectionFilter : ISelectionFilter
+    using System;
+    using Autodesk.Revit.DB;
+    using Autodesk.Revit.UI.Selection;
+
+    internal class SelectionFilter : ISelectionFilter
     {
         private readonly Func<Element, bool> _allowElement;
         private readonly Func<Reference, XYZ, bool> _allowReference;

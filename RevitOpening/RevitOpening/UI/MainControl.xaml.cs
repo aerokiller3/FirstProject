@@ -1,6 +1,4 @@
-﻿using RevitOpening.ViewModels;
-using System;
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 
 namespace RevitOpening.UI
 {
@@ -12,12 +10,6 @@ namespace RevitOpening.UI
         public MainControl()
         {
             InitializeComponent();
-        }
-
-        private void TasksGrid_OnCurrentCellChanged(object sender, EventArgs e)
-        {
-            var mainVM = DataContext as MainVM;
-            mainVM?.OnCurrentCellChanged(sender, e);
         }
     }
 }

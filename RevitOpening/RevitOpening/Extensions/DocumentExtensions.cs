@@ -1,35 +1,33 @@
-﻿using Autodesk.Revit.DB;
-using RevitOpening.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace RevitOpening.Extensions
+﻿namespace RevitOpening.Extensions
 {
-    public static class DocumentExtensions
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Autodesk.Revit.DB;
+    using Models;
+
+    internal static class DocumentExtensions
     {
-        public static List<FamilyInstance> GetTasks(this Document document, FamilyParameters familyParameters)
+        public static IEnumerable<FamilyInstance> GetTasksByName(this Document document, FamilyParameters familyParameters)
         {
-            using (var collector = new FilteredElementCollector(document)
-                .OfCategory(BuiltInCategory.OST_Windows)
-                .OfClass(typeof(FamilyInstance)))
-            {
-                return collector
-                    .Cast<FamilyInstance>()
-                    .Where(e => e.Symbol.FamilyName == familyParameters.SymbolName)
-                    .ToList();
-            }
+            var collector = new FilteredElementCollector(document)
+                           .OfCategory(BuiltInCategory.OST_Windows)
+                           .OfClass(typeof(FamilyInstance));
+
+            return collector
+                  .Cast<FamilyInstance>()
+                  .Where(e => e.Symbol.FamilyName == familyParameters.SymbolName);
         }
 
         public static FamilySymbol GetFamilySymbol(this Document document, string familyName)
         {
             var collector = new FilteredElementCollector(document)
-                .OfCategory(BuiltInCategory.OST_Windows)
-                .OfClass(typeof(FamilySymbol));
+                           .OfCategory(BuiltInCategory.OST_Windows)
+                           .OfClass(typeof(FamilySymbol));
 
             var familySymbol = collector
-                .Cast<FamilySymbol>()
-                .FirstOrDefault(x => x.FamilyName == familyName);
+                              .Cast<FamilySymbol>()
+                              .FirstOrDefault(x => x.FamilyName == familyName);
             if (familySymbol == null)
                 throw new Exception($"Невозможно найти семейство: {familyName}");
 

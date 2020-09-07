@@ -67,6 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\BoundingBoxExtensions.cs" />
+    <Compile Include="Extensions\CollectionExtensions.cs" />
     <Compile Include="Extensions\DataGridExtensions.cs" />
     <Compile Include="Extensions\DocumentExtensions.cs" />
     <Compile Include="Extensions\DocumentsExtensions.cs" />
@@ -76,6 +77,8 @@
     <Compile Include="Extensions\LineExtensions.cs" />
     <Compile Include="Extensions\MEPCurveExtensions.cs" />
     <Compile Include="Extensions\SelectionExtensions.cs" />
+    <Compile Include="Extensions\Settings.cs" />
+    <Compile Include="Logic\TasksToOpeningsChanger.cs" />
     <Compile Include="Logic\Transactions.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -89,13 +92,15 @@
     <Compile Include="Logic\BoxCreator.cs" />
     <Compile Include="Logic\AltecJsonSchema.cs" />
     <Compile Include="Logic\BoxAnalyzer.cs" />
-    <Compile Include="Logic\CreateOpeningInTaskBoxes.cs" />
     <Compile Include="Logic\CreateTaskBoxes.cs" />
     <Compile Include="Logic\Collisions.cs" />
     <Compile Include="Models\ElementGeometry.cs" />
     <Compile Include="Logic\Families.cs" />
     <Compile Include="Extensions\DoubleExtensions.cs" />
     <Compile Include="Logic\FamilyLoader.cs" />
+    <Compile Include="UI\TasksDataGrid.xaml.cs">
+      <DependentUpon>TasksDataGrid.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\TasksDockablePanel.xaml.cs">
       <DependentUpon>TasksDockablePanel.xaml</DependentUpon>
     </Compile>
@@ -118,6 +123,7 @@
     <Compile Include="Models\FamilyParameters.cs" />
     <Compile Include="Logic\BoxCalculator.cs" />
     <Compile Include="ViewModels\FilterStatusVM.cs" />
+    <Compile Include="ViewModels\IDataGridUpdater.cs" />
     <Compile Include="ViewModels\MainVM.cs" />
     <Compile Include="ViewModels\RelayCommand.cs" />
     <Compile Include="ViewModels\TaskDockablePanelVM.cs" />
@@ -147,6 +153,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="UI\TasksDataGrid.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UI\TasksDockablePanel.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

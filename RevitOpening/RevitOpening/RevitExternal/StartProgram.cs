@@ -1,12 +1,12 @@
-﻿using Autodesk.Revit.Attributes;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
-using RevitOpening.UI;
-using RevitOpening.ViewModels;
-using System.Windows;
-
-namespace RevitOpening.RevitExternal
+﻿namespace RevitOpening.RevitExternal
 {
+    using System.Windows;
+    using Autodesk.Revit.Attributes;
+    using Autodesk.Revit.DB;
+    using Autodesk.Revit.UI;
+    using UI;
+    using ViewModels;
+
     [Transaction(TransactionMode.Manual)]
     public class StartProgram : IExternalCommand
     {
@@ -23,7 +23,7 @@ namespace RevitOpening.RevitExternal
                 MinHeight = 450,
             };
 
-            (main.DataContext as MainVM)?.Init(commandData);
+            ((MainVM) main.DataContext).Init(commandData);
             window.ShowDialog();
             return Result.Succeeded;
         }

@@ -1,9 +1,9 @@
-﻿using Autodesk.Revit.DB;
-using System.Collections.Generic;
-
-namespace RevitOpening.Extensions
+﻿namespace RevitOpening.Extensions
 {
-    public static class GeometryElementExtensions
+    using System.Collections.Generic;
+    using Autodesk.Revit.DB;
+
+    internal static class GeometryElementExtensions
     {
         public static IEnumerable<Solid> GetAllSolids(this GeometryElement geometry)
         {
@@ -23,9 +23,11 @@ namespace RevitOpening.Extensions
                         break;
                 }
 
-                if (geometryElement != default)
-                    foreach (var deepSolid in geometryElement.GetAllSolids())
-                        yield return deepSolid;
+                if (geometryElement == default)
+                    continue;
+
+                foreach (var deepSolid in geometryElement.GetAllSolids())
+                    yield return deepSolid;
             }
         }
     }

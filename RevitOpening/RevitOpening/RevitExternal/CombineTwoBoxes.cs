@@ -1,32 +1,41 @@
-﻿using Autodesk.Revit.Attributes;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
-using RevitOpening.Extensions;
-using RevitOpening.Logic;
-using System.Linq;
-using System.Windows;
-
-namespace RevitOpening.RevitExternal
+﻿namespace RevitOpening.RevitExternal
 {
+    using System.Configuration;
+    using System.Globalization;
+    using System.Linq;
+    using System.Windows;
+    using Autodesk.Revit.Attributes;
+    using Autodesk.Revit.DB;
+    using Autodesk.Revit.UI;
+    using Extensions;
+    using Logic;
+    using Settings = Extensions.Settings;
+
     [Transaction(TransactionMode.Manual)]
     public class CombineTwoBoxes : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            var currentDocument = commandData.Application.ActiveUIDocument.Document;
-            var documents = commandData.Application.Application.Documents.Cast<Document>();
-            var selected = commandData.Application.ActiveUIDocument.Selection.GetSelectedTasks(currentDocument);
+            var app = commandData.Application;
+            var currentDocument = app.ActiveUIDocument.Document;
+            var documents = app.Application.Documents.Cast<Document>()
+                               .ToList();
+            var selected = app.ActiveUIDocument.Selection.GetSelectedTasks(currentDocument);
 
             if (selected == null)
                 return Result.Cancelled;
 
-            if (selected.Count != 2)
+            var selectedList = selected.ToList();
+            if (selectedList.Count != 2)
             {
                 MessageBox.Show("Необходимо выбрать два задания");
                 return Result.Failed;
             }
 
-            Transactions.CombineSelectedTasks(currentDocument, documents, selected[0], selected[1], out var newTask);
+            Transactions.UpdateTaskInfo(currentDocument, documents, selectedList[0], Settings.Offset, Settings.Diameter);
+            Transactions.UpdateTaskInfo(currentDocument, documents, selectedList[1], Settings.Offset, Settings.Diameter);
+            var newTask = Transactions
+               .CombineSelectedTasks(currentDocument, documents, selectedList[0], selectedList[1]);
 
             if (newTask == null)
             {
@@ -34,8 +43,7 @@ namespace RevitOpening.RevitExternal
                 return Result.Failed;
             }
 
-            Transactions.UpdateTaskInfo(currentDocument, documents, newTask);
-
+            Transactions.UpdateTaskInfo(currentDocument, documents, newTask, Settings.Offset, Settings.Diameter);
             return Result.Succeeded;
         }
     }

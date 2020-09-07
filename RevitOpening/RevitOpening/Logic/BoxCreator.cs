@@ -1,13 +1,13 @@
-﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.DB.Structure;
-using RevitOpening.Extensions;
-using RevitOpening.Models;
-using System;
-using System.Linq;
-
-namespace RevitOpening.Logic
+﻿namespace RevitOpening.Logic
 {
-    public static class BoxCreator
+    using System;
+    using System.Linq;
+    using Autodesk.Revit.DB;
+    using Autodesk.Revit.DB.Structure;
+    using Extensions;
+    using Models;
+
+    internal static class BoxCreator
     {
         public static FamilyInstance CreateTaskBox(OpeningParentsData parentsData, Document document)
         {
@@ -16,12 +16,13 @@ namespace RevitOpening.Logic
             var center = parentsData.BoxData.IntersectionCenter.XYZ;
             var direction = parentsData.BoxData.Direction.XYZ;
             var host = document.GetElement(parentsData.HostsIds.FirstOrDefault());
-            var newBox = document.Create.NewFamilyInstance(center, familySymbol, direction, host, StructuralType.NonStructural);
+            var newBox =
+                document.Create.NewFamilyInstance(center, familySymbol, direction, host, StructuralType.NonStructural);
 
             if (familyParameters.DiameterName != null)
             {
                 newBox.LookupParameter(familyParameters.DiameterName)
-                    .Set(Math.Max(parentsData.BoxData.Width, parentsData.BoxData.Height));
+                      .Set(Math.Max(parentsData.BoxData.Width, parentsData.BoxData.Height));
             }
             else
             {
@@ -37,6 +38,10 @@ namespace RevitOpening.Logic
                 }
             }
 
+
+            //настроить семейство круглых
+            if (newBox.IsTask())
+                newBox.LookupParameter("Несогласованно").Set(1);
             newBox.LookupParameter(familyParameters.DepthName).Set(parentsData.BoxData.Depth);
             parentsData.BoxData.Id = newBox.Id.IntegerValue;
             newBox.SetParentsData(parentsData);

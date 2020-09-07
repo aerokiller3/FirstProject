@@ -13,7 +13,7 @@ using static System.Windows.Interop.Imaging;
 
 namespace RevitOpening.RevitExternal
 {
-    public class OpeningPanel : IExternalApplication
+    internal class OpeningPanel : IExternalApplication
     {
         public const string DockablePanelGuid = "{C2D5D9FF-FCD4-4387-B6CE-B5D4DEDF2637}";
         private TasksDockablePanel _tasksDockableWindow;
@@ -78,10 +78,11 @@ namespace RevitOpening.RevitExternal
 
         private void UpdateDockablePanel(object sender, EventArgs e)
         {
-            var app = sender as UIApplication;
+            var app = (UIApplication) sender;
             var currentDocument = app.ActiveUIDocument.Document;
-            (_tasksDockableWindow.DataContext as TaskDockablePanelVM)
-                .UpdateList(app.Application.Documents.Cast<Document>(), currentDocument);
+            var documents = app.Application.Documents.Cast<Document>()
+                               .ToList();
+            ((TaskDockablePanelVM) _tasksDockableWindow.DataContext).UpdateList(documents, currentDocument);
         }
 
 

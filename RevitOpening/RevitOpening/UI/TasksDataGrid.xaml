@@ -1,0 +1,74 @@
+﻿<UserControl x:Class="RevitOpening.UI.TasksDataGrid"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:RevitOpening.UI"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <Style x:Key="Indent">
+            <Setter Property="Control.Margin" Value="5" />
+            <Setter Property="Control.Padding" Value="5"/>
+        </Style>
+    </UserControl.Resources>
+    <DataGrid AutoGenerateColumns="False"
+              ItemsSource="{Binding Path=TasksAndOpenings}"
+              Style="{StaticResource Indent}"
+              SelectionUnit="FullRow"
+              CanUserAddRows="False"
+              CanUserDeleteRows="False"
+              MouseDoubleClick="TasksGrid_OnCurrentCellChanged"
+              x:Name="TasksGrid">
+        <DataGrid.Columns>
+            <DataGridTemplateColumn Header="Ид"
+                                        SortMemberPath="Id"
+                                        IsReadOnly="True"
+                                        MinWidth="50"
+                                        Width="Auto">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Path=Id}"
+                                       TextWrapping="Wrap"/>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Header="Тип"
+                                        SortMemberPath="FamilyName"
+                                        IsReadOnly="True"
+                                        MinWidth="100"
+                                        Width="*">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Path=FamilyName}"
+                                       TextWrapping="Wrap"/>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Header="Статус"
+                                        SortMemberPath="Collisions"
+                                        IsReadOnly="True"
+                                        MinWidth="100"
+                                        Width="*">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Path=Collisions}"
+                                       TextWrapping="Wrap"/>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+            <DataGridTemplateColumn Header="Уровень"
+                                        SortMemberPath="Level"
+                                        IsReadOnly="True"
+                                        MinWidth="100"
+                                        Width="*">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Path=Level}"
+                                       TextWrapping="Wrap"/>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+        </DataGrid.Columns>
+    </DataGrid>
+</UserControl>

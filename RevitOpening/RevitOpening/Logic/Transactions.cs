@@ -1,15 +1,16 @@
-﻿using Autodesk.Revit.DB;
-using RevitOpening.Extensions;
-using RevitOpening.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace RevitOpening.Logic
+﻿namespace RevitOpening.Logic
 {
-    public static class Transactions
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Autodesk.Revit.DB;
+    using Extensions;
+    using Models;
+    using Settings = Extensions.Settings;
+
+    internal static class Transactions
     {
-        private static void DoTransaction(Document document, string transactionName, Action action)
+        public static void DoTransaction(Document document, string transactionName, Action action)
         {
             using (var t = new Transaction(document, transactionName))
             {
@@ -19,13 +20,11 @@ namespace RevitOpening.Logic
             }
         }
 
-        public static void UpdateTasksInfo(Document document, IEnumerable<Document> documents,
+        public static void UpdateTasksInfo(Document document, List<Document> documents,
             double offset, double diameter)
         {
-            DoTransaction(document, "Обновление информации о заданиях", () =>
-            {
-                BoxAnalyzer.ExecuteAnalysis(documents, offset, diameter);
-            });
+            DoTransaction(document, "Обновление информации о заданиях",
+                () => { BoxAnalyzer.ExecuteAnalysis(documents, offset, diameter); });
         }
 
         public static void Drawing(Document document, List<Element> openings)
@@ -41,35 +40,28 @@ namespace RevitOpening.Logic
             });
         }
 
-        public static void CombineIntersectsTasks(Document document, IEnumerable<Document> documents)
+        public static void CombineIntersectsTasks(Document document, ICollection<Document> documents)
         {
-            DoTransaction(document, "Объединение заданий", () =>
-            {
-                BoxCombiner.CombineAllBoxes(documents, document);
-            });
+            DoTransaction(document, "Объединение заданий",
+                () => BoxCombiner.CombineAllBoxes(documents, document));
         }
 
-        public static void CombineSelectedTasks(Document document, IEnumerable<Document> documents, Element el1,
-            Element el2, out FamilyInstance newTask)
+        public static FamilyInstance CombineSelectedTasks(Document document, ICollection<Document> documents,
+            Element el1, Element el2)
         {
             FamilyInstance task = null;
-            DoTransaction(document, "Объединение заданий", () =>
-            {
-                task = BoxCombiner.CombineTwoBoxes(documents, document, el1, el2);
-            });
-            newTask = task;
+            DoTransaction(document, "Объединение заданий",
+                () => task = BoxCombiner.CombineTwoBoxes(documents, document, el1, el2));
+            return task;
         }
 
         public static void CreateOpeningInSelectedTask(Document document, List<Element> openings, List<Element> tasks)
         {
             DoTransaction(document, "Замена заданий на отверстия", () =>
-            {
-                var createOpeningInTaskBoxes = new CreateOpeningInTaskBoxes(document);
-                openings.AddRange(createOpeningInTaskBoxes.SwapTasksToOpenings(tasks.Cast<FamilyInstance>()));
-            });
+                openings.AddRange(TasksToOpeningsChanger.SwapTasksToOpenings(document, tasks.Cast<FamilyInstance>())));
         }
 
-        public static void CreateAllTasks(Document document, IEnumerable<Document> documents,
+        public static void CreateAllTasks(Document document, ICollection<Document> documents,
             double offset, double diameter, List<OpeningData> tasks, List<OpeningData> openings)
         {
             DoTransaction(document, "Создание заданий", () =>
@@ -83,21 +75,20 @@ namespace RevitOpening.Logic
         public static void SwapAllTasksToOpenings(Document document, List<Element> openings)
         {
             DoTransaction(document, "Замена заданий на отверстия", () =>
-            {
-                var createOpenings = new CreateOpeningInTaskBoxes(document);
-                openings.AddRange(createOpenings.SwapAllTasksToOpenings());
-            });
+                openings.AddRange(TasksToOpeningsChanger.SwapAllTasksToOpenings(document)));
         }
 
-        public static void UpdateTaskInfo(Document document, IEnumerable<Document> documents, FamilyInstance newTask)
+        public static void UpdateTaskInfo(Document document, ICollection<Document> documents, Element newTask,
+            double offset, double diameter)
         {
             DoTransaction(document, "Обновление информации о задании", () =>
             {
-                var data = newTask.GetParentsData();
                 var walls = documents.GetAllElementsOfClass<Wall>();
                 var floors = documents.GetAllElementsOfClass<CeilingAndFloor>();
                 var tasks = documents.GetAllTasks();
-                newTask.AnalyzeElement(data, walls, floors, tasks, documents, 0, 0);
+                var mepCurves = documents.GetAllElementsOfClass<MEPCurve>();
+                var data = newTask.GetOrInitData(walls, floors, offset, diameter, mepCurves);
+                BoxAnalyzer.AnalyzeElement(newTask, data, walls, floors, tasks, documents, offset, diameter);
             });
         }
     }
