@@ -5,6 +5,9 @@
     using Autodesk.Revit.Attributes;
     using Autodesk.Revit.DB;
     using Autodesk.Revit.UI;
+    using EventHandlers;
+    using Logic;
+    using Revit.Async;
     using UI;
     using ViewModels;
 
@@ -13,14 +16,15 @@
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            var pane = commandData.Application.ActiveUIDocument.Application.GetDockablePane(
-                new DockablePaneId(new Guid(OpeningPanel.DockablePanelGuid)));
             var app = commandData.Application;
             var documents = app.Application.Documents.Cast<Document>()
                                .ToList();
             var currentDocument = app.ActiveUIDocument.Document;
-            var tasksDockablePanel = new TasksDockablePanel();
-            ((TaskDockablePanelVM) tasksDockablePanel.DataContext).UpdateList(documents, currentDocument);
+
+            Transactions.UpdateTasksInfo(currentDocument, documents, Extensions.Settings.Offset, Extensions.Settings.Diameter);
+
+            var pane = commandData.Application.ActiveUIDocument.Application.GetDockablePane(
+                new DockablePaneId(new Guid(OpeningPanel.DockablePanelGuid)));
             pane.Show();
             return Result.Succeeded;
         }

@@ -22,21 +22,19 @@
         private Document _currentDocument;
 
         private List<Document> _documents;
-        private IRevitTask CurrentRevitTask { get; set; }
         public List<OpeningData> TasksAndOpenings { get; set; }
-        public List<OpeningData> Tasks { get; set; }
-        public List<OpeningData> Openings { get; set; }
+        public List<OpeningData> Tasks { get; set; } = new List<OpeningData>();
+        public List<OpeningData> Openings { get; set; } = new List<OpeningData>();
 
         public void OnCurrentCellChanged(object sender, EventArgs e)
         {
-            CurrentRevitTask = new RevitTask();
-            CurrentRevitTask.Register(new BoxShowerEventHandler());
             var selectItems = (sender as DataGrid)
                              .GetSelectedItemsFromGrid<OpeningData>()
                              .Select(x => new ElementId(x.Id))
                              .ToList();
+            RevitTask.RaiseGlobal<BoxShowerEventHandler, List<ElementId>, object>(selectItems);
 
-            ShowBoxCommand(selectItems);
+
             OnPropertyChanged(nameof(TasksAndOpenings));
         }
 
@@ -46,9 +44,10 @@
         {
             _documents = documents;
             _currentDocument = currentDocument;
+            RevitTask.RegisterGlobal(new BoxShowerEventHandler());
+            RevitTask.Initialize();
 
             UpdateTasksAndOpenings();
-            RevitTask.Initialize();
             OnPropertyChanged(nameof(TasksAndOpenings));
         }
 
@@ -59,11 +58,8 @@
                 UpdateTasks();
                 UpdateOpenings();
             }
-            catch (ArgumentNullException)
+            catch
             {
-                Transactions.UpdateTasksInfo(_currentDocument, _documents, Settings.Offset, Settings.Diameter);
-                UpdateTasks();
-                UpdateOpenings();
             }
 
             TasksAndOpenings = new List<OpeningData>(Tasks.Count + Openings.Count);
@@ -84,17 +80,6 @@
             Openings = _documents.GetAllOpenings()
                                  .Select(op => op.GetParentsData().BoxData)
                                  .ToList();
-        }
-
-        private void ShowBoxCommand(List<ElementId> selectItems)
-        {
-            try
-            {
-                CurrentRevitTask.Raise<BoxShowerEventHandler, List<ElementId>, object>(selectItems);
-            }
-            catch (Exception)
-            {
-            }
         }
 
         [NotifyPropertyChangedInvocator]

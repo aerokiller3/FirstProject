@@ -35,13 +35,13 @@
             foreach (var task in elementsToAnalyze)
             {
                 var data = task.GetOrInitData(walls, floors, offset, maxDiameter, mepCurves);
-                AnalyzeElement(task, data, walls, floors, elementsToAnalyze, documents, offset, maxDiameter);
+                AnalyzeElement(task, data, walls, floors, elementsToAnalyze, documents, offset, maxDiameter, mepCurves);
             }
         }
 
         public static void AnalyzeElement(Element task, OpeningParentsData data, List<Wall> walls,
-            IEnumerable<CeilingAndFloor> floors, IEnumerable<FamilyInstance> tasks, ICollection<Document> documents,
-            double offset, double maxDiameter)
+            ICollection<CeilingAndFloor> floors, ICollection<FamilyInstance> tasks, ICollection<Document> documents,
+            double offset, double maxDiameter, List<MEPCurve> mepCurves)
         {
             var currentCollisions = new Collisions();
             var isNotProcessed = false;
@@ -64,7 +64,7 @@
                         currentCollisions.Add(Collisions.PipeNotPerpendicularHost);
                     if (data.IsTaskIntersectTask(task, tasks))
                         currentCollisions.Add(Collisions.TaskIntersectTask);
-                    if (!data.IsActualTask(task, documents, offset, maxDiameter))
+                    if (!data.IsActualTask(task, documents, offset, maxDiameter, filter, walls, floors, mepCurves))
                         currentCollisions.Add(Collisions.TaskNotActual);
                 }
             }
@@ -99,12 +99,18 @@
         }
 
         private static bool IsActualTask(this OpeningParentsData parentsData, Element element,
-            ICollection<Document> documents, double offset, double maxDiameter)
+            ICollection<Document> documents, double offset, double maxDiameter,
+            ElementIntersectsElementFilter filter, ICollection<Wall> walls,
+            ICollection<CeilingAndFloor> floors, ICollection<MEPCurve> mepCurves)
         {
-            var pipes = parentsData.PipesIds.Select(documents.GetElement)
-                                   .ToList();
-            var hosts = parentsData.HostsIds.Select(documents.GetElement)
-                                   .ToList();
+            var pipes = mepCurves
+                       .Where(filter.PassesFilter)
+                       .ToList();
+            var hosts = new List<Element>();
+            hosts.AddRange(floors
+               .Where(filter.PassesFilter));
+            hosts.AddRange(walls
+               .Where(filter.PassesFilter));
             var pipesGeometries = new List<ElementGeometry>(pipes.Select(p => new ElementGeometry(p)));
             var hostGeometries = new List<ElementGeometry>(hosts.Select(h => new ElementGeometry(h)));
             var isOldPipes = parentsData.BoxData.PipesGeometries.AlmostEqualTo(pipesGeometries);
@@ -112,8 +118,7 @@
             var isOldBox = CheckBoxParameters((FamilyInstance) element, parentsData.BoxData);
             var isImmutable = isOldBox && isOldPipes && isOldHosts;
             if (!isImmutable)
-                isImmutable = MatchOldAndNewTask(pipes.OfType<MEPCurve>() as List<MEPCurve> ?? new List<MEPCurve>(),
-                    hosts, parentsData, offset, maxDiameter);
+                isImmutable = MatchOldAndNewTask(pipes, hosts, parentsData, offset, maxDiameter);
             return isImmutable;
         }
 
@@ -147,7 +152,6 @@
                 Math.Abs(height - boxData.Height) < tolerance;
         }
 
-        //?
         private static bool MatchOldAndNewTask(ICollection<MEPCurve> pipes, ICollection<Element> hosts,
             OpeningParentsData parentsData, double offset, double maxDiameter)
         {
@@ -158,8 +162,8 @@
             }
 
             var parameters =
-                BoxCalculator.CalculateBoxInElement(hosts.FirstOrDefault(), pipes.FirstOrDefault(), offset,
-                    maxDiameter);
+                BoxCalculator.CalculateBoxInElement(hosts.FirstOrDefault(), pipes.FirstOrDefault(),
+                    offset, maxDiameter);
             return parameters != null && parentsData.BoxData.Equals(parameters);
         }
 

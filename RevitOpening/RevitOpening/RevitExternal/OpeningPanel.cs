@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+﻿
 using Autodesk.Revit.UI;
 using RevitOpening.Properties;
 using RevitOpening.UI;
@@ -13,6 +13,10 @@ using static System.Windows.Interop.Imaging;
 
 namespace RevitOpening.RevitExternal
 {
+    using Autodesk.Revit.DB;
+    using EventHandlers;
+    using Revit.Async;
+
     internal class OpeningPanel : IExternalApplication
     {
         public const string DockablePanelGuid = "{C2D5D9FF-FCD4-4387-B6CE-B5D4DEDF2637}";
@@ -80,9 +84,12 @@ namespace RevitOpening.RevitExternal
         {
             var app = (UIApplication) sender;
             var currentDocument = app.ActiveUIDocument.Document;
-            var documents = app.Application.Documents.Cast<Document>()
+            var documents = app.Application.Documents
+                               .Cast<Document>()
                                .ToList();
-            ((TaskDockablePanelVM) _tasksDockableWindow.DataContext).UpdateList(documents, currentDocument);
+
+            ((TaskDockablePanelVM) _tasksDockableWindow.DataContext)
+               .UpdateList(documents, currentDocument);
         }
 
 

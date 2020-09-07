@@ -42,7 +42,8 @@
                 if (selectedList.Count == 1)
                     Transactions.UpdateTaskInfo(currentDocument, documents, selectedList[0], Settings.Offset, Settings.Diameter);
                 var elementsData = selectedList.Select(el => el.GetParentsData());
-                if (elementsData.Any(d => d.BoxData.HostsGeometries.Count == 0 || d.BoxData.PipesGeometries.Count == 0))
+                if (elementsData.Any(d => d.BoxData.HostsGeometries.Count == 0
+                    || d.BoxData.PipesGeometries.Count == 0 || d.BoxData.Collisions.Count > 0))
                 {
                     MessageBox.Show("Одно или более отверстий невозможно вырезать автоматически");
                     return Result.Failed;

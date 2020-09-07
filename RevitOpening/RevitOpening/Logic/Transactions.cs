@@ -88,7 +88,8 @@
                 var tasks = documents.GetAllTasks();
                 var mepCurves = documents.GetAllElementsOfClass<MEPCurve>();
                 var data = newTask.GetOrInitData(walls, floors, offset, diameter, mepCurves);
-                BoxAnalyzer.AnalyzeElement(newTask, data, walls, floors, tasks, documents, offset, diameter);
+                BoxAnalyzer.AnalyzeElement(newTask, data, walls, floors, tasks, documents, offset,
+                    diameter, mepCurves);
             });
         }
     }
