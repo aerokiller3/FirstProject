@@ -7,6 +7,7 @@
     using Autodesk.Revit.DB.Electrical;
     using Autodesk.Revit.DB.Mechanical;
     using Autodesk.Revit.DB.Plumbing;
+    using Autodesk.Revit.Exceptions;
     using Extensions;
     using Models;
 
@@ -34,7 +35,8 @@
         {
             foreach (var task in elementsToAnalyze)
             {
-                var data = task.GetOrInitData(walls, floors, offset, maxDiameter, mepCurves, currentDocument);
+                var data = task.GetOrInitData(walls, floors, offset, maxDiameter, mepCurves,
+                    currentDocument, documents);
                 AnalyzeElement(task, data, walls, floors, elementsToAnalyze, documents, offset,
                     maxDiameter, mepCurves, currentDocument);
             }
@@ -45,15 +47,13 @@
             double offset, double maxDiameter, List<MEPCurve> mepCurves, Document currentDocument)
         {
             data.BoxData.Collisions = new Collisions();
-
+            var isTask = task.IsTask();
 
             using (var filter = new ElementIntersectsElementFilter(task))
             {
-                if (!data.IsActualTask(task, documents, offset, maxDiameter, filter, walls, floors, mepCurves,
+                if (isTask && !data.IsActualTask(task, documents, offset, maxDiameter, filter, walls, floors, mepCurves,
                     currentDocument, out var newData))
-                {
                     data = newData;
-                }
                 if (data.IsTaskIntersectManyWall(walls, filter))
                     data.BoxData.Collisions.Add(Collisions.TaskIntersectManyWalls);
                 if (data.IsWallTaskIntersectFloor(floors, filter))
@@ -62,7 +62,7 @@
                     data.BoxData.Collisions.Add(Collisions.FloorTaskIntersectWall);
                 if (data.IsHostNotPerpendicularPipe(documents))
                     data.BoxData.Collisions.Add(Collisions.PipeNotPerpendicularHost);
-                if (data.IsTaskIntersectTask(task, tasks))
+                if (isTask && task.IsTaskIntersectTask(tasks, filter))
                     data.BoxData.Collisions.Add(Collisions.TaskIntersectTask);
             }
 
@@ -82,14 +82,9 @@
             return currentCollisions.Count == 0 ? 0 : 1;
         }
 
-        private static bool IsTaskIntersectTask(this OpeningParentsData data, Element box,
-            IEnumerable<FamilyInstance> tasks)
+        private static bool IsTaskIntersectTask(this Element box,
+            IEnumerable<FamilyInstance> tasks, ElementIntersectsElementFilter filter)
         {
-            var tolerance = new XYZ(0.001, 0.001, 0.001);
-            var angle = XYZ.BasisY.Negate().AngleTo(data.BoxData.Direction.XYZ);
-            var transform = Transform.CreateRotation(XYZ.BasisZ, -angle);
-            var unitedSolid = box.GetUnitedSolid(null, transform, tolerance);
-            var filter = new ElementIntersectsSolidFilter(unitedSolid);
             return tasks.Where(element => element.Id != box.Id)
                         .Any(filter.PassesFilter);
         }
@@ -108,37 +103,27 @@
                .Where(filter.PassesFilter));
             hosts.AddRange(walls
                .Where(filter.PassesFilter));
+
             var pipesGeometries = new List<ElementGeometry>(pipes.Select(p => new ElementGeometry(p)));
             var hostGeometries = new List<ElementGeometry>(hosts.Select(h => new ElementGeometry(h)));
             var isOldPipes = parentsData.BoxData.PipesGeometries.AlmostEqualTo(pipesGeometries);
             var isOldHosts = parentsData.BoxData.HostsGeometries.AlmostEqualTo(hostGeometries);
-            var isOldBox = CheckBoxParameters((FamilyInstance) element, parentsData.BoxData);
+            var isOldBox = CompareActualAndOldBoxData((FamilyInstance)element, parentsData.BoxData);
             newData = null;
             var isImmutable = isOldBox && isOldPipes && isOldHosts;
             if (!isImmutable)
-            {
-                newData = new OpeningParentsData
-                {
-                    HostsIds = hosts
-                              .Select(h => h.UniqueId)
-                              .ToList(),
-                    PipesIds = hosts
-                              .Select(p => p.UniqueId)
-                              .ToList(),
-                    BoxData = CalculateNewBox(pipes, hosts, parentsData, offset, maxDiameter)
-                };
-                newData.BoxData.Level = currentDocument
-                                       .GetElement(hosts.FirstOrDefault()?.LevelId).Name;
-            }
-
+                newData = element.InitData(walls, floors, offset, maxDiameter,
+                    mepCurves, currentDocument, documents);
+            else if (pipesGeometries.Count != 1 && hostGeometries.Count != 1)
+                parentsData.BoxData.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
             return isImmutable;
         }
 
-        private static bool CheckBoxParameters(FamilyInstance oldTask, OpeningData boxData)
+        private static bool CompareActualAndOldBoxData(FamilyInstance oldTask, OpeningData boxData)
         {
             const double tolerance = 0.000_000_1;
             var familyParameters = Families.GetDataFromSymbolName(oldTask.Symbol.FamilyName);
-            var locPoint = new MyXYZ(((LocationPoint) oldTask.Location).Point);
+            var locPoint = new MyXYZ(((LocationPoint)oldTask.Location).Point);
             double width, height;
             if (familyParameters == Families.FloorRectTaskFamily)
             {
@@ -156,29 +141,16 @@
             }
             else
             {
-                throw new ArgumentException("Неизвестный тип задания");
+                //throw new ArgumentException("Не поддерживаемый тип");
+                return true;
             }
+
+            var depth = oldTask.LookupParameter(familyParameters.DepthName).AsDouble();
 
             return locPoint.Equals(boxData.IntersectionCenter) &&
                 Math.Abs(width - boxData.Width) < tolerance &&
-                Math.Abs(height - boxData.Height) < tolerance;
-        }
-
-        private static OpeningData CalculateNewBox(ICollection<MEPCurve> pipes, ICollection<Element> hosts,
-            OpeningParentsData parentsData, double offset, double maxDiameter)
-        {
-            if (pipes.Count != 1 || hosts.Count != 1)
-            {
-                parentsData.BoxData.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
-                return parentsData.BoxData;
-            }
-
-            var parameters =
-                BoxCalculator.CalculateBoxInElement(hosts.FirstOrDefault(), pipes.FirstOrDefault(),
-                    offset, maxDiameter);
-            parameters.Level = parentsData.BoxData.Level;
-            parameters.Id = parentsData.BoxData.Id;
-            return parameters;
+                Math.Abs(height - boxData.Height) < tolerance &&
+                Math.Abs(depth - boxData.Depth) < tolerance;
         }
 
         private static bool IsFloorTaskIntersectWall(this OpeningParentsData data, IEnumerable<Wall> walls,
@@ -207,9 +179,14 @@
             return wallsIntersect.Count != data.HostsIds.Count;
         }
 
-        private static bool IsHostNotPerpendicularPipe(this OpeningParentsData data, IEnumerable<Document> documents)
+        private static bool IsHostNotPerpendicularPipe(this OpeningParentsData data, ICollection<Document> documents)
         {
             const double toleranceInDegrees = 3;
+            if (data.BoxData.HostsGeometries.Count == 0 || data.BoxData.PipesGeometries.Count == 0)
+            {
+                data.BoxData.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
+                return false;
+            }
 
             switch (documents.GetElement(data.HostsIds.FirstOrDefault()))
             {
@@ -220,7 +197,16 @@
                     var wallVec = wallGeometry?.End.XYZ - wallGeometry?.Start.XYZ;
                     return !(Math.Abs(pipeVec.AngleTo(wallVec) - Math.PI / 2) < toleranceInDegrees * Math.PI / 180);
                 case CeilingAndFloor _:
-                    return false;
+                    pipeGeometry = data.BoxData.PipesGeometries.FirstOrDefault();
+                    pipeVec = pipeGeometry?.End.XYZ - pipeGeometry?.Start.XYZ;
+                    pipeVec = pipeVec.Normalize();
+                    var floorVec = ((MEPCurve) documents
+                                      .GetElement(data.PipesIds.First()))
+                                  .ConnectorManager.Connectors
+                                  .Cast<Connector>()
+                                  .FirstOrDefault()?
+                                  .CoordinateSystem.BasisX.CrossProduct(XYZ.BasisZ.Negate());
+                    return !(Math.Abs(pipeVec.AngleTo(floorVec) - Math.PI / 2) < toleranceInDegrees * Math.PI / 180);
                 default:
                     throw new Exception("Неизвестный тип хост элемента");
             }

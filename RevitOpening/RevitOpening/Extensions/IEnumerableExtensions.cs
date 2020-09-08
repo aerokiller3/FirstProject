@@ -49,8 +49,9 @@
             foreach (var intersectionElement in elements)
                 using (var intersection = new ElementIntersectsElementFilter(intersectionElement))
                 {
-                    var currentIntersections = curves.Where(intersection.PassesFilter)
-                                                     .ToList();
+                    var currentIntersections = curves
+                                              .Where(intersection.PassesFilter)
+                                              .ToList();
                     if (currentIntersections.Count > 0)
                         intersections[intersectionElement] = currentIntersections;
                 }

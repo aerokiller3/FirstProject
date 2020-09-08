@@ -12,7 +12,7 @@
     internal class CreateTaskBoxes
     {
         private readonly Document _currentDocument;
-        private readonly IEnumerable<Document> _documents;
+        private readonly ICollection<Document> _documents;
         private readonly double _maxDiameter;
         private readonly double _offsetRatio;
         private readonly HashSet<MyXYZ> _openingsCenters;
@@ -45,9 +45,9 @@
             mepCurves.AddRange(pipes);
             mepCurves.AddRange(ducts);
             mepCurves.AddRange(trays);
-
             CreateTaskBoxesIn(walls.FindIntersectionsWith(mepCurves));
             CreateTaskBoxesIn(floors.FindIntersectionsWith(mepCurves));
+            BoxCombiner.CombineAllBoxes(_documents,_currentDocument, true);
         }
 
         private void CreateTaskBoxesIn(Dictionary<Element, List<MEPCurve>> pipesInElements)
@@ -73,6 +73,8 @@
                     var filter = new ElementIntersectsElementFilter(createElement);
                     if (_tasks.Any(t => filter.PassesFilter(t)))
                         _currentDocument.Delete(createElement.Id);
+                    //else
+                    //    yield return createElement;
                 }
         }
     }

@@ -21,7 +21,6 @@
 
     internal class MainVM : INotifyPropertyChanged, IDataGridUpdater
     {
-        private RelayCommand _changeSelectedTasksToOpenings;
         private RelayCommand _changeTasksToOpenings;
         private RelayCommand _combineIntersectsTasks;
         private ExternalCommandData _commandData;
@@ -33,6 +32,7 @@
         public List<OpeningData> TasksAndOpenings { get; set; }
         private List<OpeningData> Tasks { get; set; }
         private List<OpeningData> Openings { get; set; }
+        private bool _isListUpdated;
 
         public bool IsCombineAll
         {
@@ -54,7 +54,7 @@
 
         public string DiameterStr
         {
-            get => Settings.Diameter.ToString(CultureInfo.InvariantCulture);
+            get => Settings.DiameterStr;
             set => Settings.DiameterStr = value;
         }
 
@@ -65,8 +65,10 @@
                 return _combineIntersectsTasks ??
                     (_combineIntersectsTasks = new RelayCommand(obj =>
                     {
+                        if (!_isListUpdated)
+                            UpdateTaskInfo.Execute(null);
                         Transactions.CombineIntersectsTasks(_currentDocument, _documents);
-                        Transactions.UpdateTasksInfo(_currentDocument, _documents, Settings.Offset, Settings.Diameter);
+                        UpdateTaskInfo.Execute(null);
                         UpdateTasksAndOpenings();
                     }));
             }
@@ -80,6 +82,7 @@
                     (_updateTaskInfo = new RelayCommand(obj =>
                     {
                         Transactions.UpdateTasksInfo(_currentDocument, _documents, Settings.Offset, Settings.Diameter);
+                        _isListUpdated = true;
                         UpdateTasksAndOpenings();
                     }));
             }
@@ -95,6 +98,7 @@
                         var control = new FilterStatusControl();
                         var dialogWindow = new Window
                         {
+                            Topmost = true,
                             MinWidth = 500,
                             MaxWidth = 500,
                             MinHeight = 200,
@@ -122,36 +126,6 @@
             }
         }
 
-        public RelayCommand ChangeSelectedTasksToOpenings
-        {
-            get
-            {
-                return _changeSelectedTasksToOpenings ??
-                    (_changeSelectedTasksToOpenings = new RelayCommand(obj =>
-                    {
-                        var taskId = GetSelectedElementsFromDocument();
-                        if (taskId.Count == 0)
-                            return;
-
-                        var tasks = taskId
-                                   .Select(t => _currentDocument.GetElement(t))
-                                   .ToList();
-                        if (!tasks.IsOnlyTasks())
-                        {
-                            MessageBox.Show("Выберите только задания");
-                            return;
-                        }
-
-                        var openings = new List<Element>();
-
-                        Transactions.CreateOpeningInSelectedTask(_currentDocument, openings, tasks);
-                        Transactions.Drawing(_currentDocument, openings);
-
-                        UpdateTasksAndOpenings();
-                    }));
-            }
-        }
-
         public RelayCommand CreateAllTasks
         {
             get
@@ -159,22 +133,13 @@
                 return _createAllTasks ??
                     (_createAllTasks = new RelayCommand(obj =>
                         {
-                            //
-                            var timer = new Stopwatch();
-                            timer.Start();
-                            //
-                            Transactions.UpdateTasksInfo(_currentDocument, _documents, Settings.Offset, Settings.Diameter);
-                            UpdateTasksAndOpenings();
+                            if (!_isListUpdated)
+                                UpdateTaskInfo.Execute(null);
                             Transactions.CreateAllTasks(_currentDocument, _documents, Settings.Offset,
                                 Settings.Diameter, Tasks, Openings);
                             if (IsCombineAll)
                                 Transactions.CombineIntersectsTasks(_currentDocument, _documents);
-                            Transactions.UpdateTasksInfo(_currentDocument, _documents, Settings.Offset, Settings.Diameter);
-                            UpdateTasksAndOpenings();
-                            // ТЕСТ
-                            timer.Stop();
-                            MessageBox.Show($"Count: {Tasks.Count}\nTime: {timer.Elapsed.TotalSeconds}");
-                            //
+                            UpdateTaskInfo.Execute(null);
                         },
                         obj => double.TryParse(OffsetStr, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
                             && double.TryParse(DiameterStr, NumberStyles.Any, CultureInfo.InvariantCulture, out _)));
@@ -189,9 +154,11 @@
                     (_changeTasksToOpenings = new RelayCommand(obj =>
                     {
                         var openings = new List<Element>();
+                        if (_isListUpdated)
+                            UpdateTaskInfo.Execute(null);
                         Transactions.SwapAllTasksToOpenings(_currentDocument, openings);
                         Transactions.Drawing(_currentDocument, openings);
-
+                        UpdateTaskInfo.Execute(null);
                         UpdateTasksAndOpenings();
                     }));
             }
@@ -217,11 +184,12 @@
         {
             _commandData = commandData;
             _currentDocument = commandData.Application.ActiveUIDocument.Document;
-            _documents = commandData.Application.Application.Documents.Cast<Document>()
+            _documents = commandData.Application.Application.Documents
+                                    .Cast<Document>()
                                     .ToList();
             if (bool.Parse(ConfigurationManager.AppSettings[nameof(IsAnalysisOnStart)]))
-                Transactions.UpdateTasksInfo(_currentDocument, _documents, Settings.Offset, Settings.Diameter);
-
+                UpdateTaskInfo.Execute(null);
+            _isListUpdated = IsAnalysisOnStart;
             UpdateTasksAndOpenings();
         }
 
@@ -241,7 +209,7 @@
             }
             catch (ArgumentNullException)
             {
-                Transactions.UpdateTasksInfo(_currentDocument, _documents, Settings.Offset, Settings.Diameter);
+                UpdateTaskInfo.Execute(null);
                 UpdateTasks();
                 UpdateOpenings();
             }

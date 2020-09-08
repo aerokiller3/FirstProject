@@ -11,32 +11,36 @@
     internal static class BoxCombiner
     {
         //?
-        public static bool ValidateTasksForCombine(OpeningParentsData data1, OpeningParentsData data2)
+        public static bool ValidateTasksForCombine(OpeningParentsData data1, OpeningParentsData data2, Element el1,
+            Element el2)
         {
             return (data1.PipesIds.AlmostEqualTo(data2.PipesIds) || data1.HostsIds.AlmostEqualTo(data2.HostsIds))
-                && data1.BoxData.FamilyName == data2.BoxData.FamilyName;
+                && data1.BoxData.FamilyName == data2.BoxData.FamilyName
+                && !data1.BoxData.Collisions.Contains(Collisions.TaskCouldNotBeProcessed)
+                && !data2.BoxData.Collisions.Contains(Collisions.TaskCouldNotBeProcessed)
+                && el1.IsTask() && el2.IsTask();
         }
 
-        public static void CombineAllBoxes(ICollection<Document> documents, Document currentDocument)
+        public static void CombineAllBoxes(ICollection<Document> documents, Document currentDocument, bool isTangent)
         {
             var isElementsUnited = true;
             while (isElementsUnited)
             {
                 isElementsUnited = false;
-                isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, Families.WallRectTaskFamily);
-                isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, Families.FloorRectTaskFamily);
-                isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, Families.WallRoundTaskFamily);
+                isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, Families.WallRectTaskFamily, isTangent);
+                isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, Families.FloorRectTaskFamily, isTangent);
+                isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, Families.WallRoundTaskFamily, isTangent);
                 currentDocument.Regenerate();
             }
         }
 
         private static bool CombineOneTypeBoxes(ICollection<Document> documents, Document currentDocument,
-            FamilyParameters familyData)
+            FamilyParameters familyData, bool isTangent)
         {
             var tasks = currentDocument
                        .GetTasksByName(familyData)
                        .ToList();
-            var intersections = FindTaskIntersections(tasks).ToList();
+            var intersections = FindTaskIntersections(tasks, isTangent).ToList();
             for (var i = 0; i < intersections.Count; i++)
                 if (CombineTwoBoxes(documents, currentDocument, intersections[i].Item1, intersections[i].Item2) == null)
                 {
@@ -52,7 +56,7 @@
         {
             var data1 = el1.GetParentsData();
             var data2 = el2.GetParentsData();
-            if (!ValidateTasksForCombine(data1, data2))
+            if (!ValidateTasksForCombine(data1, data2, el1, el2))
                 return null;
 
             OpeningData newOpening = null;
@@ -79,23 +83,31 @@
             return createdElement;
         }
 
-        private static IEnumerable<(Element, Element)> FindTaskIntersections(IList<FamilyInstance> elements)
+        private static IEnumerable<(Element, Element)> FindTaskIntersections(IList<FamilyInstance> elements, bool isTangent)
         {
             for (var i = 0; i < elements.Count; i++)
             {
                 var data = elements[i].GetParentsData();
-                var tolerance = new XYZ(0.001, 0.001, 0.001);
+                var tolerance = new XYZ(0.01, 0.01, 0.01);
                 var angle = XYZ.BasisY.Negate().AngleTo(data.BoxData.Direction.XYZ);
                 var transform = Transform.CreateRotation(XYZ.BasisZ, -angle);
-                var solid = elements[i].GetUnitedSolid(null, transform, tolerance);
+                var solidWithTolerance = elements[i].GetUnitedSolid(null, transform, tolerance);
+                var solid = elements[i].GetUnitedSolid(null, transform);
                 var filter = new ElementIntersectsSolidFilter(solid);
+                var filterWithTolerance = new ElementIntersectsSolidFilter(solidWithTolerance);
                 for (var j = i + 1; j < elements.Count; j++)
                 {
-                    if (elements[i].Id == elements[j].Id || !filter.PassesFilter(elements[j]))
+                    if (elements[i].Id == elements[j].Id)
                         continue;
 
-                    yield return (elements[i], elements[j]);
-
+                    var tangent = filterWithTolerance.PassesFilter(elements[j]);
+                    var intersect = filter.PassesFilter(elements[j]);
+                    if (isTangent && tangent && !intersect)
+                        yield return (elements[i], elements[j]);
+                    else if (!isTangent && intersect)
+                        yield return (elements[i], elements[j]);
+                    else
+                        continue;
                     elements.RemoveAt(j);
                     elements.RemoveAt(i);
                     i -= 1;

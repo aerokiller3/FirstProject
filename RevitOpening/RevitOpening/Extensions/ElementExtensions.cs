@@ -12,7 +12,7 @@
     {
         public static OpeningParentsData InitData(this Element task, IEnumerable<Wall> walls,
             IEnumerable<CeilingAndFloor> floors, double offset, double maxDiameter,
-            IEnumerable<MEPCurve> mepCurves, Document currentDocument)
+            IEnumerable<MEPCurve> mepCurves, Document currentDocument, ICollection<Document> documents)
         {
             var filter = new ElementIntersectsElementFilter(task);
             var intersectsWalls = walls
@@ -34,36 +34,80 @@
                 intersectsMepCurves
                    .Select(c => c.UniqueId)
                    .ToList(),
-                null);
+                task.CalculateOldBoxParameters(intersectsMepCurves, hosts, offset, maxDiameter,
+                    currentDocument, documents));
 
-            if (intersectsMepCurves.Count != 1 || hosts.Count != 1)
-            {
-                parentsData.BoxData = new OpeningData();
-                parentsData.BoxData.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
-                goto SetData;
-            }
-
-            parentsData.BoxData = BoxCalculator.CalculateBoxInElement(hosts.FirstOrDefault(),
-                intersectsMepCurves.FirstOrDefault(), offset, maxDiameter);
-            SetData:
-            parentsData.BoxData.Id = task.Id.IntegerValue;
-            parentsData.BoxData.FamilyName = ((FamilyInstance) task).Symbol.FamilyName;
-            parentsData.BoxData.Level = currentDocument
-                                       .GetElement(currentDocument
-                                                  .GetElement(parentsData.HostsIds
-                                                                         .FirstOrDefault()).LevelId).Name;
             task.SetParentsData(parentsData);
             filter.Dispose();
             return parentsData;
         }
 
+        public static OpeningData CalculateOldBoxParameters(this Element element, ICollection<MEPCurve> pipes,
+            ICollection<Element> hosts, double offset, double maxDiameter, Document currentDocument,
+            ICollection<Document> documents)
+        {
+            OpeningData parameters;
+            if (pipes.Count != 1 || hosts.Count != 1)
+            {
+                parameters = new OpeningData();
+                parameters.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
+            }
+            else
+            {
+                parameters = BoxCalculator.CalculateBoxInElement(hosts.FirstOrDefault(),
+                    pipes.FirstOrDefault(), offset, maxDiameter);
+            }
+
+            parameters.Id = element.Id.IntegerValue;
+            parameters.FamilyName = ((FamilyInstance) element).Symbol.FamilyName;
+            parameters.Level = hosts.FirstOrDefault()?.GetLevelName(documents);
+            parameters.HostsGeometries = hosts
+                                        .Select(h => new ElementGeometry(h))
+                                        .ToList();
+            parameters.PipesGeometries = pipes
+                                        .Select(p => new ElementGeometry(p))
+                                        .ToList();
+            var familyParameters = Families.GetDataFromSymbolName(parameters.FamilyName);
+            double width, height;
+            if (familyParameters == Families.FloorRectTaskFamily)
+            {
+                width = element.LookupParameter(familyParameters.HeightName).AsDouble();
+                height = element.LookupParameter(familyParameters.WidthName).AsDouble();
+            }
+            else if (familyParameters == Families.WallRectTaskFamily)
+            {
+                height = element.LookupParameter(familyParameters.HeightName).AsDouble();
+                width = element.LookupParameter(familyParameters.WidthName).AsDouble();
+            }
+            else if (familyParameters == Families.WallRoundTaskFamily)
+            {
+                width = height = element.LookupParameter(familyParameters.DiameterName).AsDouble();
+            }
+            else
+            {
+                return parameters;
+            }
+
+            var depth = element.LookupParameter(familyParameters.DepthName).AsDouble();
+            parameters.Depth = depth;
+            parameters.Width = width;
+            parameters.Height = height;
+            parameters.IntersectionCenter = new MyXYZ(((LocationPoint) element.Location).Point);
+
+            return parameters;
+        }
+
+        public static string GetLevelName(this Element element, ICollection<Document> documents)
+        {
+            return documents.GetElement(element.LevelId.IntegerValue).Name;
+        }
 
         public static OpeningParentsData GetOrInitData(this Element task, List<Wall> walls,
             List<CeilingAndFloor> floors, double offset, double maxDiameter, List<MEPCurve> mepCurves,
-            Document currentDocument)
+            Document currentDocument, ICollection<Document> documents)
         {
             return task.GetParentsData() ?? task.InitData(walls, floors, offset, maxDiameter,
-                mepCurves, currentDocument);
+                mepCurves, currentDocument, documents);
         }
 
         public static bool IsTask(this Element element)
@@ -72,6 +116,14 @@
             return Families.FloorRectTaskFamily.SymbolName == elSymbolName
                 || Families.WallRectTaskFamily.SymbolName == elSymbolName
                 || Families.WallRoundTaskFamily.SymbolName == elSymbolName;
+        }
+
+        public static bool IsOpening(this Element element)
+        {
+            var elSymbolName = (((FamilyInstance) element).Symbol.FamilyName);
+            return Families.FloorRectOpeningFamily.SymbolName == elSymbolName
+                || Families.WallRectOpeningFamily.SymbolName == elSymbolName
+                || Families.WallRoundOpeningFamily.SymbolName == elSymbolName;
         }
 
         public static OpeningParentsData GetParentsData(this Element element)
@@ -90,7 +142,7 @@
         {
             var data = task.GetParentsData();
             Solid solid;
-            if (data.BoxData.FamilyName == Families.WallRoundTaskFamily.SymbolName)
+            if (data != null && data.BoxData.FamilyName == Families.WallRoundTaskFamily.SymbolName)
                 solid = task.get_BoundingBox(null).CreateSolid();
             else
                 solid = task.get_Geometry(new Options())

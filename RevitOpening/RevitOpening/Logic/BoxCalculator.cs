@@ -74,7 +74,9 @@
             var floorSolid = floor.get_Geometry(new Options()).FirstOrDefault() as Solid;
             var direction = pipe.ConnectorManager.Connectors
                                 .Cast<Connector>()
-                                .FirstOrDefault()?.CoordinateSystem.BasisY;
+                                .FirstOrDefault()?
+                                .CoordinateSystem.BasisX
+                                .CrossProduct(XYZ.BasisZ.Negate());
             var curves = floorSolid?
                .IntersectWithCurve(pipeData.Curve, new SolidCurveIntersectionOptions());
             if (curves == null || curves.SegmentCount == 0)
@@ -91,8 +93,8 @@
             Wall wall)
         {
             var geomSolid = wall.get_Geometry(new Options()).FirstOrDefault() as Solid;
-            var line = (Line) wallData.Curve;
-            var byLineWallOrientation = line.Direction.CrossProduct(XYZ.BasisZ.Negate());
+            var direction = ((Line) wallData.Curve).Direction;
+            var byLineWallOrientation = direction.CrossProduct(XYZ.BasisZ.Negate());
             var bias = wall.Width * byLineWallOrientation / 2;
             var curves = geomSolid?
                .IntersectWithCurve(pipeData.Curve, new SolidCurveIntersectionOptions());
@@ -102,7 +104,6 @@
 
             var intersectCurve = curves.GetCurveSegment(0);
             var intersectionCenter = (intersectCurve.GetEndPoint(0) + intersectCurve.GetEndPoint(1)) / 2;
-            var direction = (wallData.End.XYZ - wallData.Start.XYZ).Normalize();
             intersectionCenter -= bias;
             if (direction.X < 0 ||
                 Math.Abs(direction.X) < Math.Pow(10, -7) && Math.Abs(direction.Y + 1) < Math.Pow(10, -7))

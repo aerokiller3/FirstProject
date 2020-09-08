@@ -10,7 +10,7 @@
         public const string FloorTaskIntersectWall = "Задание для перекрытия пересекает стену";
         public const string TaskIntersectTask = "Задание пересекается с другим заданием";
         public const string PipeNotPerpendicularHost = "Труба не перпендекулярна стене";
-        public const string TaskCouldNotBeProcessed = "Задание нельзя обработать автоматически";
+        public const string TaskCouldNotBeProcessed = "Задание невозможно обработать автоматически";
 
         public const string TaskNotActual = "Расположение трубы или стены имзенилось с момента построения задания\n" +
             "или информация о заданиях давно не обновлялась";

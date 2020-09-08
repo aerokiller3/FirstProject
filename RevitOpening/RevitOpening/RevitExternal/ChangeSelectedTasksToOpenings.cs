@@ -45,8 +45,11 @@
                 if (elementsData.Any(d => d.BoxData.HostsGeometries.Count == 0
                     || d.BoxData.PipesGeometries.Count == 0 || d.BoxData.Collisions.Count > 0))
                 {
-                    MessageBox.Show("Одно или более отверстий невозможно вырезать автоматически");
-                    return Result.Failed;
+                    var result = MessageBox.Show("Одно или более отверстий невозможно вырезать автоматически\n" +
+                        "Всё равно попытаться вырезать?",
+                        "Вырезание", MessageBoxButton.YesNo);
+                    if(result!=MessageBoxResult.Yes)
+                        return Result.Failed;
                 }
             }
             catch

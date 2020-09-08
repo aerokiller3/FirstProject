@@ -94,15 +94,11 @@
                 <Button  Grid.Row="2" Content="Заменить согласованные задания на отверстия"
                          Command="{Binding ChangeTasksToOpening}"
                         Style="{StaticResource Indent}"/>
-                <Button  Grid.Row="3" Content="Заменить выделенные задания на отверстия"
-                         CommandParameter="{Binding ElementName=TasksGrid}"
-                         Command="{Binding ChangeSelectedTasksToOpenings}"
-                        Style="{StaticResource Indent}"/>
-                <Button Grid.Row="4" Content="Обновить информацию о заданиях"
+                <Button Grid.Row="3" Content="Обновить информацию о заданиях"
                         Command="{Binding UpdateTaskInfo}"
                         CommandParameter="{Binding ElementName=TasksGrid}"
                         Style="{StaticResource Indent}"/>
-                <Button Grid.Row="5" Content="Объеденить пересекающиеся задания"
+                <Button Grid.Row="4" Content="Объеденить пересекающиеся задания"
                         Command="{Binding CombineIntersectsTasks}"
                         Style="{StaticResource Indent}"/>
             </Grid>

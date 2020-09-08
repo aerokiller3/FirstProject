@@ -43,7 +43,7 @@
         public static void CombineIntersectsTasks(Document document, ICollection<Document> documents)
         {
             DoTransaction(document, "Объединение заданий",
-                () => BoxCombiner.CombineAllBoxes(documents, document));
+                () => BoxCombiner.CombineAllBoxes(documents, document, false));
         }
 
         public static FamilyInstance CombineSelectedTasks(Document document, ICollection<Document> documents,
@@ -78,18 +78,19 @@
                 openings.AddRange(TasksToOpeningsChanger.SwapAllTasksToOpenings(document)));
         }
 
-        public static void UpdateTaskInfo(Document document, ICollection<Document> documents, Element newTask,
+        public static void UpdateTaskInfo(Document currentDocument, ICollection<Document> documents, Element newTask,
             double offset, double diameter)
         {
-            DoTransaction(document, "Обновление информации о задании", () =>
+            DoTransaction(currentDocument, "Обновление информации о задании", () =>
             {
                 var walls = documents.GetAllElementsOfClass<Wall>();
                 var floors = documents.GetAllElementsOfClass<CeilingAndFloor>();
                 var tasks = documents.GetAllTasks();
                 var mepCurves = documents.GetAllElementsOfClass<MEPCurve>();
-                var data = newTask.GetOrInitData(walls, floors, offset, diameter, mepCurves, document);
+                var data = newTask.GetOrInitData(walls, floors, offset, diameter, mepCurves,
+                    currentDocument, documents);
                 BoxAnalyzer.AnalyzeElement(newTask, data, walls, floors, tasks, documents, offset,
-                    diameter, mepCurves, document);
+                    diameter, mepCurves, currentDocument);
             });
         }
     }

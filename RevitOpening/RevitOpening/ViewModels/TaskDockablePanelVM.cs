@@ -6,6 +6,7 @@
     using System.Configuration;
     using System.Linq;
     using System.Runtime.CompilerServices;
+    using System.Windows;
     using System.Windows.Controls;
     using Annotations;
     using Autodesk.Revit.DB;
@@ -32,6 +33,17 @@
                              .GetSelectedItemsFromGrid<OpeningData>()
                              .Select(x => new ElementId(x.Id))
                              .ToList();
+            var items = selectItems
+                       .Select(i => _documents.GetElement(i.IntegerValue))
+                       .Where(el=>el!=null)
+                       .ToList();
+            if (items.Count == 0)
+            {
+                MessageBox.Show("Выбранный элемент удалён.\n" +
+                    "Обновите текущий список.");
+                return;
+            }
+
             RevitTask.RaiseGlobal<BoxShowerEventHandler, List<ElementId>, object>(selectItems);
 
 
