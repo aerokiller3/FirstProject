@@ -82,10 +82,17 @@
             if (curves == null || curves.SegmentCount == 0)
                 return (null, null);
 
-            var intersectCurve = curves.GetCurveSegment(0);
+            var intersectCurve = (Line) curves.GetCurveSegment(0);
             var intersectVector = (intersectCurve.GetEndPoint(1) - intersectCurve.GetEndPoint(0)) / 2;
             var bias = new XYZ(0, 0, -intersectVector.Z);
-            var intersectionCenter = (intersectCurve.GetEndPoint(0) + intersectCurve.GetEndPoint(1)) / 2 - bias;
+            var intersectionCenter = (intersectCurve.GetEndPoint(0) + intersectCurve.GetEndPoint(1)) / 2;
+            intersectionCenter -= bias;
+            if (intersectCurve.Direction.Z < 0)
+            {
+                direction = direction.Negate();
+                intersectionCenter += 2 * bias;
+            }
+
             return (intersectionCenter, direction);
         }
 
