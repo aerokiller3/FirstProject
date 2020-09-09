@@ -88,7 +88,7 @@
             for (var i = 0; i < elements.Count; i++)
             {
                 var data = elements[i].GetParentsData();
-                var tolerance = new XYZ(0.01, 0.01, 0.01);
+                var tolerance = new XYZ(0.1, 0.1, 0.1);
                 var angle = XYZ.BasisY.Negate().AngleTo(data.BoxData.Direction.XYZ);
                 var transform = Transform.CreateRotation(XYZ.BasisZ, -angle);
                 var solidWithTolerance = elements[i].GetUnitedSolid(null, transform, tolerance);

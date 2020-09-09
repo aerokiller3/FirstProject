@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Logger">
+      <HintPath>..\..\..\TestFrame\TestStandart\Logger\Logger\bin\Debug\netstandard2.0\Logger.dll</HintPath>
+    </Reference>
     <Reference Include="NewtonSoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\Revit 2019\NewtonSoft.Json.dll</HintPath>
