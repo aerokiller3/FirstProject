@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Configuration;
-    using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
     using System.Runtime.CompilerServices;
@@ -14,12 +13,13 @@
     using Autodesk.Revit.DB;
     using Autodesk.Revit.UI;
     using Extensions;
+    using LoggerClient;
     using Logic;
     using Models;
     using UI;
     using Settings = Extensions.Settings;
 
-    internal class MainVM : INotifyPropertyChanged, IDataGridUpdater
+    internal class MainVM : INotifyPropertyChanged, IDataGridUpdater, IDisposable
     {
         private RelayCommand _changeTasksToOpenings;
         private RelayCommand _combineIntersectsTasks;
@@ -33,6 +33,12 @@
         private List<OpeningData> Tasks { get; set; }
         private List<OpeningData> Openings { get; set; }
         private bool _isListUpdated;
+        private readonly LoggerClient _logger;
+
+        public MainVM()
+        {
+            _logger = new LoggerClient();
+        }
 
         public bool IsCombineAll
         {
@@ -238,6 +244,11 @@
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
         }
     }
 }
