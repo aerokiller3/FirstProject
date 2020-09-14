@@ -54,13 +54,13 @@ namespace RevitOpening.Extensions
             }
         }
 
-        public static string GetParameterFromSettings(string parameterName, object defaultValue = null)
+        private static string GetParameterFromSettings(string parameterName, object defaultValue = null)
         {
             return ConfigurationManager.AppSettings[parameterName] ??
                 (ConfigurationManager.AppSettings[parameterName] = defaultValue?.ToString());
         }
 
-        public static void SetParameterToSettings(string parameterName, object value)
+        private static void SetParameterToSettings(string parameterName, object value)
         {
             ConfigurationManager.AppSettings[parameterName] = value.ToString();
         }

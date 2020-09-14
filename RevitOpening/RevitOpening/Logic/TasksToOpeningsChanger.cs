@@ -9,8 +9,6 @@
     {
         public static List<Element> SwapAllTasksToOpenings(Document currentDocument)
         {
-            FamilyLoader.LoadAllFamiliesToProject(currentDocument);
-
             var wallRectTasks = currentDocument.GetTasksByName(Families.WallRectTaskFamily);
             var wallRoundTasks = currentDocument.GetTasksByName(Families.WallRoundTaskFamily);
             var floorRectTasks = currentDocument.GetTasksByName(Families.FloorRectTaskFamily);

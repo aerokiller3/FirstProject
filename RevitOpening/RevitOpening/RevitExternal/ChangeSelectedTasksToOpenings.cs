@@ -8,6 +8,7 @@
     using Autodesk.Revit.DB;
     using Autodesk.Revit.UI;
     using Extensions;
+    using LoggerClient;
     using Logic;
     using Settings = Extensions.Settings;
 
@@ -16,9 +17,11 @@
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            ModuleLogger.SendFunctionUseData(nameof(ChangeSelectedTasksToOpenings), nameof(RevitOpening));
             var currentDocument = commandData.Application.ActiveUIDocument.Document;
             var documents = commandData.Application.Application.Documents.Cast<Document>()
                                        .ToList();
+            FamilyLoader.LoadAllFamiliesToProject(currentDocument);
             var selected = commandData.Application.ActiveUIDocument.Selection
                                       .GetSelectedTasks(currentDocument);
             if (selected == null)
@@ -48,7 +51,7 @@
                     var result = MessageBox.Show("Одно или более отверстий невозможно вырезать автоматически\n" +
                         "Всё равно попытаться вырезать?",
                         "Вырезание", MessageBoxButton.YesNo);
-                    if(result!=MessageBoxResult.Yes)
+                    if (result != MessageBoxResult.Yes)
                         return Result.Failed;
                 }
             }

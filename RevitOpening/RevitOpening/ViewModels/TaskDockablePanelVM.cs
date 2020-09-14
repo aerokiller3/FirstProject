@@ -12,6 +12,7 @@
     using Autodesk.Revit.DB;
     using EventHandlers;
     using Extensions;
+    using LoggerClient;
     using Logic;
     using Models;
     using Revit.Async;
@@ -27,15 +28,16 @@
         public List<OpeningData> Tasks { get; set; } = new List<OpeningData>();
         public List<OpeningData> Openings { get; set; } = new List<OpeningData>();
 
-        public void OnCurrentCellChanged(object sender, EventArgs e)
+        public void ShowItemFromGrid(object sender, EventArgs e)
         {
+            ModuleLogger.SendFunctionUseData(nameof(ShowItemFromGrid), nameof(RevitOpening));
             var selectItems = (sender as DataGrid)
                              .GetSelectedItemsFromGrid<OpeningData>()
                              .Select(x => new ElementId(x.Id))
                              .ToList();
             var items = selectItems
                        .Select(i => _documents.GetElement(i.IntegerValue))
-                       .Where(el=>el!=null)
+                       .Where(el => el != null)
                        .ToList();
             if (items.Count == 0)
             {

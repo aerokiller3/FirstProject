@@ -8,6 +8,7 @@
     using Autodesk.Revit.DB;
     using Autodesk.Revit.UI;
     using Extensions;
+    using LoggerClient;
     using Logic;
     using Settings = Extensions.Settings;
 
@@ -16,8 +17,10 @@
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            ModuleLogger.SendFunctionUseData(nameof(CombineTwoBoxes), nameof(RevitOpening));
             var app = commandData.Application;
             var currentDocument = app.ActiveUIDocument.Document;
+            FamilyLoader.LoadAllFamiliesToProject(currentDocument);
             var documents = app.Application.Documents.Cast<Document>()
                                .ToList();
             var selected = app.ActiveUIDocument.Selection.GetSelectedTasks(currentDocument);

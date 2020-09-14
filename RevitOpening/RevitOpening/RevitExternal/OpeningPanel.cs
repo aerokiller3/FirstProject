@@ -15,6 +15,7 @@ namespace RevitOpening.RevitExternal
 {
     using Autodesk.Revit.DB;
     using EventHandlers;
+    using LoggerClient;
     using Revit.Async;
 
     internal class OpeningPanel : IExternalApplication
@@ -24,9 +25,9 @@ namespace RevitOpening.RevitExternal
 
         public Result OnStartup(UIControlledApplication application)
         {
+            ModuleLogger.SendModuleStartData(nameof(RevitOpening));
             var panel = CreateRibbonPanel(application);
             var currentDirectory = Assembly.GetExecutingAssembly().Location;
-
             RegisterDockableWindow(application);
             AddButtonOnPanel(panel, currentDirectory, "StartProgram", "Открыть модуль",
                 Resources.StartModule);

@@ -4,6 +4,6 @@
 
     public interface IDataGridUpdater
     {
-        void OnCurrentCellChanged(object sender, EventArgs e);
+        void ShowItemFromGrid(object sender, EventArgs e);
     }
 }

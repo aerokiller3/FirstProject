@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using Autodesk.Revit.DB;
     using Autodesk.Revit.DB.Electrical;
@@ -9,6 +10,7 @@
     using Autodesk.Revit.DB.Plumbing;
     using Autodesk.Revit.Exceptions;
     using Extensions;
+    using LoggerClient;
     using Models;
 
     internal static class BoxAnalyzer
@@ -123,7 +125,7 @@
         {
             const double tolerance = 0.000_000_1;
             var familyParameters = Families.GetDataFromSymbolName(oldTask.Symbol.FamilyName);
-            var locPoint = new MyXYZ(((LocationPoint)oldTask.Location).Point);
+            var locPoint = new MyXYZ(((LocationPoint) oldTask.Location).Point);
             double width, height;
             if (familyParameters == Families.FloorRectTaskFamily)
             {
@@ -141,6 +143,9 @@
             }
             else
             {
+                ModuleLogger.SendErrorData("Не поддерживаемый тип элемента для анализа",
+                    $"Name: {oldTask.Name} Type: {oldTask.Symbol.FamilyName}",
+                    nameof(BoxAnalyzer), Environment.StackTrace, nameof(RevitOpening));
                 //throw new ArgumentException("Не поддерживаемый тип");
                 return true;
             }
@@ -188,7 +193,8 @@
                 return false;
             }
 
-            switch (documents.GetElement(data.HostsIds.FirstOrDefault()))
+            var element = documents.GetElement(data.HostsIds.FirstOrDefault());
+            switch (element)
             {
                 case Wall _:
                     var pipeGeometry = data.BoxData.PipesGeometries.FirstOrDefault();
@@ -208,6 +214,9 @@
                                   .CoordinateSystem.BasisX.CrossProduct(XYZ.BasisZ.Negate());
                     return !(Math.Abs(pipeVec.AngleTo(floorVec) - Math.PI / 2) < toleranceInDegrees * Math.PI / 180);
                 default:
+                    ModuleLogger.SendErrorData("Необработанный тип хост элемента",
+                        element.Category.Name, nameof(BoxAnalyzer),
+                        Environment.StackTrace, nameof(RevitOpening));
                     throw new Exception("Неизвестный тип хост элемента");
             }
         }
