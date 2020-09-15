@@ -14,10 +14,10 @@ namespace RevitOpening.UI
             InitializeComponent();
         }
 
-        private void TasksGrid_OnCurrentCellChanged(object sender, EventArgs e)
+        private void OnCurrentCellChanged(object sender, EventArgs e)
         {
             var updater = (IDataGridUpdater) DataContext;
-            updater.OnCurrentCellChanged(sender, e);
+            updater.ShowItemFromGrid(sender, e);
         }
     }
 }

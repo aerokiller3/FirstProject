@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Configuration;
-    using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
     using System.Runtime.CompilerServices;
@@ -14,6 +13,7 @@
     using Autodesk.Revit.DB;
     using Autodesk.Revit.UI;
     using Extensions;
+    using LoggerClient;
     using Logic;
     using Models;
     using UI;
@@ -65,6 +65,7 @@
                 return _combineIntersectsTasks ??
                     (_combineIntersectsTasks = new RelayCommand(obj =>
                     {
+                        ModuleLogger.SendFunctionUseData(nameof(CombineIntersectsTasks), nameof(RevitOpening));
                         if (!_isListUpdated)
                             UpdateTaskInfo.Execute(null);
                         Transactions.CombineIntersectsTasks(_currentDocument, _documents);
@@ -95,6 +96,7 @@
                 return _filterTasks ??
                     (_filterTasks = new RelayCommand(obj =>
                     {
+                        ModuleLogger.SendFunctionUseData(nameof(FilterTasks), nameof(RevitOpening));
                         var control = new FilterStatusControl();
                         var dialogWindow = new Window
                         {
@@ -133,6 +135,7 @@
                 return _createAllTasks ??
                     (_createAllTasks = new RelayCommand(obj =>
                         {
+                            ModuleLogger.SendFunctionUseData(nameof(CreateAllTasks), nameof(RevitOpening));
                             if (!_isListUpdated)
                                 UpdateTaskInfo.Execute(null);
                             Transactions.CreateAllTasks(_currentDocument, _documents, Settings.Offset,
@@ -153,6 +156,7 @@
                 return _changeTasksToOpenings ??
                     (_changeTasksToOpenings = new RelayCommand(obj =>
                     {
+                        ModuleLogger.SendFunctionUseData(nameof(ChangeTasksToOpening), nameof(RevitOpening));
                         var openings = new List<Element>();
                         if (_isListUpdated)
                             UpdateTaskInfo.Execute(null);
@@ -165,7 +169,7 @@
         }
 
 
-        public void OnCurrentCellChanged(object sender, EventArgs e)
+        public void ShowItemFromGrid(object sender, EventArgs e)
         {
             var grid = sender as DataGrid;
             var selectItems = grid.GetSelectedItemsFromGrid<OpeningData>()
@@ -174,6 +178,7 @@
             if (selectItems.Count != 1)
                 return;
 
+            ModuleLogger.SendFunctionUseData(nameof(ShowItemFromGrid), nameof(RevitOpening));
             _commandData.Application.ActiveUIDocument.Selection.SetElementIds(selectItems);
             _commandData.Application.ActiveUIDocument.ShowElements(selectItems);
         }
@@ -187,17 +192,11 @@
             _documents = commandData.Application.Application.Documents
                                     .Cast<Document>()
                                     .ToList();
+            FamilyLoader.LoadAllFamiliesToProject(_currentDocument);
             if (bool.Parse(ConfigurationManager.AppSettings[nameof(IsAnalysisOnStart)]))
                 UpdateTaskInfo.Execute(null);
             _isListUpdated = IsAnalysisOnStart;
             UpdateTasksAndOpenings();
-        }
-
-        private List<ElementId> GetSelectedElementsFromDocument()
-        {
-            return _commandData.Application.ActiveUIDocument.Selection
-                               .GetElementIds()
-                               .ToList();
         }
 
         private void UpdateTasksAndOpenings()

@@ -1,20 +1,30 @@
 ﻿namespace RevitOpening.Logic
 {
+    using System;
     using System.IO;
     using System.Linq;
     using System.Reflection;
     using Autodesk.Revit.DB;
     using Extensions;
+    using LoggerClient;
 
     public static class FamilyLoader
     {
         public static void LoadAllFamiliesToProject(Document document)
         {
-            foreach (var family in Families.AllFamilies)
+            try
             {
-                LoadFamilyToProject(family.SymbolName, document);
-                var familySymbol = document.GetFamilySymbol(family.SymbolName);
-                familySymbol.Activate();
+                foreach (var family in Families.AllFamilies)
+                {
+                    LoadFamilyToProject(family.SymbolName, document);
+                    var familySymbol = document.GetFamilySymbol(family.SymbolName);
+                    familySymbol.Activate();
+                }
+            }
+            catch (Exception e)
+            {
+                ModuleLogger.SendErrorData(e.Message, e.InnerException?.Message,
+                    e.Source, e.StackTrace, nameof(RevitOpening));
             }
         }
 

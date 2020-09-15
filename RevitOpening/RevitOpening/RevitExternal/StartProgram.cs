@@ -4,6 +4,7 @@
     using Autodesk.Revit.Attributes;
     using Autodesk.Revit.DB;
     using Autodesk.Revit.UI;
+    using LoggerClient;
     using UI;
     using ViewModels;
 
@@ -12,6 +13,7 @@
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            ModuleLogger.SendFunctionUseData(nameof(StartProgram), nameof(RevitOpening));
             var main = new MainControl();
             var window = new Window
             {

@@ -18,7 +18,7 @@
               SelectionUnit="FullRow"
               CanUserAddRows="False"
               CanUserDeleteRows="False"
-              MouseDoubleClick="TasksGrid_OnCurrentCellChanged"
+              MouseDoubleClick="OnCurrentCellChanged"
               x:Name="TasksGrid">
         <DataGrid.Columns>
             <DataGridTemplateColumn Header="Ид"

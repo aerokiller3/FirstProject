@@ -25,7 +25,7 @@ namespace RevitOpening.EventHandlers
             var documents = app.Application.Documents
                                .Cast<Document>()
                                .ToList();
-            Transactions.UpdateTasksInfo(currentDocument,documents, Extensions.Settings.Offset, Extensions.Settings.Diameter);
+            Transactions.UpdateTasksInfo(currentDocument, documents, Extensions.Settings.Offset, Extensions.Settings.Diameter);
             return null;
         }
     }

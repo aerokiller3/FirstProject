@@ -32,8 +32,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Logger">
-      <HintPath>..\..\..\TestFrame\TestStandart\Logger\Logger\bin\Debug\netstandard2.0\Logger.dll</HintPath>
+    <Reference Include="LoggerClient">
+      <HintPath>..\..\..\Logger\LoggerWCF\LoggerClient\bin\Debug\LoggerClient.dll</HintPath>
     </Reference>
     <Reference Include="NewtonSoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -58,6 +58,8 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
@@ -137,6 +139,7 @@
       <Link>.editorconfig</Link>
     </None>
     <EmbeddedResource Include="Resources\Unite.png" />
+    <None Include="app.config" />
     <None Include="Families\Задание_Круглая_Стена_БезОсновы.rfa">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -190,6 +193,5 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\Reload.png" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

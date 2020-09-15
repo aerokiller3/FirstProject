@@ -5,6 +5,7 @@
     using System.Linq;
     using Autodesk.Revit.DB;
     using Extensions;
+    using LoggerClient;
     using Models;
     using Settings = Extensions.Settings;
 
@@ -12,11 +13,19 @@
     {
         public static void DoTransaction(Document document, string transactionName, Action action)
         {
-            using (var t = new Transaction(document, transactionName))
+            try
             {
-                t.Start();
-                action.Invoke();
-                t.Commit();
+                using (var t = new Transaction(document, transactionName))
+                {
+                    t.Start();
+                    action.Invoke();
+                    t.Commit();
+                }
+            }
+            catch (Exception e)
+            {
+                ModuleLogger.SendErrorData(e.Message, e.InnerException?.Message,
+                    e.Source, e.StackTrace, nameof(RevitOpening));
             }
         }
 

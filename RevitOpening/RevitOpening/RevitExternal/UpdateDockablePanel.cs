@@ -6,6 +6,7 @@
     using Autodesk.Revit.DB;
     using Autodesk.Revit.UI;
     using EventHandlers;
+    using LoggerClient;
     using Logic;
     using Revit.Async;
     using UI;
@@ -16,11 +17,12 @@
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            ModuleLogger.SendFunctionUseData(nameof(UpdateDockablePanel), nameof(RevitOpening));
             var app = commandData.Application;
             var documents = app.Application.Documents.Cast<Document>()
-                               .ToList();   
+                               .ToList();
             var currentDocument = app.ActiveUIDocument.Document;
-
+            FamilyLoader.LoadAllFamiliesToProject(currentDocument);
             Transactions.UpdateTasksInfo(currentDocument, documents, Extensions.Settings.Offset, Extensions.Settings.Diameter);
 
             var pane = commandData.Application.ActiveUIDocument.Application.GetDockablePane(

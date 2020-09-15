@@ -5,6 +5,7 @@
     using System.Linq;
     using Autodesk.Revit.DB;
     using Extensions;
+    using LoggerClient;
     using Models;
 
     internal static class BoxCalculator
@@ -19,6 +20,9 @@
                 case CeilingAndFloor floor:
                     return CalculateBoxInFloor(floor, pipe, offsetRatio);
                 default:
+                    ModuleLogger.SendErrorData("Необработанный тип хост элемента",
+                        element.Category.Name, nameof(BoxCalculator),
+                        Environment.StackTrace, nameof(RevitOpening));
                     throw new Exception("Неизсветный тип хост-элемента");
             }
         }
@@ -68,8 +72,8 @@
                 offsetRatio, 0, null);
         }
 
-        private static (XYZ, XYZ) CalculateCenterAndDirectionInFloor(ElementGeometry pipeData, CeilingAndFloor floor,
-            MEPCurve pipe)
+        private static (XYZ, XYZ) CalculateCenterAndDirectionInFloor(ElementGeometry pipeData,
+            CeilingAndFloor floor, MEPCurve pipe)
         {
             var floorSolid = floor.get_Geometry(new Options()).FirstOrDefault() as Solid;
             var direction = pipe.ConnectorManager.Connectors

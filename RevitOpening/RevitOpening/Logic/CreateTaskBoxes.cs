@@ -34,8 +34,6 @@
 
         public void Execute()
         {
-            FamilyLoader.LoadAllFamiliesToProject(_currentDocument);
-
             var walls = _documents.GetAllElementsOfClass<Wall>();
             var floors = _documents.GetAllElementsOfClass<CeilingAndFloor>();
             var pipes = _documents.GetAllElementsOfClass<Pipe>();
