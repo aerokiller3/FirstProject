@@ -1,2 +1,0 @@
-﻿Organization=Altec
-Password=altec123
