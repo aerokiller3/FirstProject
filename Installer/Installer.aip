@@ -39,29 +39,30 @@
     <ROW Component="AI_CustomARPName" ComponentId="{CA2D7DF2-1EF1-4845-BCAA-E8DED631B87A}" Directory_="APPDIR" Attributes="4" KeyPath="DisplayName" Options="1"/>
     <ROW Component="AI_INSTALLPERUSER" ComponentId="{8C9927B8-ABBA-4738-92F4-C424021C1FB8}" Directory_="APPDIR" Attributes="4" KeyPath="AI_INSTALLPERUSER" Options="1"/>
     <ROW Component="APPDIR" ComponentId="{3AD26AB4-02C0-483B-8DD6-0F5C25B68038}" Directory_="APPDIR" Attributes="0"/>
-    <ROW Component="EntityFramework.dll" ComponentId="{471AF551-1898-4E80-965F-AB33BA3F4F78}" Directory_="RevitOpening_Dir" Attributes="0" KeyPath="EntityFramework.dll"/>
-    <ROW Component="EntityFramework.xml" ComponentId="{732398F2-0EBF-477F-A300-6DD46C2373F5}" Directory_="RevitOpening_Dir" Attributes="0" KeyPath="EntityFramework.xml" Type="0"/>
-    <ROW Component="LoggerClient.dll" ComponentId="{A9D25FC5-5888-499F-9749-8B85B16765C6}" Directory_="RevitOpening_Dir" Attributes="0" KeyPath="LoggerClient.dll"/>
-    <ROW Component="LoggerWCFLib.dll" ComponentId="{E519B6D1-022E-4EF9-9D9F-90ED55872300}" Directory_="RevitOpening_Dir" Attributes="0" KeyPath="LoggerWCFLib.dll"/>
+    <ROW Component="EntityFramework.dll" ComponentId="{24FADE91-6DDA-4CB0-ACF4-85FC30A66A21}" Directory_="RevitOpening_Dir" Attributes="0" KeyPath="EntityFramework.dll"/>
+    <ROW Component="EntityFramework.xml" ComponentId="{1BF4D1ED-D703-490D-BCB4-D9B529BC59D1}" Directory_="RevitOpening_Dir" Attributes="0" KeyPath="EntityFramework.xml" Type="0"/>
+    <ROW Component="LoggerClient.dll" ComponentId="{55CA8E73-3602-4C31-8E3D-33CCF4F5FC42}" Directory_="RevitOpening_Dir" Attributes="0" KeyPath="LoggerClient.dll"/>
+    <ROW Component="LoggerWCFLib.dll" ComponentId="{B9898663-6E3C-4B87-88FD-6123E713C82E}" Directory_="RevitOpening_Dir" Attributes="0" KeyPath="LoggerWCFLib.dll"/>
     <ROW Component="ProductName" ComponentId="{7EEDCCE4-1D1D-4EAE-897A-8A7E53081C5C}" Directory_="APPDIR" Attributes="4" KeyPath="ProductName"/>
-    <ROW Component="Revit.Async.dll" ComponentId="{822E8111-44AE-4A72-A97D-A01DA5D134DA}" Directory_="RevitOpening_Dir" Attributes="256" KeyPath="Revit.Async.dll"/>
-    <ROW Component="RevitOpening.addin" ComponentId="{C5749F98-56C2-4BC4-9298-24CABD160BBD}" Directory_="APPDIR" Attributes="0" KeyPath="RevitOpening.addin" Type="0"/>
-    <ROW Component="RevitOpening.dll" ComponentId="{21AF22BA-A20E-412A-AC56-85D7DB2E63B9}" Directory_="RevitOpening_Dir" Attributes="256" KeyPath="RevitOpening.dll"/>
-    <ROW Component="___.rfa_1" ComponentId="{77EAF193-7F28-4CDD-807B-FF001B099D86}" Directory_="Families_Dir" Attributes="0" KeyPath="___.rfa" Type="0"/>
+    <ROW Component="Revit.Async.dll" ComponentId="{F17B08B3-A9B2-4D17-87EE-D5BB47C46526}" Directory_="RevitOpening_Dir" Attributes="256" KeyPath="Revit.Async.dll"/>
+    <ROW Component="RevitOpening.addin" ComponentId="{E0A047BE-1FC6-4859-BD8C-B5FBDCA09FB0}" Directory_="APPDIR" Attributes="0" KeyPath="RevitOpening.addin" Type="0"/>
+    <ROW Component="RevitOpening.dll" ComponentId="{2E1C3E32-CBCB-427A-BAFD-B54220D3E31C}" Directory_="RevitOpening_Dir" Attributes="256" KeyPath="RevitOpening.dll"/>
+    <ROW Component="___.rfa" ComponentId="{696861EC-0600-49F2-8872-B1F2AE1F62E9}" Directory_="Families_Dir" Attributes="0" KeyPath="___.rfa" Type="0"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatsComponent">
     <ROW Feature="MainFeature" Title="MainFeature" Description="Description" Display="1" Level="1" Directory_="APPDIR" Attributes="0"/>
     <ATTRIBUTE name="CurrentFeature" value="MainFeature"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFilesComponent">
+    <ROW File="RevitOpening.addin" Component_="RevitOpening.addin" FileName="REVITO~1.ADD|RevitOpening.addin" Attributes="0" SourcePath="Module\RevitOpening.addin" SelfReg="false"/>
     <ROW File="EntityFramework.dll" Component_="EntityFramework.dll" FileName="ENTITY~1.DLL|EntityFramework.dll" Attributes="0" SourcePath="Module\RevitOpening\EntityFramework.dll" SelfReg="false"/>
     <ROW File="EntityFramework.xml" Component_="EntityFramework.xml" FileName="ENTITY~1.XML|EntityFramework.xml" Attributes="0" SourcePath="Module\RevitOpening\EntityFramework.xml" SelfReg="false"/>
-    <ROW File="___.rfa" Component_="___.rfa_1" FileName="ЗАДАНИ~1.RFA|Задание_Круглая_Стена_БезОсновы.rfa" Attributes="0" SourcePath="Module\RevitOpening\Families\Задание_Круглая_Стена_БезОсновы.rfa" SelfReg="false"/>
-    <ROW File="__.rfa_4" Component_="___.rfa_1" FileName="ЗАДАНИ~2.RFA|Задание_Перекрытие_БезОсновы.rfa" Attributes="0" SourcePath="Module\RevitOpening\Families\Задание_Перекрытие_БезОсновы.rfa" SelfReg="false"/>
-    <ROW File="___.rfa_2" Component_="___.rfa_1" FileName="ЗАДАНИ~3.RFA|Задание_Стена_Прямоугольник_БезОсновы.rfa" Attributes="0" SourcePath="Module\RevitOpening\Families\Задание_Стена_Прямоугольник_БезОсновы.rfa" SelfReg="false"/>
-    <ROW File="__.rfa_5" Component_="___.rfa_1" FileName="ОТВЕРС~1.RFA|Отверстие_Круглое_Стена.rfa" Attributes="0" SourcePath="Module\RevitOpening\Families\Отверстие_Круглое_Стена.rfa" SelfReg="false"/>
-    <ROW File="__.rfa_6" Component_="___.rfa_1" FileName="ОТВЕРС~2.RFA|Отверстие_Прямоуг_Перекр.rfa" Attributes="0" SourcePath="Module\RevitOpening\Families\Отверстие_Прямоуг_Перекр.rfa" SelfReg="false"/>
-    <ROW File="__.rfa_7" Component_="___.rfa_1" FileName="ОТВЕРС~3.RFA|Отверстие_Прямоуг_Стена.rfa" Attributes="0" SourcePath="Module\RevitOpening\Families\Отверстие_Прямоуг_Стена.rfa" SelfReg="false"/>
+    <ROW File="___.rfa" Component_="___.rfa" FileName="ЗАДАНИ~1.RFA|Задание_Круглая_Стена_БезОсновы.rfa" Attributes="0" SourcePath="Module\RevitOpening\Families\Задание_Круглая_Стена_БезОсновы.rfa" SelfReg="false"/>
+    <ROW File="__.rfa" Component_="___.rfa" FileName="ЗАДАНИ~2.RFA|Задание_Перекрытие_БезОсновы.rfa" Attributes="0" SourcePath="Module\RevitOpening\Families\Задание_Перекрытие_БезОсновы.rfa" SelfReg="false"/>
+    <ROW File="___.rfa_1" Component_="___.rfa" FileName="ЗАДАНИ~3.RFA|Задание_Стена_Прямоугольник_БезОсновы.rfa" Attributes="0" SourcePath="Module\RevitOpening\Families\Задание_Стена_Прямоугольник_БезОсновы.rfa" SelfReg="false"/>
+    <ROW File="__.rfa_1" Component_="___.rfa" FileName="ОТВЕРС~1.RFA|Отверстие_Круглое_Стена.rfa" Attributes="0" SourcePath="Module\RevitOpening\Families\Отверстие_Круглое_Стена.rfa" SelfReg="false"/>
+    <ROW File="__.rfa_2" Component_="___.rfa" FileName="ОТВЕРС~2.RFA|Отверстие_Прямоуг_Перекр.rfa" Attributes="0" SourcePath="Module\RevitOpening\Families\Отверстие_Прямоуг_Перекр.rfa" SelfReg="false"/>
+    <ROW File="__.rfa_3" Component_="___.rfa" FileName="ОТВЕРС~3.RFA|Отверстие_Прямоуг_Стена.rfa" Attributes="0" SourcePath="Module\RevitOpening\Families\Отверстие_Прямоуг_Стена.rfa" SelfReg="false"/>
     <ROW File="LoggerClient.dll" Component_="LoggerClient.dll" FileName="LOGGER~1.DLL|LoggerClient.dll" Attributes="0" SourcePath="Module\RevitOpening\LoggerClient.dll" SelfReg="false"/>
     <ROW File="LoggerClient.dll.config" Component_="EntityFramework.xml" FileName="LOGGER~1.CON|LoggerClient.dll.config" Attributes="0" SourcePath="Module\RevitOpening\LoggerClient.dll.config" SelfReg="false"/>
     <ROW File="LoggerClient.pdb" Component_="LoggerClient.dll" FileName="LOGGER~1.PDB|LoggerClient.pdb" Attributes="0" SourcePath="Module\RevitOpening\LoggerClient.pdb" SelfReg="false"/>
@@ -73,7 +74,6 @@
     <ROW File="RevitOpening.dll.config" Component_="EntityFramework.xml" FileName="REVITO~1.CON|RevitOpening.dll.config" Attributes="0" SourcePath="Module\RevitOpening\RevitOpening.dll.config" SelfReg="false"/>
     <ROW File="RevitOpening.pdb" Component_="RevitOpening.dll" FileName="REVITO~1.PDB|RevitOpening.pdb" Attributes="0" SourcePath="Module\RevitOpening\RevitOpening.pdb" SelfReg="false"/>
     <ROW File="Settings.txt" Component_="EntityFramework.xml" FileName="Settings.txt" Attributes="0" SourcePath="Module\RevitOpening\Settings.txt" SelfReg="false"/>
-    <ROW File="RevitOpening.addin" Component_="RevitOpening.addin" FileName="REVITO~1.ADD|RevitOpening.addin" Attributes="0" SourcePath="..\Module\RevitOpening.addin" SelfReg="false"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.AiPersistentPropComponent">
     <ROW Property="AI_INSTALLPERUSER" Registry="AI_INSTALLPERUSER" HklmSearch="AI_INSTALLPERUSER" HkcuSearch="AI_INSTALLPERUSER_1"/>
@@ -172,17 +172,17 @@
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatCompsComponent">
     <ROW Feature_="MainFeature" Component_="APPDIR"/>
+    <ROW Feature_="MainFeature" Component_="AI_CustomARPName"/>
     <ROW Feature_="MainFeature" Component_="EntityFramework.dll"/>
     <ROW Feature_="MainFeature" Component_="EntityFramework.xml"/>
-    <ROW Feature_="MainFeature" Component_="___.rfa_1"/>
-    <ROW Feature_="MainFeature" Component_="AI_CustomARPName"/>
+    <ROW Feature_="MainFeature" Component_="___.rfa"/>
     <ROW Feature_="MainFeature" Component_="LoggerClient.dll"/>
+    <ROW Feature_="MainFeature" Component_="ProductName"/>
+    <ROW Feature_="MainFeature" Component_="AI_INSTALLPERUSER"/>
+    <ROW Feature_="MainFeature" Component_="RevitOpening.addin"/>
     <ROW Feature_="MainFeature" Component_="LoggerWCFLib.dll"/>
     <ROW Feature_="MainFeature" Component_="Revit.Async.dll"/>
     <ROW Feature_="MainFeature" Component_="RevitOpening.dll"/>
-    <ROW Feature_="MainFeature" Component_="RevitOpening.addin"/>
-    <ROW Feature_="MainFeature" Component_="ProductName"/>
-    <ROW Feature_="MainFeature" Component_="AI_INSTALLPERUSER"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiInstExSeqComponent">
     <ROW Action="AI_DOWNGRADE" Condition="AI_NEWERPRODUCTFOUND AND (UILevel &lt;&gt; 5)" Sequence="210"/>
