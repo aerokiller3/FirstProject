@@ -1,2 +1,3 @@
 ﻿Organization=Altec
 Password=-^gf3BmQRn@-4c%v
+Domain=rchat.altekproekt.ru
