@@ -192,7 +192,7 @@
             _documents = commandData.Application.Application.Documents
                                     .Cast<Document>()
                                     .ToList();
-            FamilyLoader.LoadAllFamiliesToProject(_currentDocument);
+            Transactions.LoadFamiliesToProject(_currentDocument);
             if (bool.Parse(ConfigurationManager.AppSettings[nameof(IsAnalysisOnStart)]))
                 UpdateTaskInfo.Execute(null);
             _isListUpdated = IsAnalysisOnStart;

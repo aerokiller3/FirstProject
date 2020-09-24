@@ -20,22 +20,22 @@
         static Families()
         {
             WallRoundOpeningFamily =
-                new FamilyParameters("Отверстие_Круглое_Стена", "ТолщинаОсновы",
+                new FamilyParameters("Отверстие_Круглое_Стена_Альтек", "ТолщинаОсновы",
                     "Круглое отверстие", null, null, "Размер_Диаметр");
             FloorRectOpeningFamily =
-                new FamilyParameters("Отверстие_Прямоуг_Перекр", "Размер_Толщина основа",
+                new FamilyParameters("Отверстие_Прямоуг_Перекр_Альтек", "Размер_Толщина основа",
                     "Отверстие", "Отверстие_Высота", "Отверстие_Ширина", null);
             WallRectOpeningFamily =
-                new FamilyParameters("Отверстие_Прямоуг_Стена", "ТолщинаОсновы",
+                new FamilyParameters("Отверстие_Прямоуг_Стена_Альтек", "ТолщинаОсновы",
                     "Отверстие", "Отверстие_Высота", "Отверстие_Ширина", null);
             WallRectTaskFamily =
-                new FamilyParameters("Задание_Стена_Прямоугольник_БезОсновы", "Отверстие_Глубина",
+                new FamilyParameters("Задание_Стена_Прямоугольник_БезОсновы_Альтек", "Отверстие_Глубина",
                     "Задание_Стена_Прямоугольное", "Отверстие_Высота", "Отверстие_Ширина", null);
             WallRoundTaskFamily =
-                new FamilyParameters("Задание_Круглая_Стена_БезОсновы", "ТолщинаОсновы",
+                new FamilyParameters("Задание_Круглая_Стена_БезОсновы_Альтек", "ТолщинаОсновы",
                     "Круглое отверстие", null, null, "Диаметр отверстия");
             FloorRectTaskFamily =
-                new FamilyParameters("Задание_Перекрытие_БезОсновы", "Отверстие_Глубина",
+                new FamilyParameters("Задание_Перекрытие_БезОсновы_Альтек", "Отверстие_Глубина",
                     "Задание_Перекрытие", "Отверстие_Высота", "Отверстие_Ширина", null);
             AllFamilies = new HashSet<FamilyParameters>
             {

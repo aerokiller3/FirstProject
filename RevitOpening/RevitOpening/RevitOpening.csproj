@@ -164,22 +164,22 @@
     </None>
     <EmbeddedResource Include="Resources\Unite.png" />
     <None Include="app.config" />
-    <None Include="Families\Задание_Круглая_Стена_БезОсновы.rfa">
+    <None Include="Families\Задание_Круглая_Стена_БезОсновы_Альтек.rfa">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Families\Задание_Перекрытие_БезОсновы.rfa">
+    <None Include="Families\Задание_Перекрытие_БезОсновы_Альтек.rfa">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Families\Задание_Стена_Прямоугольник_БезОсновы.rfa">
+    <None Include="Families\Задание_Стена_Прямоугольник_БезОсновы_Альтек.rfa">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Families\Отверстие_Круглое_Стена.rfa">
+    <None Include="Families\Отверстие_Круглое_Стена_Альтек.rfa">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Families\Отверстие_Прямоуг_Перекр.rfa">
+    <None Include="Families\Отверстие_Прямоуг_Перекр_Альтек.rfa">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="Families\Отверстие_Прямоуг_Стена.rfa">
+    <None Include="Families\Отверстие_Прямоуг_Стена_Альтек.rfa">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

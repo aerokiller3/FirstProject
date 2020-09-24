@@ -77,8 +77,11 @@
             newData.BoxData.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
 
             var createdElement = BoxCreator.CreateTaskBox(newData, currentDocument);
-            currentDocument.Delete(el1.Id);
-            currentDocument.Delete(el2.Id);
+            if (createdElement != null)
+            {
+                currentDocument.Delete(el1.Id);
+                currentDocument.Delete(el2.Id);
+            }
 
             return createdElement;
         }
@@ -108,6 +111,7 @@
                         yield return (elements[i], elements[j]);
                     else
                         continue;
+
                     elements.RemoveAt(j);
                     elements.RemoveAt(i);
                     i -= 1;

@@ -1,7 +1,10 @@
 ﻿namespace RevitOpening.Logic
 {
+    using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using Autodesk.Revit.DB;
     using Autodesk.Revit.DB.Electrical;
     using Autodesk.Revit.DB.Mechanical;
@@ -34,8 +37,20 @@
 
         public void Execute()
         {
-            var walls = _documents.GetAllElementsOfClass<Wall>();
-            var floors = _documents.GetAllElementsOfClass<CeilingAndFloor>();
+            var mepCurves = GetAllMEPCurves();
+            var elements = GetAllHostElements();
+            var intersections = elements.FindIntersectionsWith(mepCurves);
+            var boxes = CalculateBoxes(intersections);
+            var createTasks = CreateTaskBoxesByParameters(boxes).ToArray();
+            _currentDocument.Regenerate();
+            var tasksForDelete = GetIntersectionsForRemove(createTasks);
+            RemoveIntersectedTasks(tasksForDelete);
+            _currentDocument.Regenerate();
+            BoxCombiner.CombineAllBoxes(_documents, _currentDocument, true);
+        }
+
+        private List<MEPCurve> GetAllMEPCurves()
+        {
             var pipes = _documents.GetAllElementsOfClass<Pipe>();
             var ducts = _documents.GetAllElementsOfClass<Duct>();
             var trays = _documents.GetAllElementsOfClass<CableTrayConduitBase>();
@@ -43,20 +58,56 @@
             mepCurves.AddRange(pipes);
             mepCurves.AddRange(ducts);
             mepCurves.AddRange(trays);
-            CreateTaskBoxesIn(walls.FindIntersectionsWith(mepCurves));
-            CreateTaskBoxesIn(floors.FindIntersectionsWith(mepCurves));
-            BoxCombiner.CombineAllBoxes(_documents,_currentDocument, true);
+            return mepCurves;
         }
 
-        private void CreateTaskBoxesIn(Dictionary<Element, List<MEPCurve>> pipesInElements)
+        private List<Element> GetAllHostElements()
         {
-            foreach (var ductsInWall in pipesInElements)
+            var walls = _documents.GetAllElementsOfClass<Wall>();
+            var floors = _documents.GetAllElementsOfClass<CeilingAndFloor>();
+            var elements = new List<Element>();
+            elements.AddRange(walls);
+            elements.AddRange(floors);
+            return elements;
+        }
+
+        private void RemoveIntersectedTasks(IEnumerable<FamilyInstance> tasksForDelete)
+        {
+            foreach (var task in tasksForDelete)
+                _currentDocument.Delete(task.Id);
+        }
+
+        private IEnumerable<FamilyInstance> GetIntersectionsForRemove(IEnumerable<FamilyInstance> createdTasks)
+        {
+            var tasksForDelete = new ConcurrentBag<FamilyInstance>();
+            Task.WaitAll(createdTasks
+                        .Select(task => Task.Run(() =>
+                         {
+                             var filter = new ElementIntersectsElementFilter(task);
+                             if (_tasks.Any(t => filter.PassesFilter(t)))
+                                 tasksForDelete.Add(task);
+                         })).ToArray());
+            return tasksForDelete;
+        }
+
+        private IEnumerable<FamilyInstance> CreateTaskBoxesByParameters(IEnumerable<OpeningParentsData> openingsParameters)
+        {
+            return openingsParameters
+                  .Select(parameters => BoxCreator
+                      .CreateTaskBox(parameters, _currentDocument))
+                  .Where(createElement => createElement != null);
+        }
+
+        private IEnumerable<OpeningParentsData> CalculateBoxes(IDictionary<Element, List<MEPCurve>> pipesInElements)
+        {
+            var parameters = new ConcurrentBag<OpeningParentsData>();
+            Task.WaitAll(pipesInElements.Select(ductsInWall => Task.Run(() =>
+            {
                 foreach (var curve in ductsInWall.Value)
                 {
-                    var openingParameters =
-                        BoxCalculator.CalculateBoxInElement(ductsInWall.Key, curve, _offsetRatio, _maxDiameter);
-                    if (openingParameters == null)
-                        continue;
+                    var openingParameters = BoxCalculator
+                       .CalculateBoxInElement(ductsInWall.Key, curve, _offsetRatio, _maxDiameter);
+                    if (openingParameters == null) continue;
 
                     openingParameters.Level = _documents.GetElement(ductsInWall.Key.LevelId.IntegerValue).Name;
                     var parentsData = new OpeningParentsData(new List<string> {ductsInWall.Key.UniqueId},
@@ -66,14 +117,10 @@
                         || (_openingsCenters?.Contains(openingParameters.IntersectionCenter) ?? false))
                         continue;
 
-                    var createElement = BoxCreator.CreateTaskBox(parentsData, _currentDocument);
-                    _currentDocument.Regenerate();
-                    var filter = new ElementIntersectsElementFilter(createElement);
-                    if (_tasks.Any(t => filter.PassesFilter(t)))
-                        _currentDocument.Delete(createElement.Id);
-                    //else
-                    //    yield return createElement;
+                    parameters.Add(parentsData);
                 }
+            })).ToArray());
+            return parameters;
         }
     }
 }

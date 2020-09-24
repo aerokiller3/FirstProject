@@ -1,8 +1,10 @@
 ﻿namespace RevitOpening.Extensions
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using Autodesk.Revit.DB;
 
     internal static class EnumerableExtensions
@@ -42,20 +44,22 @@
             return new XYZ(minX, minY, minZ);
         }
 
-        public static Dictionary<Element, List<MEPCurve>> FindIntersectionsWith(this IEnumerable<Element> elements,
+        public static IDictionary<Element, List<MEPCurve>> FindIntersectionsWith(this IEnumerable<Element> elements,
             ICollection<MEPCurve> curves)
         {
-            var intersections = new Dictionary<Element, List<MEPCurve>>();
-            foreach (var intersectionElement in elements)
-                using (var intersection = new ElementIntersectsElementFilter(intersectionElement))
-                {
-                    var currentIntersections = curves
-                                              .Where(intersection.PassesFilter)
-                                              .ToList();
-                    if (currentIntersections.Count > 0)
-                        intersections[intersectionElement] = currentIntersections;
-                }
-
+            var intersections = new ConcurrentDictionary<Element, List<MEPCurve>>();
+            Task.WaitAll(elements
+                        .Select(intersectionElement => Task.Run(() =>
+                         {
+                             using (var intersection = new ElementIntersectsElementFilter(intersectionElement))
+                             {
+                                 var currentIntersections = curves
+                                                           .Where(intersection.PassesFilter)
+                                                           .ToList();
+                                 if (currentIntersections.Count > 0) intersections[intersectionElement] = currentIntersections;
+                             }
+                         }))
+                        .ToArray());
             return intersections;
         }
     }

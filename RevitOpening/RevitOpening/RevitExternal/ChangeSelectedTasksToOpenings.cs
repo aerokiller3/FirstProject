@@ -21,7 +21,7 @@
             var currentDocument = commandData.Application.ActiveUIDocument.Document;
             var documents = commandData.Application.Application.Documents.Cast<Document>()
                                        .ToList();
-            FamilyLoader.LoadAllFamiliesToProject(currentDocument);
+            Transactions.LoadFamiliesToProject(currentDocument);
             var selected = commandData.Application.ActiveUIDocument.Selection
                                       .GetSelectedTasks(currentDocument);
             if (selected == null)

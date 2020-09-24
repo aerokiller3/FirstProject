@@ -20,7 +20,7 @@
             ModuleLogger.SendFunctionUseData(nameof(CombineTwoBoxes), nameof(RevitOpening));
             var app = commandData.Application;
             var currentDocument = app.ActiveUIDocument.Document;
-            FamilyLoader.LoadAllFamiliesToProject(currentDocument);
+            Transactions.LoadFamiliesToProject(currentDocument);
             var documents = app.Application.Documents.Cast<Document>()
                                .ToList();
             var selected = app.ActiveUIDocument.Selection.GetSelectedTasks(currentDocument);

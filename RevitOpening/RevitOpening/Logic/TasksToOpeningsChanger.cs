@@ -33,7 +33,11 @@
                 var parentsData = task.GetParentsData();
                 parentsData.BoxData.FamilyName = familyData.SymbolName;
                 currentDocument.Delete(task.Id);
-                elementList.Add(BoxCreator.CreateTaskBox(parentsData, currentDocument));
+                var createdEl = BoxCreator.CreateTaskBox(parentsData, currentDocument);
+                if (createdEl == null)
+                    continue;
+
+                elementList.Add(createdEl);
             }
 
             return elementList;

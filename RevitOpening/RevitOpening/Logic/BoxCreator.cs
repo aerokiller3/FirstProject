@@ -5,6 +5,7 @@
     using Autodesk.Revit.DB;
     using Autodesk.Revit.DB.Structure;
     using Extensions;
+    using LoggerClient;
     using Models;
 
     internal static class BoxCreator
@@ -38,13 +39,13 @@
                 }
             }
 
-
             //настроить семейство круглых
             if (newBox.IsTask())
                 newBox.LookupParameter("Несогласованно").Set(1);
             newBox.LookupParameter(familyParameters.DepthName).Set(parentsData.BoxData.Depth);
             parentsData.BoxData.Id = newBox.Id.IntegerValue;
             newBox.SetParentsData(parentsData);
+
             return newBox;
         }
     }

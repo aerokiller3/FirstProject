@@ -13,17 +13,24 @@
         public static OpeningData CalculateBoxInElement(Element element, MEPCurve pipe, double offsetRatio,
             double maxDiameter)
         {
-            switch (element)
+            try
             {
-                case Wall wall:
-                    return CalculateBoxInWall(wall, pipe, offsetRatio, maxDiameter);
-                case CeilingAndFloor floor:
-                    return CalculateBoxInFloor(floor, pipe, offsetRatio);
-                default:
-                    ModuleLogger.SendErrorData("Необработанный тип хост элемента",
-                        element.Category.Name, nameof(BoxCalculator),
-                        Environment.StackTrace, nameof(RevitOpening));
-                    throw new Exception("Неизсветный тип хост-элемента");
+                switch (element)
+                {
+                    case Wall wall:
+                        return CalculateBoxInWall(wall, pipe, offsetRatio, maxDiameter);
+                    case CeilingAndFloor floor:
+                        return CalculateBoxInFloor(floor, pipe, offsetRatio);
+                    default:
+                        throw new ArgumentException("Unsupported host type");
+                }
+            }
+            catch (Exception e)
+            {
+                ModuleLogger.SendErrorData(e.Message,
+                    $"Element id: {element?.Id?.IntegerValue}", nameof(BoxCalculator),
+                    e.StackTrace, nameof(RevitOpening));
+                return null;
             }
         }
 
@@ -50,6 +57,11 @@
                 intersectionCenter, new List<ElementGeometry> {wallData},
                 new List<ElementGeometry> {pipeData}, familyParameters.SymbolName,
                 offsetRatio, maxDiameter, null);
+        }
+
+        private static bool IsNotNormalNumber(double number)
+        {
+            return double.IsNaN(number) || double.IsInfinity(number);
         }
 
         private static OpeningData CalculateBoxInFloor(CeilingAndFloor floor, MEPCurve pipe, double offsetRatio)
@@ -134,25 +146,25 @@
                     (SqrtOfSqrSum(wallData.XLen, wallData.YLen) *
                         SqrtOfSqrSum(pipeData.XLen, pipeData.YLen)));
             horizontalAngleBetweenWallAndPipe = GetAcuteAngle(horizontalAngleBetweenWallAndPipe);
-
-            return CalculateTaskSize(wallWidth, horizontalAngleBetweenWallAndPipe, pipeWidth, offsetRatio);
+            var size = CalculateTaskSize(wallWidth, horizontalAngleBetweenWallAndPipe, pipeWidth, offsetRatio);
+            return IsNotNormalNumber(size) ? size : pipeWidth * offsetRatio;
         }
 
-        private static double CalculateHeightInWall(double pipeWidth, double wallWidth, ElementGeometry pipeData,
+        private static double CalculateHeightInWall(double pipeHeight, double wallWidth, ElementGeometry pipeData,
             double offsetRatio)
         {
             var verticalAngleBetweenWallAndPipe =
                 Math.Acos(pipeData.ZLen / Math.Sqrt(pipeData.XLen * pipeData.XLen + pipeData.YLen * pipeData.YLen +
                     pipeData.ZLen * pipeData.ZLen));
             verticalAngleBetweenWallAndPipe = GetAcuteAngle(verticalAngleBetweenWallAndPipe);
-
-            return CalculateTaskSize(wallWidth, verticalAngleBetweenWallAndPipe, pipeWidth, offsetRatio);
+            var size = CalculateTaskSize(wallWidth, verticalAngleBetweenWallAndPipe, pipeHeight, offsetRatio);
+            return IsNotNormalNumber(size) ? size : pipeHeight * offsetRatio;
         }
 
-        private static double CalculateTaskSize(double wallWidth, double angle, double ductWidth, double offsetRatio)
+        private static double CalculateTaskSize(double wallWidth, double angle, double pipeSize, double offsetRatio)
         {
-            return (wallWidth / (angle == 0 ? 1 : Math.Tan(angle))
-                + ductWidth / (angle == 0 ? 1 : Math.Sin(angle))) * offsetRatio;
+            return (wallWidth / Math.Tan(angle)
+                + pipeSize / Math.Sin(angle)) * offsetRatio;
         }
 
         private static double SqrtOfSqrSum(double a, double b)
@@ -162,9 +174,13 @@
 
         private static double GetAcuteAngle(double angel)
         {
-            return angel > Math.PI / 2
+            angel = angel > Math.PI / 2
                 ? Math.PI - angel
                 : angel;
+            if (IsNotNormalNumber(angel) || Math.Abs(angel) < 0.001)
+                return Math.PI / 2;
+
+            return angel;
         }
     }
 }

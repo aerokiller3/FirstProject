@@ -26,6 +26,7 @@
             {
                 ModuleLogger.SendErrorData(e.Message, e.InnerException?.Message,
                     e.Source, e.StackTrace, nameof(RevitOpening));
+                throw;
             }
         }
 
@@ -101,6 +102,12 @@
                 BoxAnalyzer.AnalyzeElement(newTask, data, walls, floors, tasks, documents, offset,
                     diameter, mepCurves, currentDocument);
             });
+        }
+
+        public static void LoadFamiliesToProject(Document currentDocument)
+        {
+            DoTransaction(currentDocument, "Загрузка семейств",
+                () => FamilyLoader.LoadAllFamiliesToProject(currentDocument));
         }
     }
 }

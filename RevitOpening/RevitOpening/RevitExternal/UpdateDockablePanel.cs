@@ -22,7 +22,7 @@
             var documents = app.Application.Documents.Cast<Document>()
                                .ToList();
             var currentDocument = app.ActiveUIDocument.Document;
-            FamilyLoader.LoadAllFamiliesToProject(currentDocument);
+            Transactions.LoadFamiliesToProject(currentDocument);
             Transactions.UpdateTasksInfo(currentDocument, documents, Extensions.Settings.Offset, Extensions.Settings.Diameter);
 
             var pane = commandData.Application.ActiveUIDocument.Application.GetDockablePane(

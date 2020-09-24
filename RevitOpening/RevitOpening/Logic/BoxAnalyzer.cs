@@ -115,7 +115,7 @@
             var isImmutable = isOldBox && isOldPipes && isOldHosts;
             if (!isImmutable)
                 newData = element.InitData(walls, floors, offset, maxDiameter,
-                    mepCurves, currentDocument, documents);
+                    mepCurves, documents);
             else if (pipesGeometries.Count != 1 && hostGeometries.Count != 1)
                 parentsData.BoxData.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
             return isImmutable;
@@ -217,7 +217,7 @@
                     ModuleLogger.SendErrorData("Необработанный тип хост элемента",
                         element.Category.Name, nameof(BoxAnalyzer),
                         Environment.StackTrace, nameof(RevitOpening));
-                    throw new Exception("Неизвестный тип хост элемента");
+                    return false;
             }
         }
     }

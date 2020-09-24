@@ -12,7 +12,7 @@
     {
         public static OpeningParentsData InitData(this Element task, IEnumerable<Wall> walls,
             IEnumerable<CeilingAndFloor> floors, double offset, double maxDiameter,
-            IEnumerable<MEPCurve> mepCurves, Document currentDocument, ICollection<Document> documents)
+            IEnumerable<MEPCurve> mepCurves, ICollection<Document> documents)
         {
             var filter = new ElementIntersectsElementFilter(task);
             var intersectsWalls = walls
@@ -34,8 +34,7 @@
                 intersectsMepCurves
                    .Select(c => c.UniqueId)
                    .ToList(),
-                task.CalculateOldBoxParameters(intersectsMepCurves, hosts, offset, maxDiameter,
-                    currentDocument, documents));
+                task.CalculateOldBoxParameters(intersectsMepCurves, hosts, offset, maxDiameter, documents));
 
             task.SetParentsData(parentsData);
             filter.Dispose();
@@ -43,8 +42,7 @@
         }
 
         public static OpeningData CalculateOldBoxParameters(this Element element, ICollection<MEPCurve> pipes,
-            ICollection<Element> hosts, double offset, double maxDiameter, Document currentDocument,
-            ICollection<Document> documents)
+            ICollection<Element> hosts, double offset, double maxDiameter, ICollection<Document> documents)
         {
             OpeningData parameters;
             if (pipes.Count != 1 || hosts.Count != 1)
@@ -60,7 +58,9 @@
 
             parameters.Id = element.Id.IntegerValue;
             parameters.FamilyName = ((FamilyInstance) element).Symbol.FamilyName;
+            // TASK
             parameters.Level = hosts.FirstOrDefault()?.GetLevelName(documents);
+            // OR NOT
             parameters.HostsGeometries = hosts
                                         .Select(h => new ElementGeometry(h))
                                         .ToList();
@@ -107,7 +107,7 @@
             Document currentDocument, ICollection<Document> documents)
         {
             return task.GetParentsData() ?? task.InitData(walls, floors, offset, maxDiameter,
-                mepCurves, currentDocument, documents);
+                mepCurves, documents);
         }
 
         public static bool IsTask(this Element element)
