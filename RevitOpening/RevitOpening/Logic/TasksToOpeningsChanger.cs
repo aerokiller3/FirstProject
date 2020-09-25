@@ -7,15 +7,15 @@
 
     internal static class TasksToOpeningsChanger
     {
-        public static List<Element> SwapAllTasksToOpenings(Document currentDocument)
+        public static List<Element> SwapAllTasksToOpenings(ICollection<Document> documents, Document currentDocument)
         {
-            var wallRectTasks = currentDocument.GetTasksByName(Families.WallRectTaskFamily);
-            var wallRoundTasks = currentDocument.GetTasksByName(Families.WallRoundTaskFamily);
-            var floorRectTasks = currentDocument.GetTasksByName(Families.FloorRectTaskFamily);
+            var wallRectTasks = documents.GetTasksByName(Families.WallRectTaskFamily);
+            var wallRoundTasks = documents.GetTasksByName(Families.WallRoundTaskFamily);
+            var floorRectTasks = documents.GetTasksByName(Families.FloorRectTaskFamily);
 
-            (var correctWallRectTasks, var incorrectWallRectTasks) = GetCheckedBoxes(wallRectTasks);
-            (var correctWallRoundTasks, var incorrectWallRoundTasks) = GetCheckedBoxes(wallRoundTasks);
-            (var correctFloorRectTasks, var incorrectFloorRectTasks) = GetCheckedBoxes(floorRectTasks);
+            var correctWallRectTasks = GetCheckedBoxes(wallRectTasks);
+            var correctWallRoundTasks = GetCheckedBoxes(wallRoundTasks);
+            var correctFloorRectTasks = GetCheckedBoxes(floorRectTasks);
 
             var elementList = new List<Element>();
             elementList.AddRange(SwapTasksToOpenings(currentDocument, correctWallRectTasks));
@@ -29,41 +29,37 @@
             var elementList = new List<Element>();
             foreach (var task in tasks)
             {
-                var familyData = Families.GetDataFromSymbolName(task.Symbol.FamilyName).ChooseOpeningFamily();
-                var parentsData = task.GetParentsData();
+                var familyData = Families.GetDataFromSymbolName(task.Symbol.FamilyName)
+                                         .ChooseOpeningFamily();
+                var parentsData = task.GetParentsDataFromSchema();
                 parentsData.BoxData.FamilyName = familyData.SymbolName;
-                currentDocument.Delete(task.Id);
+
                 var createdEl = BoxCreator.CreateTaskBox(parentsData, currentDocument);
+
                 if (createdEl == null)
                     continue;
 
+                currentDocument.Delete(task.Id);
                 elementList.Add(createdEl);
             }
 
             return elementList;
         }
 
-        private static (IEnumerable<FamilyInstance>, IEnumerable<FamilyInstance>) GetCheckedBoxes(
+        private static IEnumerable<FamilyInstance> GetCheckedBoxes(
             IEnumerable<FamilyInstance> wallRectTasks)
         {
-            var correctTasks = new List<FamilyInstance>();
-            var incorrectTasks = new List<FamilyInstance>();
             foreach (var task in wallRectTasks)
             {
-                var data = task.GetParentsData();
+                var data = task.GetParentsDataFromSchema();
                 if (CheckAgreed(task, data) &&
                     (data.BoxData.Collisions.Count == 0 ||
-                        data.BoxData.Collisions.Contains(Collisions.TaskCouldNotBeProcessed)))
-                    correctTasks.Add(task);
-                else
-                    incorrectTasks.Add(task);
+                        data.BoxData.Collisions.IsTaskCouldNotBeProcessed))
+                    yield return task;
 
                 //Изменить на спец. атрибут
                 //task.LookupParameter("Несогласованно").Set(0);
             }
-
-
-            return (correctTasks, incorrectTasks);
         }
 
         private static bool CheckAgreed(FamilyInstance box, OpeningParentsData data)
@@ -72,7 +68,7 @@
             //Проверку спец. атрибута
 
             return agreedParameter == 0 &&
-                !data.BoxData.Collisions.Contains(Collisions.TaskCouldNotBeProcessed);
+                !data.BoxData.Collisions.IsTaskCouldNotBeProcessed;
         }
     }
 }

@@ -4,6 +4,7 @@
     using System.Linq;
     using Autodesk.Revit.DB;
     using Logic;
+    using Models;
 
     internal static class DocumentsExtensions
     {
@@ -23,28 +24,38 @@
             return els.FirstOrDefault(curEl => curEl != null);
         }
 
-        public static List<FamilyInstance> GetAllOpenings(this IEnumerable<Document> documents)
+        public static List<FamilyInstance> GetAllOpenings(this ICollection<Document> documents)
+        {
+            var elements = new List<FamilyInstance>();
+            elements.AddRange(documents.GetTasksByName(Families.FloorRectOpeningFamily));
+            elements.AddRange(documents.GetTasksByName(Families.WallRectOpeningFamily));
+            elements.AddRange(documents.GetTasksByName(Families.WallRoundOpeningFamily));
+            return elements;
+        }
+
+        public static List<FamilyInstance> GetTasksByName(this IEnumerable<Document> documents,
+            FamilyParameters familyParameters)
         {
             var elements = new List<FamilyInstance>();
             foreach (var document in documents)
             {
-                elements.AddRange(document.GetTasksByName(Families.FloorRectOpeningFamily));
-                elements.AddRange(document.GetTasksByName(Families.WallRectOpeningFamily));
-                elements.AddRange(document.GetTasksByName(Families.WallRoundOpeningFamily));
+                var collector = new FilteredElementCollector(document)
+                               .OfCategory(BuiltInCategory.OST_Windows)
+                               .OfClass(typeof(FamilyInstance));
+                elements.AddRange(collector
+                                 .Cast<FamilyInstance>()
+                                 .Where(e => e.Symbol.FamilyName == familyParameters.SymbolName));
             }
 
             return elements;
         }
 
-        public static List<FamilyInstance> GetAllTasks(this IEnumerable<Document> documents)
+        public static List<FamilyInstance> GetAllTasks(this ICollection<Document> documents)
         {
             var elements = new List<FamilyInstance>();
-            foreach (var document in documents)
-            {
-                elements.AddRange(document.GetTasksByName(Families.FloorRectTaskFamily));
-                elements.AddRange(document.GetTasksByName(Families.WallRectTaskFamily));
-                elements.AddRange(document.GetTasksByName(Families.WallRoundTaskFamily));
-            }
+            elements.AddRange(documents.GetTasksByName(Families.FloorRectTaskFamily));
+            elements.AddRange(documents.GetTasksByName(Families.WallRectTaskFamily));
+            elements.AddRange(documents.GetTasksByName(Families.WallRoundTaskFamily));
 
             return elements;
         }

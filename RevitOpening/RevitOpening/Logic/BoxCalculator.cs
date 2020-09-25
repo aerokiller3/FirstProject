@@ -147,7 +147,9 @@
                         SqrtOfSqrSum(pipeData.XLen, pipeData.YLen)));
             horizontalAngleBetweenWallAndPipe = GetAcuteAngle(horizontalAngleBetweenWallAndPipe);
             var size = CalculateTaskSize(wallWidth, horizontalAngleBetweenWallAndPipe, pipeWidth, offsetRatio);
-            return IsNotNormalNumber(size) ? size : pipeWidth * offsetRatio;
+            return IsNotNormalNumber(size)
+                ? size
+                : pipeWidth * offsetRatio;
         }
 
         private static double CalculateHeightInWall(double pipeHeight, double wallWidth, ElementGeometry pipeData,
@@ -158,7 +160,9 @@
                     pipeData.ZLen * pipeData.ZLen));
             verticalAngleBetweenWallAndPipe = GetAcuteAngle(verticalAngleBetweenWallAndPipe);
             var size = CalculateTaskSize(wallWidth, verticalAngleBetweenWallAndPipe, pipeHeight, offsetRatio);
-            return IsNotNormalNumber(size) ? size : pipeHeight * offsetRatio;
+            return IsNotNormalNumber(size)
+                ? size
+                : pipeHeight * offsetRatio;
         }
 
         private static double CalculateTaskSize(double wallWidth, double angle, double pipeSize, double offsetRatio)

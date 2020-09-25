@@ -15,6 +15,8 @@
         public const string TaskNotActual = "Расположение трубы или стены имзенилось с момента построения задания\n" +
             "или информация о заданиях давно не обновлялась";
 
+        public bool IsTaskCouldNotBeProcessed { get; set; } = false;
+
         public HashSet<string> ListOfCollisions = new HashSet<string>();
 
         public int Count => ListOfCollisions.Count;
@@ -22,6 +24,12 @@
         public void Add(string collision)
         {
             ListOfCollisions.Add(collision);
+        }
+
+        public void MarkUnSupported()
+        {
+            ListOfCollisions.Add(TaskCouldNotBeProcessed);
+            IsTaskCouldNotBeProcessed = true;
         }
 
         public bool Contains(string collision)

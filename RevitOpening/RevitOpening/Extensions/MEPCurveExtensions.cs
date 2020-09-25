@@ -1,23 +1,27 @@
 ﻿namespace RevitOpening.Extensions
 {
+    using System.Linq;
     using Autodesk.Revit.DB;
 
     internal static class MEPCurveExtensions
     {
         public static bool IsRoundPipe(this MEPCurve pipe)
         {
-            bool isRound;
-            try
-            {
-                var width = pipe.Width;
-                isRound = false;
-            }
-            catch
-            {
-                isRound = true;
-            }
+            var connector = pipe.ConnectorManager.Connectors
+                                .Cast<Connector>()
+                                .FirstOrDefault();
+            if (connector == null)
+                try
+                {
+                    var width = pipe.Width;
+                    return false;
+                }
+                catch
+                {
+                    return true;
+                }
 
-            return isRound;
+            return connector.Shape == ConnectorProfileType.Oval || connector.Shape == ConnectorProfileType.Round;
         }
 
         public static double GetPipeWidth(this MEPCurve pipe)

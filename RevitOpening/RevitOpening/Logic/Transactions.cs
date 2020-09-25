@@ -34,7 +34,7 @@
             double offset, double diameter)
         {
             DoTransaction(document, "Обновление информации о заданиях",
-                () => { BoxAnalyzer.ExecuteAnalysis(documents,document, offset, diameter); });
+                () => BoxAnalyzer.ExecuteAnalysis(documents, offset, diameter));
         }
 
         public static void Drawing(Document document, List<Element> openings)
@@ -82,10 +82,10 @@
             });
         }
 
-        public static void SwapAllTasksToOpenings(Document document, List<Element> openings)
+        public static void SwapAllTasksToOpenings(List<Document> documents, Document document, List<Element> openings)
         {
             DoTransaction(document, "Замена заданий на отверстия", () =>
-                openings.AddRange(TasksToOpeningsChanger.SwapAllTasksToOpenings(document)));
+                openings.AddRange(TasksToOpeningsChanger.SwapAllTasksToOpenings(documents, document)));
         }
 
         public static void UpdateTaskInfo(Document currentDocument, ICollection<Document> documents, Element newTask,
@@ -97,10 +97,10 @@
                 var floors = documents.GetAllElementsOfClass<CeilingAndFloor>();
                 var tasks = documents.GetAllTasks();
                 var mepCurves = documents.GetAllElementsOfClass<MEPCurve>();
-                var data = newTask.GetOrInitData(walls, floors, offset, diameter, mepCurves,
-                    currentDocument, documents);
-                BoxAnalyzer.AnalyzeElement(newTask, data, walls, floors, tasks, documents, offset,
-                    diameter, mepCurves, currentDocument);
+                var data = newTask.GetParentsDataFromSchema();
+                data = BoxAnalyzer.UpdateElementInformation(newTask, data, walls, floors, tasks, documents, offset,
+                    diameter, mepCurves);
+                newTask.SetParentsData(data);
             });
         }
 

@@ -85,14 +85,14 @@
         private void UpdateTasks()
         {
             Tasks = _documents.GetAllTasks()
-                              .Select(t => t.GetParentsData().BoxData)
+                              .Select(t => t.GetParentsDataFromSchema().BoxData)
                               .ToList();
         }
 
         private void UpdateOpenings()
         {
             Openings = _documents.GetAllOpenings()
-                                 .Select(op => op.GetParentsData().BoxData)
+                                 .Select(op => op.GetParentsDataFromSchema().BoxData)
                                  .ToList();
         }
 

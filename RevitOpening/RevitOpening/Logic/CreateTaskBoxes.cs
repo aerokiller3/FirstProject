@@ -80,13 +80,12 @@
         private IEnumerable<FamilyInstance> GetIntersectionsForRemove(IEnumerable<FamilyInstance> createdTasks)
         {
             var tasksForDelete = new ConcurrentBag<FamilyInstance>();
-            Task.WaitAll(createdTasks
-                        .Select(task => Task.Run(() =>
-                         {
-                             var filter = new ElementIntersectsElementFilter(task);
-                             if (_tasks.Any(t => filter.PassesFilter(t)))
-                                 tasksForDelete.Add(task);
-                         })).ToArray());
+            Parallel.ForEach(createdTasks, task =>
+            {
+                var filter = new ElementIntersectsElementFilter(task);
+                if (_tasks.Any(t => filter.PassesFilter(t)))
+                    tasksForDelete.Add(task);
+            });
             return tasksForDelete;
         }
 
@@ -101,16 +100,16 @@
         private IEnumerable<OpeningParentsData> CalculateBoxes(IDictionary<Element, List<MEPCurve>> pipesInElements)
         {
             var parameters = new ConcurrentBag<OpeningParentsData>();
-            Task.WaitAll(pipesInElements.Select(ductsInWall => Task.Run(() =>
+            Parallel.ForEach(pipesInElements, pipesInHost =>
             {
-                foreach (var curve in ductsInWall.Value)
+                foreach (var curve in pipesInHost.Value)
                 {
                     var openingParameters = BoxCalculator
-                       .CalculateBoxInElement(ductsInWall.Key, curve, _offsetRatio, _maxDiameter);
+                       .CalculateBoxInElement(pipesInHost.Key, curve, _offsetRatio, _maxDiameter);
                     if (openingParameters == null) continue;
 
-                    openingParameters.Level = _documents.GetElement(ductsInWall.Key.LevelId.IntegerValue).Name;
-                    var parentsData = new OpeningParentsData(new List<string> {ductsInWall.Key.UniqueId},
+                    openingParameters.Level = _documents.GetElement(pipesInHost.Key.LevelId.IntegerValue).Name;
+                    var parentsData = new OpeningParentsData(new List<string> {pipesInHost.Key.UniqueId},
                         new List<string> {curve.UniqueId}, openingParameters);
 
                     if ((_tasksCenters?.Contains(openingParameters.IntersectionCenter) ?? false)
@@ -119,7 +118,7 @@
 
                     parameters.Add(parentsData);
                 }
-            })).ToArray());
+            });
             return parameters;
         }
     }

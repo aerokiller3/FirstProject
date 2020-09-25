@@ -8,17 +8,6 @@
 
     internal static class DocumentExtensions
     {
-        public static IEnumerable<FamilyInstance> GetTasksByName(this Document document, FamilyParameters familyParameters)
-        {
-            var collector = new FilteredElementCollector(document)
-                           .OfCategory(BuiltInCategory.OST_Windows)
-                           .OfClass(typeof(FamilyInstance));
-
-            return collector
-                  .Cast<FamilyInstance>()
-                  .Where(e => e.Symbol.FamilyName == familyParameters.SymbolName);
-        }
-
         public static FamilySymbol GetFamilySymbol(this Document document, string familyName)
         {
             var collector = new FilteredElementCollector(document)

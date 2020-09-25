@@ -160,7 +160,7 @@
                         var openings = new List<Element>();
                         if (_isListUpdated)
                             UpdateTaskInfo.Execute(null);
-                        Transactions.SwapAllTasksToOpenings(_currentDocument, openings);
+                        Transactions.SwapAllTasksToOpenings(_documents, _currentDocument, openings);
                         Transactions.Drawing(_currentDocument, openings);
                         UpdateTaskInfo.Execute(null);
                         UpdateTasksAndOpenings();
@@ -222,14 +222,14 @@
         private void UpdateTasks()
         {
             Tasks = _documents.GetAllTasks()
-                              .Select(t => t.GetParentsData().BoxData)
+                              .Select(t => t.GetParentsDataFromSchema().BoxData)
                               .ToList();
         }
 
         private void UpdateOpenings()
         {
             Openings = _documents.GetAllOpenings()
-                                 .Select(op => op.GetParentsData().BoxData)
+                                 .Select(op => op.GetParentsDataFromSchema().BoxData)
                                  .ToList();
         }
 

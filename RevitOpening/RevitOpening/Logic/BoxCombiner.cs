@@ -10,56 +10,42 @@
 
     internal static class BoxCombiner
     {
-        //?
-        public static bool ValidateTasksForCombine(OpeningParentsData data1, OpeningParentsData data2, Element el1,
-            Element el2)
-        {
-            return (data1.PipesIds.AlmostEqualTo(data2.PipesIds) || data1.HostsIds.AlmostEqualTo(data2.HostsIds))
-                && data1.BoxData.FamilyName == data2.BoxData.FamilyName
-                && !data1.BoxData.Collisions.Contains(Collisions.TaskCouldNotBeProcessed)
-                && !data2.BoxData.Collisions.Contains(Collisions.TaskCouldNotBeProcessed)
-                && el1.IsTask() && el2.IsTask();
-        }
-
         public static void CombineAllBoxes(ICollection<Document> documents, Document currentDocument, bool isTangent)
         {
             var isElementsUnited = true;
             while (isElementsUnited)
             {
                 isElementsUnited = false;
-                isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, Families.WallRectTaskFamily, isTangent);
-                isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, Families.FloorRectTaskFamily, isTangent);
-                isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, Families.WallRoundTaskFamily, isTangent);
+                var tasks1 = documents.GetTasksByName(Families.WallRectTaskFamily);
+                var tasks2 = documents.GetTasksByName(Families.FloorRectTaskFamily);
+                var tasks3 = documents.GetTasksByName(Families.WallRoundTaskFamily);
+                isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, isTangent, tasks1);
+                isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, isTangent, tasks2);
+                isElementsUnited |= CombineOneTypeBoxes(documents, currentDocument, isTangent, tasks3);
                 currentDocument.Regenerate();
             }
         }
 
         private static bool CombineOneTypeBoxes(ICollection<Document> documents, Document currentDocument,
-            FamilyParameters familyData, bool isTangent)
+            bool isTangent, IList<FamilyInstance> tasks)
         {
-            var tasks = currentDocument
-                       .GetTasksByName(familyData)
-                       .ToList();
-            var intersections = FindTaskIntersections(tasks, isTangent).ToList();
-            for (var i = 0; i < intersections.Count; i++)
-                if (CombineTwoBoxes(documents, currentDocument, intersections[i].Item1, intersections[i].Item2) == null)
-                {
-                    intersections.RemoveAt(i);
-                    i--;
-                }
+            var intersections = FindTaskIntersections(tasks, isTangent)
+               .ToList();
+            var isCombined = false;
+            foreach ((var el1, var el2) in intersections)
+                if (CombineTwoBoxes(documents, currentDocument, el1, el2) != null)
+                    isCombined = true;
 
-            return intersections.Count > 0;
+            return isCombined;
         }
 
         public static FamilyInstance CombineTwoBoxes(ICollection<Document> documents, Document currentDocument,
             Element el1, Element el2)
         {
-            var data1 = el1.GetParentsData();
-            var data2 = el2.GetParentsData();
-            if (!ValidateTasksForCombine(data1, data2, el1, el2))
-                return null;
+            var data1 = el1.GetParentsDataFromSchema();
+            var data2 = el2.GetParentsDataFromSchema();
 
-            OpeningData newOpening = null;
+            OpeningData newOpening;
             if (data1.PipesIds.AlmostEqualTo(data2.PipesIds))
                 newOpening = CalculateUnitedTaskOnOnePipe(data1, data2);
             else if (documents.GetElement(data1.HostsIds.FirstOrDefault()) is Wall)
@@ -68,13 +54,12 @@
                     : CalculateUnitedTaskInWallWithRects(el1, el2, data1, data2);
             else if (documents.GetElement(data1.HostsIds.FirstOrDefault()) is CeilingAndFloor)
                 newOpening = CalculateUnitedTaskInFloor(el1, el2, data1, data2);
-
-            if (newOpening == null)
+            else
                 return null;
 
             var newData = new OpeningParentsData(data1.HostsIds.Union(data2.HostsIds).ToList(),
                 data1.PipesIds.Union(data2.PipesIds).ToList(), newOpening);
-            newData.BoxData.Collisions.Add(Collisions.TaskCouldNotBeProcessed);
+            newData.BoxData.Collisions.MarkUnSupported();
 
             var createdElement = BoxCreator.CreateTaskBox(newData, currentDocument);
             if (createdElement != null)
@@ -88,9 +73,10 @@
 
         private static IEnumerable<(Element, Element)> FindTaskIntersections(IList<FamilyInstance> elements, bool isTangent)
         {
-            for (var i = 0; i < elements.Count; i++)
+            var intersectedIndexes = new HashSet<int>();
+            for (var i = elements.Count - 1; i > -1; i--)
             {
-                var data = elements[i].GetParentsData();
+                var data = elements[i].GetParentsDataFromSchema();
                 var tolerance = new XYZ(0.1, 0.1, 0.1);
                 var angle = XYZ.BasisY.Negate().AngleTo(data.BoxData.Direction.XYZ);
                 var transform = Transform.CreateRotation(XYZ.BasisZ, -angle);
@@ -98,9 +84,10 @@
                 var solid = elements[i].GetUnitedSolid(null, transform);
                 var filter = new ElementIntersectsSolidFilter(solid);
                 var filterWithTolerance = new ElementIntersectsSolidFilter(solidWithTolerance);
-                for (var j = i + 1; j < elements.Count; j++)
+                for (var j = i - 1; j > -1; j--)
                 {
-                    if (elements[i].Id == elements[j].Id)
+                    if (elements[i].Id == elements[j].Id
+                        || intersectedIndexes.Contains(j) || intersectedIndexes.Contains(i))
                         continue;
 
                     var tangent = filterWithTolerance.PassesFilter(elements[j]);
@@ -112,9 +99,8 @@
                     else
                         continue;
 
-                    elements.RemoveAt(j);
-                    elements.RemoveAt(i);
-                    i -= 1;
+                    intersectedIndexes.Add(j);
+                    intersectedIndexes.Add(i);
                     break;
                 }
             }
@@ -138,8 +124,8 @@
                 data1.BoxData.Diameter, data1.BoxData.Level);
         }
 
-        private static OpeningData CalculateUnitedTaskInFloor(Element el1, Element el2, OpeningParentsData data1,
-            OpeningParentsData data2)
+        private static OpeningData CalculateUnitedTaskInFloor(Element el1, Element el2,
+            OpeningParentsData data1, OpeningParentsData data2)
         {
             var angle = XYZ.BasisX.AngleTo(data1.BoxData.Direction.XYZ);
             var transform = Transform.CreateRotation(XYZ.BasisZ, -angle);
