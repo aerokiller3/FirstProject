@@ -11,8 +11,6 @@
 
     internal static class ElementExtensions
     {
-        private static readonly object DocumentLock = new object();
-
         public static OpeningParentsData GetParentsDataFromParameters(this Element element,
             IEnumerable<Wall> walls, IEnumerable<CeilingAndFloor> floors, double offset,
             double maxDiameter, IEnumerable<MEPCurve> mepCurves, ICollection<Document> documents)
@@ -54,30 +52,27 @@
                                         .Select(p => new ElementGeometry(p))
                                         .ToList();
             var familyParameters = Families.GetDataFromSymbolName(parameters.FamilyName);
-            double width, height, depth;
-            lock (DocumentLock)
+            double width, height;
+            if (familyParameters == Families.FloorRectTaskFamily)
             {
-                if (familyParameters == Families.FloorRectTaskFamily)
-                {
-                    width = element.LookupParameter(familyParameters.HeightName).AsDouble();
-                    height = element.LookupParameter(familyParameters.WidthName).AsDouble();
-                }
-                else if (familyParameters == Families.WallRectTaskFamily)
-                {
-                    height = element.LookupParameter(familyParameters.HeightName).AsDouble();
-                    width = element.LookupParameter(familyParameters.WidthName).AsDouble();
-                }
-                else if (familyParameters == Families.WallRoundTaskFamily)
-                {
-                    width = height = element.LookupParameter(familyParameters.DiameterName).AsDouble();
-                }
-                else
-                {
-                    throw new ArgumentException("Неизвестный экземпляр семейства");
-                }
-
-                depth = element.LookupParameter(familyParameters.DepthName).AsDouble();
+                width = element.LookupParameter(familyParameters.HeightName).AsDouble();
+                height = element.LookupParameter(familyParameters.WidthName).AsDouble();
             }
+            else if (familyParameters == Families.WallRectTaskFamily)
+            {
+                height = element.LookupParameter(familyParameters.HeightName).AsDouble();
+                width = element.LookupParameter(familyParameters.WidthName).AsDouble();
+            }
+            else if (familyParameters == Families.WallRoundTaskFamily)
+            {
+                width = height = element.LookupParameter(familyParameters.DiameterName).AsDouble();
+            }
+            else
+            {
+                throw new ArgumentException("Неизвестный экземпляр семейства");
+            }
+
+            var depth = element.LookupParameter(familyParameters.DepthName).AsDouble();
 
             parameters.Depth = depth;
             parameters.Width = width;

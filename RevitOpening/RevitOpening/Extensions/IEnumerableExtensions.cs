@@ -48,18 +48,17 @@
             ICollection<MEPCurve> curves)
         {
             var intersections = new ConcurrentDictionary<Element, List<MEPCurve>>();
-            Task.WaitAll(elements
-                        .Select(intersectionElement => Task.Run(() =>
-                         {
-                             using (var intersection = new ElementIntersectsElementFilter(intersectionElement))
-                             {
-                                 var currentIntersections = curves
-                                                           .Where(intersection.PassesFilter)
-                                                           .ToList();
-                                 if (currentIntersections.Count > 0) intersections[intersectionElement] = currentIntersections;
-                             }
-                         }))
-                        .ToArray());
+            Parallel.ForEach(elements, el =>
+            {
+                using (var intersection = new ElementIntersectsElementFilter(el))
+                {
+                    var currentIntersections = curves
+                                              .Where(intersection.PassesFilter)
+                                              .ToList();
+                    if (currentIntersections.Count > 0)
+                        intersections[el] = currentIntersections;
+                }
+            });
             return intersections;
         }
     }

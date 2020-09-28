@@ -10,18 +10,18 @@
             var connector = pipe.ConnectorManager.Connectors
                                 .Cast<Connector>()
                                 .FirstOrDefault();
-            if (connector == null)
-                try
-                {
-                    var width = pipe.Width;
-                    return false;
-                }
-                catch
-                {
-                    return true;
-                }
+            if (connector != null && connector.Shape != ConnectorProfileType.Invalid)
+                return connector.Shape == ConnectorProfileType.Oval || connector.Shape == ConnectorProfileType.Round;
 
-            return connector.Shape == ConnectorProfileType.Oval || connector.Shape == ConnectorProfileType.Round;
+            try
+            {
+                var width = pipe.Width;
+                return false;
+            }
+            catch
+            {
+                return true;
+            }
         }
 
         public static double GetPipeWidth(this MEPCurve pipe)

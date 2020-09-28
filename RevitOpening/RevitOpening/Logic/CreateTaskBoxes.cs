@@ -5,6 +5,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
+    using System.Windows;
     using Autodesk.Revit.DB;
     using Autodesk.Revit.DB.Electrical;
     using Autodesk.Revit.DB.Mechanical;
@@ -37,7 +38,7 @@
 
         public void Execute()
         {
-            var mepCurves = GetAllMEPCurves();
+            var mepCurves = GetAllMepCurves();
             var elements = GetAllHostElements();
             var intersections = elements.FindIntersectionsWith(mepCurves);
             var boxes = CalculateBoxes(intersections);
@@ -49,7 +50,7 @@
             BoxCombiner.CombineAllBoxes(_documents, _currentDocument, true);
         }
 
-        private List<MEPCurve> GetAllMEPCurves()
+        private List<MEPCurve> GetAllMepCurves()
         {
             var pipes = _documents.GetAllElementsOfClass<Pipe>();
             var ducts = _documents.GetAllElementsOfClass<Duct>();
@@ -79,14 +80,12 @@
 
         private IEnumerable<FamilyInstance> GetIntersectionsForRemove(IEnumerable<FamilyInstance> createdTasks)
         {
-            var tasksForDelete = new ConcurrentBag<FamilyInstance>();
-            Parallel.ForEach(createdTasks, task =>
+            foreach (var task in createdTasks)
             {
                 var filter = new ElementIntersectsElementFilter(task);
                 if (_tasks.Any(t => filter.PassesFilter(t)))
-                    tasksForDelete.Add(task);
-            });
-            return tasksForDelete;
+                    yield return task;
+            }
         }
 
         private IEnumerable<FamilyInstance> CreateTaskBoxesByParameters(IEnumerable<OpeningParentsData> openingsParameters)
