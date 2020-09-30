@@ -84,7 +84,8 @@
                 return _updateTaskInfo ??
                     (_updateTaskInfo = new RelayCommand(obj =>
                     {
-                        Transactions.UpdateTasksInfo(_currentDocument, _documents, Settings.Offset, Settings.Diameter);
+                        if (!_isListUpdated)
+                            Transactions.UpdateTasksInfo(_currentDocument, _documents, Settings.Offset, Settings.Diameter);
                         _isListUpdated = true;
                         UpdateTasksAndOpenings();
                     }));

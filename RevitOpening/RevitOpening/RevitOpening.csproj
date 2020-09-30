@@ -217,5 +217,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\Reload.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\List.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -23,7 +23,7 @@
                                .ToList();
             var currentDocument = app.ActiveUIDocument.Document;
             Transactions.LoadFamiliesToProject(currentDocument);
-            Transactions.UpdateTasksInfo(currentDocument, documents, Extensions.Settings.Offset, Extensions.Settings.Diameter);
+            //Transactions.UpdateTasksInfo(currentDocument, documents, Extensions.Settings.Offset, Extensions.Settings.Diameter);
 
             var pane = commandData.Application.ActiveUIDocument.Application.GetDockablePane(
                 new DockablePaneId(new Guid(OpeningPanel.DockablePanelGuid)));

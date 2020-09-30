@@ -90,10 +90,20 @@
 
         private IEnumerable<FamilyInstance> CreateTaskBoxesByParameters(IEnumerable<OpeningParentsData> openingsParameters)
         {
-            return openingsParameters
-                  .Select(parameters => BoxCreator
-                      .CreateTaskBox(parameters, _currentDocument))
-                  .Where(createElement => createElement != null);
+            foreach (var parentsData in openingsParameters)
+            {
+                var level = _documents
+                   .GetElement(_documents
+                              .GetElement(parentsData.HostsIds
+                                                     .FirstOrDefault()).LevelId.IntegerValue) as Level;
+                var levelOffset = level?.Elevation ?? 0;
+                var offsetFromLevel = parentsData.BoxData.Height - levelOffset;
+                parentsData.BoxData.LevelOffset = levelOffset;
+                parentsData.BoxData.OffsetFromLevel = offsetFromLevel;
+                var newBox = BoxCreator.CreateTaskBox(parentsData, _currentDocument);
+                if (newBox != null)
+                    yield return newBox;
+            }
         }
 
         private IEnumerable<OpeningParentsData> CalculateBoxes(IDictionary<Element, List<MEPCurve>> pipesInElements)

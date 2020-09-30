@@ -39,6 +39,9 @@
                 }
             }
 
+            newBox.LookupParameter("Отверстие_Отметка от этажа").Set(parentsData.BoxData.OffsetFromLevel);
+            newBox.LookupParameter("Отверстие_Отметка этажа").Set(parentsData.BoxData.LevelOffset);
+
             //настроить семейство круглых
             if (newBox.IsTask())
                 newBox.LookupParameter("Несогласованно").Set(1);

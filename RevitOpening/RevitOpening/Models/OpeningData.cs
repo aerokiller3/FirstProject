@@ -10,7 +10,7 @@
     {
         public OpeningData(double width, double height, double depth, XYZ direction,
             XYZ intersectionCenter, List<ElementGeometry> hostsGeometries, List<ElementGeometry> pipesGeometries,
-            string familyName, double offset, double diameter, string level)
+            string familyName, double offsetFromLevel, double diameter, string levelName)
         {
             Width = width;
             Height = height;
@@ -21,9 +21,9 @@
             HostsGeometries = hostsGeometries;
             PipesGeometries = pipesGeometries;
             FamilyName = familyName;
-            Offset = offset;
+            OffsetFromLevel = offsetFromLevel;
             Diameter = diameter;
-            Level = level;
+            Level = levelName;
         }
 
         public OpeningData()
@@ -38,7 +38,9 @@
 
         public string Level { get; set; }
 
-        public double Offset { get; set; }
+        public double LevelOffset { get; set; }
+
+        public double OffsetFromLevel { get; set; }
 
         public double Diameter { get; set; }
 

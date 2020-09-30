@@ -30,7 +30,7 @@ namespace RevitOpening.Extensions
 
         public static bool IsAnalysisOnStart
         {
-            get => bool.Parse(GetParameterFromSettings(nameof(IsAnalysisOnStart), true));
+            get => bool.Parse(GetParameterFromSettings(nameof(IsAnalysisOnStart), false));
             set => SetParameterToSettings(nameof(IsAnalysisOnStart), value);
         }
 

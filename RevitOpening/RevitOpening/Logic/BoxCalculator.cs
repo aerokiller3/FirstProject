@@ -25,11 +25,8 @@
                         throw new ArgumentException("Unsupported host type");
                 }
             }
-            catch (Exception e)
+            catch
             {
-                ModuleLogger.SendErrorData(e.Message,
-                    $"Element id: {element?.Id?.IntegerValue}", nameof(BoxCalculator),
-                    e.StackTrace, nameof(RevitOpening));
                 return null;
             }
         }
@@ -75,6 +72,14 @@
 
             var pipeWidth = pipe.GetPipeWidth();
             var pipeHeight = pipe.GetPipeHeight();
+            var isRoundPipe = pipe.IsRoundPipe();
+            if (isRoundPipe)
+            {
+                direction = XYZ.BasisZ.Negate();
+                pipeWidth = Math.Max(pipeWidth, pipeHeight);
+                pipeHeight = pipeWidth;
+            }
+
             var taskWidth = pipeHeight * offsetRatio;
             var taskHeight = pipeWidth * offsetRatio;
             var taskDepth = floorData.SolidInfo.Max.Z - floorData.SolidInfo.Min.Z;
@@ -88,7 +93,7 @@
         private static (XYZ, XYZ) CalculateCenterAndDirectionInFloor(ElementGeometry pipeData,
             CeilingAndFloor floor, MEPCurve pipe)
         {
-            var floorSolid = floor.get_Geometry(new Options()).FirstOrDefault() as Solid;
+            var floorSolid = floor.GetSolid();
             var direction = pipe.ConnectorManager.Connectors
                                 .Cast<Connector>()
                                 .FirstOrDefault()?
@@ -116,7 +121,7 @@
         private static (XYZ, XYZ) CalculateCenterAndDirectionInWall(ElementGeometry wallData, ElementGeometry pipeData,
             Wall wall)
         {
-            var geomSolid = wall.get_Geometry(new Options()).FirstOrDefault() as Solid;
+            var geomSolid = wall.GetSolid();
             var direction = wallData.Curve.Direction;
             var byLineWallOrientation = direction.CrossProduct(XYZ.BasisZ.Negate());
             var bias = wall.Width * byLineWallOrientation / 2;

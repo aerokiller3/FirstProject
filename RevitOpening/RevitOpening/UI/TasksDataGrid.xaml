@@ -11,6 +11,14 @@
             <Setter Property="Control.Margin" Value="5" />
             <Setter Property="Control.Padding" Value="5"/>
         </Style>
+        <Style x:Key="MyRowStyle" TargetType="{x:Type DataGridRow}">        
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=Collisions.IsTaskCouldNotBeProcessed}" Value="True" >
+                    <Setter Property="Background" Value="Yellow" />
+                    <Setter Property="Foreground" Value="Black" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </UserControl.Resources>
     <DataGrid AutoGenerateColumns="False"
               ItemsSource="{Binding Path=TasksAndOpenings}"
@@ -19,7 +27,8 @@
               CanUserAddRows="False"
               CanUserDeleteRows="False"
               MouseDoubleClick="OnCurrentCellChanged"
-              x:Name="TasksGrid">
+              x:Name="TasksGrid"
+              RowStyle="{StaticResource MyRowStyle}">
         <DataGrid.Columns>
             <DataGridTemplateColumn Header="Ид"
                                         SortMemberPath="Id"
@@ -49,7 +58,8 @@
                                         SortMemberPath="Collisions"
                                         IsReadOnly="True"
                                         MinWidth="100"
-                                        Width="*">
+                                        Width="*"
+                                        >
                 <DataGridTemplateColumn.CellTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Path=Collisions}"

@@ -120,7 +120,7 @@
             return new OpeningData(
                 data1.BoxData.Width, data1.BoxData.Height, depth,
                 data1.BoxData.Direction.XYZ, center, hostsGeometries,
-                pipesGeometries, data1.BoxData.FamilyName, data1.BoxData.Offset,
+                pipesGeometries, data1.BoxData.FamilyName, data1.BoxData.OffsetFromLevel,
                 data1.BoxData.Diameter, data1.BoxData.Level);
         }
 
@@ -148,7 +148,7 @@
             return new OpeningData(
                 width, height, data1.BoxData.Depth, direction,
                 center, hostsGeometries, pipesGeometries, Families.FloorRectTaskFamily.SymbolName,
-                data1.BoxData.Offset, data1.BoxData.Diameter, data1.BoxData.Level);
+                data1.BoxData.OffsetFromLevel, data1.BoxData.Diameter, data1.BoxData.Level);
         }
 
         private static OpeningData CalculateUnitedTaskInWallWithRounds(OpeningParentsData data1,
@@ -174,7 +174,7 @@
             return new OpeningData(
                 width, height, data1.BoxData.Depth, data1.BoxData.Direction.XYZ,
                 center, hostsGeometries, pipesGeometries, Families.WallRectTaskFamily.SymbolName,
-                data1.BoxData.Offset, data1.BoxData.Diameter, data1.BoxData.Level);
+                data1.BoxData.OffsetFromLevel, data1.BoxData.Diameter, data1.BoxData.Level);
         }
 
         private static OpeningData CalculateUnitedTaskInWallWithRects(Element el1, Element el2,
@@ -196,7 +196,7 @@
             return new OpeningData(
                 width, height, data1.BoxData.Depth, data1.BoxData.Direction.XYZ, center.XYZ,
                 hostsGeometries, pipesGeometries, Families.WallRectTaskFamily.SymbolName,
-                data1.BoxData.Offset, data2.BoxData.Diameter, data1.BoxData.Level);
+                data1.BoxData.OffsetFromLevel, data2.BoxData.Diameter, data1.BoxData.Level);
         }
 
         private static MyXYZ FindTasksCenterInWall(Solid unitedSolid, Transform transform)

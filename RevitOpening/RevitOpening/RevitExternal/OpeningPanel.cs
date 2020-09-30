@@ -35,8 +35,8 @@ namespace RevitOpening.RevitExternal
                 Resources.Unite);
             AddButtonOnPanel(panel, currentDirectory, "ChangeSelectedTasksToOpenings", "Создать отверстие",
                 Resources.CreateOpening);
-            AddButtonOnPanel(panel, currentDirectory, "UpdateDockablePanel", "Обновить список",
-                Resources.Reload);
+            AddButtonOnPanel(panel, currentDirectory, "UpdateDockablePanel", "Показать список",
+                Resources.List);
 
             return Result.Succeeded;
         }
