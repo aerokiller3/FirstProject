@@ -47,6 +47,7 @@
             var isRoundTask = pipe.IsRoundPipe() && taskWidth <= maxDiameter.GetInFoot();
             var familyParameters = isRoundTask ? Families.WallRoundTaskFamily : Families.WallRectTaskFamily;
             var taskDepth = wall.Width;
+
             //
             // Фикс семейства
             if (familyParameters == Families.WallRectTaskFamily)
@@ -116,7 +117,7 @@
             Wall wall)
         {
             var geomSolid = wall.get_Geometry(new Options()).FirstOrDefault() as Solid;
-            var direction = ((Line) wallData.Curve).Direction;
+            var direction = wallData.Curve.Direction;
             var byLineWallOrientation = direction.CrossProduct(XYZ.BasisZ.Negate());
             var bias = wall.Width * byLineWallOrientation / 2;
             var curves = geomSolid?

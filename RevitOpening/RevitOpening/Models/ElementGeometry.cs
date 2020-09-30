@@ -9,12 +9,18 @@
         public ElementGeometry(Element element)
         {
             SolidInfo = new MySolidInfo(element);
-            Curve = (element.Location as LocationCurve)?.Curve;
-            if (Curve == null)
-                return;
+            Curve = (element.Location as LocationCurve)?.Curve as Line;
+            if (Curve != null)
+            {
+                Start = new MyXYZ(Curve.GetEndPoint(0));
+                End = new MyXYZ(Curve.GetEndPoint(1));
+            }
+            else
+            {
+                Start = SolidInfo.Min;
+                End = SolidInfo.Max;
+            }
 
-            Start = new MyXYZ(Curve.GetEndPoint(0));
-            End = new MyXYZ(Curve.GetEndPoint(1));
             XLen = Start.X - End.X;
             YLen = Start.Y - End.Y;
             ZLen = Start.Z - End.Z;
@@ -30,7 +36,8 @@
 
         public double ZLen { get; set; }
 
-        [JsonIgnore] public Curve Curve { get; set; }
+        [JsonIgnore]
+        public Line Curve { get; set; }
 
         public MySolidInfo SolidInfo { get; set; }
 

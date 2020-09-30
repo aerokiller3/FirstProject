@@ -10,7 +10,7 @@
     <ROW Property="AI_REQUIRED_DOTNET_VERSION" MultiBuildValue="DefaultBuild:4.7.2" ValueLocId="-"/>
     <ROW Property="ALLUSERS" Value="1" MultiBuildValue="DefaultBuild:"/>
     <ROW Property="ARPCOMMENTS" Value="Эта база данных установщика содержит логику и данные, необходимые для установки [|[ProductName]." ValueLocId="*"/>
-    <ROW Property="ARPPRODUCTICON" Value="StartModule.exe" Type="8"/>
+    <ROW Property="ARPPRODUCTICON" Value="RevitOpening.exe" Type="8"/>
     <ROW Property="Manufacturer" Value="Altec Systems"/>
     <ROW Property="ProductCode" Value="1049:{D9CF7532-4264-4724-A4A1-AFE063FABA20} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1049"/>
@@ -160,7 +160,7 @@
     <ROW Feature_="MainFeature" Component_="____.rfa"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
-    <ROW Name="StartModule.exe" SourcePath="StartModule.ico" Index="0"/>
+    <ROW Name="RevitOpening.exe" SourcePath="RevitOpening.ico" Index="0"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiInstExSeqComponent">
     <ROW Action="AI_DOWNGRADE" Condition="AI_NEWERPRODUCTFOUND AND (UILevel &lt;&gt; 5)" Sequence="210"/>

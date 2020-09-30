@@ -137,33 +137,16 @@
                 return _createAllTasks ??
                     (_createAllTasks = new RelayCommand(obj =>
                         {
-                            var t = new Stopwatch();
-                            var stat = new StringBuilder();
-                            t.Start();
                             ModuleLogger.SendFunctionUseData(nameof(CreateAllTasks), nameof(RevitOpening));
                             if (!_isListUpdated)
-                            {
                                 UpdateTaskInfo.Execute(null);
-                                stat.AppendLine($"Update: {t.Elapsed.TotalMilliseconds}");
-                            }
 
                             Transactions.CreateAllTasks(_currentDocument, _documents, Settings.Offset,
                                 Settings.Diameter, Tasks, Openings);
-                            stat.AppendLine($"Create: {t.Elapsed.TotalMilliseconds}");
                             if (IsCombineAll)
-                            {
                                 Transactions.CombineIntersectsTasks(_currentDocument, _documents);
-                                stat.AppendLine($"Combine: {t.Elapsed.TotalMilliseconds}");
-                            }
 
                             UpdateTaskInfo.Execute(null);
-                            t.Stop();
-                            stat.AppendLine($"Update: {t.Elapsed.TotalMilliseconds}");
-                            stat.AppendLine($"TimeOnTask: {t.Elapsed.TotalMilliseconds / TasksAndOpenings.Count}");
-                            stat.AppendLine($"Tasks: {TasksAndOpenings.Count}");
-                            stat.AppendLine(
-                                $"Variants: {(_documents.GetAllElementsOfClass<Wall>().Count + _documents.GetAllElementsOfClass<CeilingAndFloor>().Count) * _documents.GetAllElementsOfClass<MEPCurve>().Count}");
-                            MessageBox.Show(stat.ToString());
                         },
                         obj => double.TryParse(OffsetStr, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
                             && double.TryParse(DiameterStr, NumberStyles.Any, CultureInfo.InvariantCulture, out _)));

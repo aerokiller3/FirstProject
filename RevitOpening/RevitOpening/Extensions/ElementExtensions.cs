@@ -40,6 +40,17 @@
                     intersectsMepCurves.FirstOrDefault(), offset, maxDiameter);
             }
 
+            if (parameters == null)
+                return new OpeningParentsData
+                {
+                    HostsIds = hosts
+                              .Select(h => h.UniqueId)
+                              .ToList(),
+                    PipesIds = intersectsMepCurves
+                              .Select(c => c.UniqueId)
+                              .ToList(),
+                };
+
             parameters.Id = element.Id.IntegerValue;
             parameters.FamilyName = ((FamilyInstance) element).Symbol.FamilyName;
             // TASK

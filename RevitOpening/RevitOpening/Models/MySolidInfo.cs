@@ -2,16 +2,14 @@
 {
     using System.Linq;
     using Autodesk.Revit.DB;
+    using Extensions;
 
     public class MySolidInfo
     {
         public MySolidInfo(Element element)
         {
-            var solid = element.get_Geometry(new Options())
-                               .FirstOrDefault() as Solid;
-            var geometry = element
-                          .get_Geometry(new Options())
-                          .GetBoundingBox();
+            var solid = element.GetSolid();
+            var geometry = solid.GetBoundingBox();
             Min = new MyXYZ(geometry.Min);
             Max = new MyXYZ(geometry.Max);
             FacesCount = solid.Faces.Size;
