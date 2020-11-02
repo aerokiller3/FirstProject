@@ -1,0 +1,49 @@
+﻿<UserControl x:Class="RevitOpening.UI.FilterStatusControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:viewModels="clr-namespace:RevitOpening.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.DataContext>
+        <viewModels:FilterStatusVM/>
+    </UserControl.DataContext>
+    <UserControl.Resources>
+        <Style x:Key="Indent">
+            <Setter Property="Control.Margin" Value="5" />
+            <Setter Property="Control.Padding" Value="5"/>
+        </Style>
+    </UserControl.Resources>
+    <Grid Style="{StaticResource Indent}">
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="Выберите тип коллизии"
+                   Style="{StaticResource Indent}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Top"
+                   Width="Auto"
+                   Height="Auto"/>
+        <ComboBox Grid.Row="1" ItemsSource="{Binding Path=Statuses}"
+                  Style="{StaticResource Indent}"
+                  MinWidth="450"
+                  MaxDropDownHeight="300"
+                  Text="Виды коллизий"
+                  VerticalAlignment="Center"
+                  HorizontalAlignment="Center"
+                  Height="Auto"
+                  Width="Auto"
+                  x:Name="StatusesBox"/>
+        <Button Grid.Row="2" Content="Фильтровать"
+                Height="Auto"
+                Width="Auto"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Style="{StaticResource Indent}"
+                Command="{Binding Filter}"
+                CommandParameter="{Binding ElementName=StatusesBox}"/>
+    </Grid>
+</UserControl>
