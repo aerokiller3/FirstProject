@@ -46,7 +46,6 @@
                 elements.AddRange(document.GetTasksByName(Families.FloorRectTaskFamily));
                 elements.AddRange(document.GetTasksByName(Families.WallRectTaskFamily));
                 elements.AddRange(document.GetTasksByName(Families.WallRoundTaskFamily));
-                //elements.AddRange(document.GetTasksByName(Families.WallElipticalTaskFamily));
             }
 
             return elements;

@@ -1,6 +1,7 @@
 ﻿namespace RevitOpening.Models
 {
     using System.Linq;
+    using Annotations;
     using Autodesk.Revit.DB;
 
     public class MySolidInfo
@@ -9,15 +10,18 @@
         {
             var solid = element.get_Geometry(new Options())
                                .FirstOrDefault() as Solid;
-            var geometry = element
-                          .get_Geometry(new Options())
-                          .GetBoundingBox();
-            Min = new MyXYZ(geometry.Min);
-            Max = new MyXYZ(geometry.Max);
+            var boundingBox = element
+                             .get_Geometry(new Options())
+                             .GetBoundingBox();
+            Min = new MyXYZ(boundingBox.Min);
+            Max = new MyXYZ(boundingBox.Max);
             FacesCount = solid.Faces.Size;
             EdgesCount = solid.Edges.Size;
         }
 
+        /// <summary>
+        /// Пустой конструктор для json.
+        /// </summary>
         public MySolidInfo()
         {
         }

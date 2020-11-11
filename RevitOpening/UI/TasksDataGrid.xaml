@@ -21,11 +21,25 @@
               MouseDoubleClick="OnCurrentCellChanged"
               x:Name="TasksGrid">
         <DataGrid.Columns>
+
+            <DataGridTemplateColumn Header="Номер"
+                                    SortMemberPath="Number"
+                                    IsReadOnly="True"
+                                    MinWidth="30"
+                                    Width="Auto">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Path=Number}"
+                                        TextWrapping="Wrap"/>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
             <DataGridTemplateColumn Header="Ид"
-                                        SortMemberPath="Id"
-                                        IsReadOnly="True"
-                                        MinWidth="50"
-                                        Width="Auto">
+                                    SortMemberPath="Id"
+                                    IsReadOnly="True"
+                                    MinWidth="50"
+                                    Width="Auto">
                 <DataGridTemplateColumn.CellTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Path=Id}"

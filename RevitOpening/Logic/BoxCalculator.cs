@@ -41,15 +41,12 @@
             var familyParameters = isRoundTask ? Families.WallRoundTaskFamily : Families.WallRectTaskFamily;
             var taskDepth = wall.Width;
 
-            // Фикс семейства
-            // Добавил овальные трубы
             if (familyParameters == Families.WallRectTaskFamily || familyParameters == Families.WallElipticalTaskFamily)
                 intersectionCenter -= new XYZ(0, 0, taskHeight / 2);
-            //
 
             return new OpeningData(taskWidth, taskHeight, taskDepth, direction,
-                intersectionCenter, new List<ElementGeometry> { wallData },
-                new List<ElementGeometry> { pipeData }, familyParameters.SymbolName,
+                intersectionCenter, new List<ElementGeometry> {wallData},
+                new List<ElementGeometry> {pipeData}, familyParameters.SymbolName,
                 offsetRatio, maxDiameter, null);
         }
 
@@ -105,6 +102,8 @@
             Wall wall)
         {
             var geomSolid = wall.get_Geometry(new Options()).FirstOrDefault() as Solid;
+            // TODO: ОСТОРОЖНО!
+#warning не безопасный код.
             var direction = ((Line)wallData.Curve).Direction;
             var byLineWallOrientation = direction.CrossProduct(XYZ.BasisZ.Negate());
             var bias = wall.Width * byLineWallOrientation / 2;

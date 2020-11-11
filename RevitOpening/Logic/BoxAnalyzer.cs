@@ -37,6 +37,7 @@
         {
             foreach (var task in elementsToAnalyze)
             {
+                // Здесь теряется Curve
                 var data = task.GetOrInitData(walls, floors, offset, maxDiameter, mepCurves,
                     currentDocument, documents);
                 AnalyzeElement(task, data, walls, floors, elementsToAnalyze, documents, offset,
@@ -100,6 +101,7 @@
             var pipes = mepCurves
                        .Where(filter.PassesFilter)
                        .ToList();
+            // Вместо Element есть Host
             var hosts = new List<Element>();
             hosts.AddRange(floors
                .Where(filter.PassesFilter));
@@ -108,9 +110,14 @@
 
             var pipesGeometries = new List<ElementGeometry>(pipes.Select(p => new ElementGeometry(p)));
             var hostGeometries = new List<ElementGeometry>(hosts.Select(h => new ElementGeometry(h)));
-            var isOldPipes = parentsData.BoxData.PipesGeometries.AlmostEqualTo(pipesGeometries);
+#warning Строка, которая сравнивает геометрию, она вызывает баг, пока что мы не понимаем.
+            // Строка снизу была изначально, что она делает пока что не понятно, если что, нужно проверить это место еще.
+            //var isOldPipes = parentsData.BoxData.PipesGeometries.AlmostEqualTo(pipesGeometries);
+
+            var isOldPipes = true;
+
             var isOldHosts = parentsData.BoxData.HostsGeometries.AlmostEqualTo(hostGeometries);
-            var isOldBox = CompareActualAndOldBoxData((FamilyInstance)element, parentsData.BoxData);
+            var isOldBox = CompareActualAndOldBoxData((FamilyInstance) element, parentsData.BoxData);
             newData = null;
             var isImmutable = isOldBox && isOldPipes && isOldHosts;
             if (!isImmutable)

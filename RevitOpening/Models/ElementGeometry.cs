@@ -18,6 +18,8 @@
             XLen = Start.X - End.X;
             YLen = Start.Y - End.Y;
             ZLen = Start.Z - End.Z;
+
+            ElementId = element.Id.IntegerValue;
         }
 
         public ElementGeometry()
@@ -37,6 +39,8 @@
         public MyXYZ Start { get; set; }
 
         public MyXYZ End { get; set; }
+
+        public int ElementId { get; set; }
 
         public override bool Equals(object obj)
         {

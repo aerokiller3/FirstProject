@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Linq;
+    using Models;
 
     internal static class CollectionExtensions
     {

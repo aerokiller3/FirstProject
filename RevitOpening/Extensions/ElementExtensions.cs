@@ -14,6 +14,11 @@
             IEnumerable<CeilingAndFloor> floors, double offset, double maxDiameter,
             IEnumerable<MEPCurve> mepCurves, Document currentDocument, ICollection<Document> documents)
         {
+            var count = mepCurves.Count();
+            var first = mepCurves.FirstOrDefault();
+            var location = first.Location;
+
+
             var filter = new ElementIntersectsElementFilter(task);
             var intersectsWalls = walls
                .Where(filter.PassesFilter);
@@ -112,8 +117,7 @@
 
         public static bool IsTask(this Element element)
         {
-            // Добавил овальные трубы
-            var elSymbolName = (((FamilyInstance) element).Symbol.FamilyName);
+            var elSymbolName = (((FamilyInstance)element).Symbol.FamilyName);
             return Families.FloorRectTaskFamily.SymbolName == elSymbolName
                 || Families.WallRectTaskFamily.SymbolName == elSymbolName
                 || Families.WallRoundTaskFamily.SymbolName == elSymbolName
@@ -122,8 +126,7 @@
 
         public static bool IsOpening(this Element element)
         {
-            // Добавил овальные трубы
-            var elSymbolName = (((FamilyInstance) element).Symbol.FamilyName);
+            var elSymbolName = (((FamilyInstance)element).Symbol.FamilyName);
             return Families.FloorRectOpeningFamily.SymbolName == elSymbolName
                 || Families.WallRectOpeningFamily.SymbolName == elSymbolName
                 || Families.WallRoundOpeningFamily.SymbolName == elSymbolName

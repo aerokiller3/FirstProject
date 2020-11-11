@@ -67,68 +67,74 @@
             var boxDataWidth1 = data1.BoxData.Width;
             var boxDataHeight2 = data2.BoxData.Height;
             var minX = el1.get_BoundingBox(null).Min.X;
+            var maxX1 = el2.get_BoundingBox(null).Max.X;
             var minX1 = el2.get_BoundingBox(null).Min.X;
-            var minZ = el1.get_BoundingBox(null).Min.Z;
-            var minZ1 = el2.get_BoundingBox(null).Min.Z;
             var minY = el1.get_BoundingBox(null).Min.Y;
             var minY1 = el2.get_BoundingBox(null).Min.Y;
+            var maxY1 = el2.get_BoundingBox(null).Max.Y;
+            var minZ = el1.get_BoundingBox(null).Min.Z;
+            var minZ1 = el2.get_BoundingBox(null).Min.Z;
+            var maxZ1 = el2.get_BoundingBox(null).Max.X;
 
             if (!ValidateTasksForCombine(data1, data2, el1, el2))
                 return null;
 
-            var pointZ1 = pointEl1.Point.Z;
-            var pointZ2 = pointEl2.Point.Z;
             var pointX1 = pointEl1.Point.X;
             var pointX2 = pointEl2.Point.X;
             var pointY1 = pointEl1.Point.Y;
             var pointY2 = pointEl2.Point.Y;
-            XYZ center;
+            var pointZ1 = pointEl1.Point.Z;
+            var pointZ2 = pointEl2.Point.Z;
+
+            var imprecision1 = Math.Round(pointX1 - pointX2, 1);
+            var imprecision2 = Math.Round(pointY1 - pointY2, 1);
+            var imprecision3 = Math.Round(pointZ1 - pointZ2, 1);
+
+            XYZ center = null;
             double width = 0;
             double height = 0;
+            double middlePointX = 0;
+            double middlePointY = 0;
 
-            //TODO: уменьшить условие
-            /*if (pointEl1.Point.X - pointEl2.Point.X != 0 && pointEl1.Point.Z - pointEl2.Point.Z == 0 &&
-                pointY1 - pointY2 != 0)
-            {
-                width = boxDataWidth1 + Math.Abs(minX1 - minX);
-                height = boxDataHeight1 + Math.Abs(minY1 - minY);
-                var x1 = (pointX2 + pointX1) / 2;
-
-                center = new XYZ(x1, pointEl1.Point.Y, minZ);
-            }*/
-            //TODO: пофиксить это условие
-            if (pointEl1.Point.X - pointEl2.Point.X != 0 && pointEl1.Point.Z - pointEl2.Point.Z == 0)
-            {
-                var centerPoint = (pointX1 + pointX2) / 2;
-                var left = pointX1 - minX;
-                var centerHorizontalLine = Math.Abs(pointX2 - pointX1);
-                width = centerHorizontalLine + 2 * left;
-
-                center = new XYZ(centerPoint, 0, minZ);
-            }
-            else if (pointEl1.Point.Z - pointEl2.Point.Z != 0 && pointEl1.Point.X - pointEl2.Point.X == 0)
+            if (pointX1 == pointX2 && pointZ1 != pointZ2)
             {
                 height = (pointZ2 - pointZ1) + boxDataHeight2;
-                center = new XYZ(pointEl1.Point.X, pointEl1.Point.Y, minZ);
+                center = new XYZ(pointX1, pointY1, Math.Min(pointZ1, pointZ2));
             }
-            else
+            else if (pointX1 != pointX2 && pointZ1 == pointZ2)
             {
-                width = boxDataWidth1 + Math.Abs(minX1 - minX);
-                height = boxDataHeight1 + Math.Abs(minY1 - minY);
-                var x1 = (pointX2 + pointX1) / 2;
+                middlePointY = (pointY1 + pointY2) / 2;
+                middlePointX = (pointX1 + pointX2) / 2;
+                var left = pointX1 - minX;
+                var centerLine = Math.Abs(pointX2 - pointX1);
+                width = data1.BoxData.Width + left * 2;
 
-                center = new XYZ(x1, pointEl1.Point.Y, minZ);
+                center = new XYZ(middlePointX, middlePointY, Math.Min(pointZ1, pointZ2));
+            }
+            else if (pointX1 != pointX2 && pointZ1 != pointZ2)
+            {
+                var point = new XYZ(pointX1 - minX, 0, 0);
+                var pointLength = Math.Sqrt(point.X * point.X + point.Y * point.Y + point.Z * point.Z);
+                middlePointX = (pointX2 + pointX1) / 2;
+                width = boxDataWidth1 + pointLength;
+                height = boxDataHeight1 + Math.Abs(pointZ2 - pointZ1);
+
+                center = new XYZ(middlePointX, pointY1, Math.Min(pointZ1, pointZ2));
             }
 
             OpeningData newOpening;
+
             if (data1.PipesIds.AlmostEqualTo(data2.PipesIds))
-                newOpening = CalculateUnitedTaskOnOnePipe(data1, data2);
+                newOpening = CalculateUnitedTaskOnOnePipe(data1, data2, el1, el2);
+
             else if (documents.GetElement(data1.HostsIds.FirstOrDefault()) is Wall)
                 newOpening = data1.BoxData.FamilyName == Families.WallRoundTaskFamily.SymbolName
                     ? CalculateUnitedTaskInWallWithRounds(data1, data2)
                     : CalculateUnitedTaskInWallWithRects(el1, el2, data1, data2);
+
             else if (documents.GetElement(data1.HostsIds.FirstOrDefault()) is CeilingAndFloor)
                 newOpening = CalculateUnitedTaskInFloor(el1, el2, data1, data2);
+
             else
                 return null;
 
@@ -170,6 +176,7 @@
                         yield return (elements[i], elements[j]);
                     else
                         continue;
+
                     elements.RemoveAt(j);
                     elements.RemoveAt(i);
                     i -= 1;
@@ -178,29 +185,36 @@
             }
         }
 
-        private static OpeningData CalculateUnitedTaskOnOnePipe(OpeningParentsData data1, OpeningParentsData data2)
+        private static OpeningData CalculateUnitedTaskOnOnePipe(OpeningParentsData data1, OpeningParentsData data2, Element el1, Element el2)
         {
-            var direction = data1.BoxData.IntersectionCenter.XYZ - data2.BoxData.IntersectionCenter.XYZ;
-            var depth = data1.BoxData.Depth;
+            var angle = XYZ.BasisY.Negate().AngleTo(data1.BoxData.Direction.XYZ);
+            var rotationTransform = Transform.CreateRotation(XYZ.BasisZ, -angle);
+            var unitedSolid = el1.GetUnitedSolid(el2, rotationTransform);
+            var rotatedSolid = SolidUtils.CreateTransformed(unitedSolid, rotationTransform);
+            var minUnSolid = rotatedSolid.GetBoundingBox().Min;
+            var maxUnSolid = rotatedSolid.GetBoundingBox().Max;
+            var center = FindTasksCenterInWall(unitedSolid, rotationTransform);
+            var direction = data1.BoxData.IntersectionCenter.XYZ + data2.BoxData.IntersectionCenter.XYZ;
+            var depth = data1.BoxData.Depth + data2.BoxData.Depth;
             var normalDirection = direction.Normalize();
             var source = data1.BoxData.Direction.XYZ;
             source = Transform.CreateRotation(-XYZ.BasisZ, Math.PI / 2).OfVector(source);
-            var center = normalDirection.IsAlmostEqualTo(source)
-                ? data1.BoxData.IntersectionCenter.XYZ
-                : data2.BoxData.IntersectionCenter.XYZ;
+            var width = maxUnSolid.Y - minUnSolid.Y;
+            var height = maxUnSolid.Z - minUnSolid.Z;
+
             (var hostsGeometries, var pipesGeometries) = UnionTwoData(data1, data2);
+
             return new OpeningData(
-                data1.BoxData.Width, data1.BoxData.Height, depth,
-                data1.BoxData.Direction.XYZ, center, hostsGeometries,
-                pipesGeometries, data1.BoxData.FamilyName, data1.BoxData.Offset,
-                data1.BoxData.Diameter, data1.BoxData.Level);
+                width, height, data1.BoxData.Depth, data1.BoxData.Direction.XYZ, center.XYZ,
+                hostsGeometries, pipesGeometries, Families.WallRectTaskFamily.SymbolName,
+                data1.BoxData.Offset, data2.BoxData.Diameter, data1.BoxData.Level);
         }
 
         private static OpeningData CalculateUnitedTaskInFloor(Element el1, Element el2, OpeningParentsData data1,
             OpeningParentsData data2)
         {
-            var angle = XYZ.BasisX.AngleTo(data1.BoxData.Direction.XYZ);
-            var transform = Transform.CreateRotation(XYZ.BasisZ, -angle);
+            var angle = XYZ.BasisY.AngleTo(data1.BoxData.Direction.XYZ);
+            var transform = Transform.CreateRotation(XYZ.BasisZ, angle);
             var unitedSolid = el1.GetUnitedSolid(el2, transform);
             var transformedSolid = SolidUtils.CreateTransformed(unitedSolid, transform);
             var planarFace = unitedSolid.Faces.Cast<PlanarFace>()

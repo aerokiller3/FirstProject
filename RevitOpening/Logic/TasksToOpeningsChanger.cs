@@ -23,7 +23,6 @@
             elementList.AddRange(SwapTasksToOpenings(currentDocument, correctWallRectTasks));
             elementList.AddRange(SwapTasksToOpenings(currentDocument, correctWallRoundTasks));
             elementList.AddRange(SwapTasksToOpenings(currentDocument, correctFloorRectTasks));
-            //elementList.AddRange(SwapTasksToOpenings(currentDocument, correctWallElipticalTasks));
             return elementList;
         }
 
